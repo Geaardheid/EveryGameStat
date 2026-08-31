@@ -62,12 +62,10 @@
       "installerHeader": "build/installerHeader.bmp",
       "runAfterFinish": true
     },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "everygamestat",
-        "repo": "egs-companion"
-      }
-    ]
+    "publish": {
+      "provider": "github",
+      "owner": "Geaardheid",
+      "repo": "EveryGameStat"
+    }
   }
 }
