@@ -1,0 +1,73 @@
+{
+  "name": "egs-companion",
+  "productName": "EGS Companion",
+  "version": "1.0.1",
+  "description": "EveryGameStat desktop companion \u2014 brings local, per-session game stats to your EGS card. Read-only: local logs and local APIs only, never game memory.",
+  "author": "EveryGameStat",
+  "license": "MIT",
+  "homepage": "https://everygamestat.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/everygamestat/egs-companion.git"
+  },
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "release": "electron-builder --win --publish always"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "dependencies": {
+    "@xhayper/discord-rpc": "^1.3.4",
+    "electron-updater": "^6.3.9",
+    "tesseract.js": "^7.0.0"
+  },
+  "build": {
+    "appId": "com.everygamestat.companion",
+    "productName": "EGS Companion",
+    "artifactName": "EGS-Companion-Setup.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "EGS Companion",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "runAfterFinish": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "everygamestat",
+        "repo": "egs-companion"
+      }
+    ]
+  }
+}

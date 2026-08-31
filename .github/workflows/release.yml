@@ -1,0 +1,22 @@
+# Bouwt de Windows-installer in de cloud en publiceert 'm als GitHub Release.
+# Gebruik: tag pushen (git tag v0.2.0 && git push --tags) of handmatig starten.
+name: release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci || npm install
+      - run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,29 @@
+const { contextBridge, ipcRenderer } = require("electron");
+
+contextBridge.exposeInMainWorld("egs", {
+  getState: () => ipcRenderer.invoke("get-state"),
+  claimCode: (code) => ipcRenderer.invoke("claim-code", code),
+  unlink: () => ipcRenderer.invoke("unlink"),
+  recent: () => ipcRenderer.invoke("recent"),
+  profile: () => ipcRenderer.invoke("profile"),
+  restartUpdate: () => ipcRenderer.invoke("restart-update"),
+  checkUpdates: () => ipcRenderer.invoke("check-updates"),
+  onUpdate: (cb) => ipcRenderer.on("update", (_e, d) => cb(d)),
+  sessionsSummary: () => ipcRenderer.invoke("sessions-summary"),
+  onProcStatus: (cb) => ipcRenderer.on("proc-status", (_e, d) => cb(d)),
+  onProcSession: (cb) => ipcRenderer.on("proc-session", (_e, d) => cb(d)),
+  captureScoreboard: () => ipcRenderer.invoke("capture-scoreboard"),
+  saveGmatch: (m) => ipcRenderer.invoke("save-gmatch", m),
+  onOcrResult: (cb) => ipcRenderer.on("ocr-result", (_e, d) => cb(d)),
+  social: (action, extra) => ipcRenderer.invoke("social", action, extra),
+  onSocialUnread: (cb) => ipcRenderer.on("social-unread", (_e, d) => cb(d)),
+  onOpenSocial: (cb) => ipcRenderer.on("open-social", (_e, d) => cb(d)),
+  onPresence: (cb) => ipcRenderer.on("presence", (_e, d) => cb(d)),
+  setSetting: (kv) => ipcRenderer.invoke("set-setting", kv),
+  openExternal: (url) => ipcRenderer.invoke("open-external", url),
+  rlSetupStatus: () => ipcRenderer.invoke("rl-setup-status"),
+  rlSetupAuto: () => ipcRenderer.invoke("rl-setup-auto"),
+  rlSetupPick: () => ipcRenderer.invoke("rl-setup-pick"),
+  onAdapterStatus: (cb) => ipcRenderer.on("adapter-status", (_e, d) => cb(d)),
+  onMatch: (cb) => ipcRenderer.on("match", (_e, d) => cb(d))
+});

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self'; img-src 'self' data: https: http:;">
+<title>EGS Companion</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ KOPPELSCHERM ============ -->
+<div id="view-link" class="view center-view">
+  <div class="link-card">
+    <img src="../../assets/icon.png" class="logo" alt="">
+    <h1>EGS <span>COMPANION</span></h1>
+    <p class="sub" data-i18n="linkSub"></p>
+    <div class="steps">
+      <div class="step"><span class="n">1</span><span data-i18n="linkStep1"></span></div>
+      <div class="step"><span class="n">2</span><span data-i18n="linkStep2"></span></div>
+      <div class="step"><span class="n">3</span><span data-i18n="linkStep3"></span></div>
+    </div>
+    <input id="code" class="code-input" maxlength="9" placeholder="XXXX-XXXX" autocomplete="off" spellcheck="false">
+    <button id="btn-link" class="btn gold" data-i18n="linkBtn"></button>
+    <div id="link-err" class="err"></div>
+    <button id="open-site" class="linklike" data-i18n="linkOpenSite"></button>
+    <div class="foot mono" data-i18n="footReadonly"></div>
+  </div>
+</div>
+
+<!-- ============ ZIJBALK ============ -->
+<nav id="tabbar" hidden>
+  <img src="../../assets/icon.png" class="rail-logo" alt="">
+  <button class="tab active" data-tab="home" title="Home"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg></span><span class="tab-lbl" data-i18n="tabHome"></span></button>
+  <button class="tab" data-tab="social" title="Social"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M15.4 14.6c2.6.2 4.6 1.7 5.2 4.4"/></svg></span><span class="tab-lbl" data-i18n="tabSocial"></span><span class="badge" id="soc-badge" hidden></span></button>
+  <button class="tab" data-tab="library" title="Library"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></span><span class="tab-lbl" data-i18n="tabLibrary"></span></button>
+  <button class="tab" data-tab="board" title="Leaderboard"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3.5a5 5 0 0 1-10 0Z"/><path d="M7 5H4.5a0 0 0 0 0 0 0c0 2.6 1.1 4.3 2.9 4.9M17 5h2.5c0 2.6-1.1 4.3-2.9 4.9"/><path d="M12 12.5V16"/><path d="M8.5 20h7M10 16h4v4"/></svg></span><span class="tab-lbl" data-i18n="tabBoard"></span></button>
+  <div class="rail-spacer"></div>
+  <button class="tab" id="btn-settings" title="Settings"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7"/></svg></span><span class="tab-lbl" data-i18n="settingsHead"></span></button>
+  <div class="rail-ver mono" id="ver"></div>
+</nav>
+
+<!-- ============ HOME ============ -->
+<div id="view-main" class="view" hidden>
+  <div id="upd-banner" class="upd" hidden>
+    <span id="upd-txt"></span>
+    <button class="btn gold sm" id="upd-restart" hidden data-i18n="updRestart"></button>
+  </div>
+  <div class="home-grid">
+    <aside class="pcol">
+      <div class="panel pcard-panel">
+        <div class="pcard-top">
+          <img src="../../assets/icon.png" class="avatar" id="who-avatar" alt="">
+          <div class="who">
+            <div class="name" id="who-name">—</div>
+            <button class="linklike small" id="who-card" data-i18n="myCard"></button>
+          </div>
+          <button id="btn-refresh" class="icon-btn" title="Refresh">⟳</button>
+        </div>
+        <div class="statrow">
+          <div class="stat"><div class="stat-num mono" id="st-games">–</div><div class="stat-lbl" data-i18n="stGames"></div></div>
+          <div class="stat"><div class="stat-num mono gold" id="st-hours">–</div><div class="stat-lbl" data-i18n="stHours"></div></div>
+          <div class="stat"><div class="stat-num mono teal" id="st-ach">–</div><div class="stat-lbl" data-i18n="stAch"></div></div>
+        </div>
+        <div id="now-playing" class="nowplay" hidden><span class="np-dot"></span><span id="now-playing-txt"></span></div>
+        <div class="chips" id="plat-chips"></div>
+      </div>
+      <div class="panel" id="top-panel" hidden>
+        <div class="panel-head" data-i18n="topHead"></div>
+        <div id="top-games" class="topgames"></div>
+      </div>
+    </aside>
+    <section class="mcol">
+      <div class="panel">
+        <div class="panel-head" data-i18n="adaptersHead"></div>
+        <div class="adapter" id="ad-rocketleague">
+          <span class="dot" data-state="waiting"></span>
+          <div class="ad-info">
+            <div class="ad-name">Rocket League</div>
+            <div class="ad-state mono" id="rl-state">—</div>
+          </div>
+          <button class="btn ghost sm" id="rl-help" data-i18n="rlHelp"></button>
+        </div>
+        <div id="rl-setup-box" class="setupbox" hidden>
+          <p class="dim" data-i18n="rlSetupIntro"></p>
+          <div class="btnrow">
+            <button class="btn gold sm" id="rl-auto" data-i18n="rlSetupAuto"></button>
+            <button class="btn ghost sm" id="rl-pick" data-i18n="rlSetupPick"></button>
+          </div>
+          <div class="setup-msg mono" id="rl-setup-msg"></div>
+          <button class="linklike small" id="rl-manual" data-i18n="rlSetupManual"></button>
+          <div id="rl-help-box" class="helpbox" hidden></div>
+        </div>
+        <div class="adapter" id="ad-mw4">
+          <span class="dot" data-state="off"></span>
+          <div class="ad-info">
+            <div class="ad-name">MW4 Beta <span class="tag mono" data-i18n="procTag"></span></div>
+            <div class="ad-state mono" id="mw4-state">—</div>
+          </div>
+          <button class="btn ghost sm" id="mw4-cap" data-i18n="capBtn"></button>
+        </div>
+        <div id="cap-panel" class="setupbox" hidden>
+          <p class="dim" id="cap-status"></p>
+          <div class="cap-grid">
+            <label><span data-i18n="capKills"></span><input id="cap-kills" class="text-input mono" inputmode="numeric"></label>
+            <label><span data-i18n="capDeaths"></span><input id="cap-deaths" class="text-input mono" inputmode="numeric"></label>
+            <label><span data-i18n="capResult"></span>
+              <select id="cap-result" class="text-input">
+                <option value="win">Win</option><option value="loss">Loss</option>
+                <option value="draw">Draw</option><option value="unknown">?</option>
+              </select></label>
+          </div>
+          <div class="btnrow">
+            <button class="btn gold sm" id="cap-save" data-i18n="capSave"></button>
+            <button class="btn ghost sm" id="cap-discard" data-i18n="capDiscard"></button>
+          </div>
+        </div>
+        <div class="adapter dimmed">
+          <span class="dot" data-state="off"></span>
+          <div class="ad-info">
+            <div class="ad-name">Dead by Daylight</div>
+            <div class="ad-state mono" data-i18n="dbdSoon"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel grow">
+        <div class="panel-head"><span data-i18n="sessionHead"></span><span class="mono dim" id="session-line"></span></div>
+        <div id="matches" class="matches"><div class="empty" data-i18n="noMatches"></div></div>
+      </div>
+      <div class="foot mono"><span id="queue-note"></span></div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ SOCIAL ============ -->
+<div id="view-social" class="view" hidden>
+  <div class="social-grid">
+    <aside class="panel soc-left">
+      <div class="soc-lefthead">
+        <div class="panel-head" style="margin:0" data-i18n="socHead"></div>
+        <button id="soc-refresh" class="icon-btn sm">⟳</button>
+      </div>
+      <input id="soc-search" class="text-input" data-i18n-ph="socSearchPh" spellcheck="false">
+      <div id="soc-results"></div>
+      <div id="soc-req-panel" hidden>
+        <div class="panel-head" data-i18n="socRequests"></div>
+        <div id="soc-incoming"></div>
+        <div id="soc-outgoing"></div>
+      </div>
+      <div class="panel-head" data-i18n="socFriends"></div>
+      <div id="soc-friends" class="soc-scroll"><div class="empty" data-i18n="socNoFriends"></div></div>
+    </aside>
+    <section class="panel chat-pane" id="chat-pane">
+      <div id="chat-placeholder" class="chat-ph">
+        <span class="chat-ph-ico">💬</span>
+        <span data-i18n="chatPick"></span>
+      </div>
+      <div id="chat-ui" hidden>
+        <div class="chat-head">
+          <button id="chat-back" class="icon-btn sm">←</button>
+          <img class="chat-av" id="chat-avatar" src="../../assets/icon.png" alt="">
+          <div class="name" id="chat-name">—</div>
+        </div>
+        <div id="chat-msgs" class="chat-msgs"></div>
+        <div class="chat-inrow">
+          <input id="chat-input" class="text-input" data-i18n-ph="chatPh" maxlength="2000" spellcheck="true">
+          <button id="chat-send" class="btn gold" data-i18n="chatSend"></button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- ============ BIBLIOTHEEK ============ -->
+<div id="view-library" class="view" hidden>
+  <div class="lib-head">
+    <div class="lib-title" data-i18n="libHead"></div>
+    <input id="lib-search" class="text-input" data-i18n-ph="libSearchPh" spellcheck="false">
+    <select id="lib-sort" class="text-input">
+      <option value="minutes" data-i18n="libSortHours"></option>
+      <option value="name" data-i18n="libSortName"></option>
+      <option value="ach" data-i18n="libSortAch"></option>
+      <option value="last" data-i18n="libSortLast"></option>
+    </select>
+    <select id="lib-plat" class="text-input"><option value="" data-i18n="libAllPlatforms"></option></select>
+    <span class="mono dim" id="lib-count"></span>
+  </div>
+  <div id="lib-grid" class="lib-grid"><div class="empty" data-i18n="libLoading"></div></div>
+</div>
+
+<!-- ============ LEADERBOARD ============ -->
+<div id="view-board" class="view" hidden>
+  <div class="board-wrap">
+    <div class="lib-head">
+      <div class="lib-title" data-i18n="boardHead"></div>
+      <div class="board-tabs">
+        <button class="btn ghost sm active" data-metric="hours" data-i18n="boardHours"></button>
+        <button class="btn ghost sm" data-metric="games" data-i18n="boardGames"></button>
+        <button class="btn ghost sm" data-metric="ach" data-i18n="boardAch"></button>
+      </div>
+    </div>
+    <div id="board-podium" class="podium"></div>
+    <div id="board-rows" class="board-rows"></div>
+  </div>
+</div>
+
+<!-- ============ INSTELLINGEN ============ -->
+<div id="view-settings" class="view center-view" hidden>
+  <div class="settings-card">
+    <div class="settings-head">
+      <button id="btn-back" class="icon-btn">←</button>
+      <div class="name" data-i18n="settingsHead"></div>
+    </div>
+    <div class="panel">
+      <label class="field">
+        <span data-i18n="setRlName"></span>
+        <input id="set-rlname" class="text-input" spellcheck="false">
+        <small class="dim" data-i18n="setRlNameHint"></small>
+      </label>
+      <label class="field">
+        <span data-i18n="setMw4Exes"></span>
+        <input id="set-mw4exes" class="text-input" spellcheck="false" placeholder="cod.exe, cod26-cod.exe">
+        <small class="dim" data-i18n="setMw4ExesHint"></small>
+      </label>
+      <label class="field row">
+        <input type="checkbox" id="set-autostart">
+        <span data-i18n="setAutostart"></span>
+      </label>
+      <label class="field row">
+        <input type="checkbox" id="set-discord">
+        <span data-i18n="setDiscord"></span>
+      </label>
+      <label class="field">
+        <span data-i18n="setLang"></span>
+        <select id="set-lang" class="text-input">
+          <option value="nl">Nederlands</option>
+          <option value="en">English</option>
+        </select>
+      </label>
+    </div>
+    <div class="panel">
+      <div class="btnrow">
+        <button id="upd-check" class="btn ghost sm" data-i18n="updCheck"></button>
+        <span class="mono dim" id="upd-status" style="align-self:center;font-size:11px"></span>
+      </div>
+    </div>
+    <div class="panel">
+      <button id="btn-unlink" class="btn danger" data-i18n="setUnlink"></button>
+      <small class="dim" data-i18n="setUnlinkHint"></small>
+    </div>
+    <div class="foot mono" data-i18n="footReadonly"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
