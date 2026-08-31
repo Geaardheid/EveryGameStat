@@ -65,7 +65,8 @@
     "publish": {
       "provider": "github",
       "owner": "Geaardheid",
-      "repo": "EveryGameStat"
+      "repo": "EveryGameStat",
+      "releaseType": "release"
     }
   }
 }
