@@ -230,7 +230,7 @@ const $ = (id) => document.getElementById(id);
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
-const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-web"];
+const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board"];
 function show(view) {
   ALL_VIEWS.forEach((v) => { $(v).hidden = v !== view; });
   const tabbed = view !== "view-link" && state && state.linked;
@@ -243,9 +243,8 @@ function show(view) {
   if (view === "view-social") loadSocial();
   if (view === "view-library") loadLibrary();
   if (view === "view-board") loadBoard();
-  if (view === "view-web" && !webLoadedOnce) openWeb("/me");
 }
-const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board", web: "view-web" };
+const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board" };
 document.querySelectorAll("#tabbar .tab[data-tab]").forEach((b) => {
   b.addEventListener("click", () => show(TABMAP[b.dataset.tab]));
 });
@@ -706,33 +705,15 @@ function renderLibrary() {
       '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
     card.appendChild(coverEl);
     card.appendChild(body);
-    card.addEventListener("click", () => openWeb("/me/lib/" + encodeURIComponent(g.platform) + "/" + encodeURIComponent(String(g.external_id))));
+    card.addEventListener("click", () => openGameSheet(g));
     frag.appendChild(card);
   });
   if (!rows.length) grid.innerHTML = '<div class="empty">\u2014</div>';
   else grid.appendChild(frag);
 }
-/* ===== WEB: de echte site, ingelogd, in de app. Eerste keer via een eenmalige
-   magic-link (web_session); daarna houdt de webview-partition de sessie vast.
-   ?app=1 verbergt op de site header/footer/tabbar. ===== */
-let webLoadedOnce = false, webAuthed = false;
-async function openWeb(path) {
-  show("view-web");
-  const wv = $("web-frame");
-  if (!webAuthed) {
-    const r = await window.egs.webSession(path);
-    if (r && r.ok && r.url) { wv.src = r.url; webAuthed = true; webLoadedOnce = true; return; }
-  }
-  const base = "https://everygamestat.com" + path;
-  wv.src = base + (base.includes("?") ? "&" : "?") + "app=1";
-  webLoadedOnce = true;
-}
-/* Alt+← gaat terug in het sitevenster; verder is de site zelf de navigatie. */
-document.addEventListener("keydown", (e) => { if (e.altKey && e.key === "ArrowLeft") { const wv = $("web-frame"); if (wv && wv.canGoBack && wv.canGoBack()) wv.goBack(); } });
-/* titelbalk */
-document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
-$("btn-quit").addEventListener("click", () => window.egs.win("quit"));
-
+/* Site-pagina's openen in de browser (het ingebouwde venster is eruit: rendert
+   niet betrouwbaar op elke pc). Ingelogd via je eigen browser-sessie. */
+function openWeb(path) { window.egs.openExternal("https://everygamestat.com" + path); }
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];
 function ytThumb(id) { return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"; }
@@ -759,18 +740,18 @@ async function openGameSheet(g) {
         (!owned && m.steam_appid ? '<button class="btn" data-url="https://store.steampowered.com/app/' + m.steam_appid + '">' + t("gsWishlist") + "</button>" : "") +
       "</div></div></div>" +
     (m.summary ? '<p class="gs-summary">' + escT(m.summary) + "</p>" : "") +
-    (m.videos && m.videos.length ? '<div class="gs-sec">' + t("gsTrailer") + '</div><div class="gs-video" data-yt="' + m.videos[0].id + '"><img src="' + ytThumb(m.videos[0].id) + '" alt=""><span class="gs-play">\u25b6</span></div>' : "") +
-    (m.screenshots && m.screenshots.length ? '<div class="gs-sec">' + t("gsScreens") + '</div><div class="gs-shots">' + m.screenshots.map((s) => '<img src="' + s + '" loading="lazy" alt="" data-url="' + s + '">').join("") + "</div>" : "") +
+    (m.videos && m.videos.length ? '<div class="gs-sec">' + t("gsTrailer") + '</div><div class="gs-video" data-url="https://www.youtube.com/watch?v=' + m.videos[0].id + '"><img src="' + ytThumb(m.videos[0].id) + '" alt=""><span class="gs-play">\u25b6</span></div>' : "") +
+    (m.screenshots && m.screenshots.length ? '<div class="gs-sec">' + t("gsScreens") + '</div><div class="gs-shots">' + m.screenshots.map((s) => '<img src="' + s + '" loading="lazy" alt="" data-shot="' + s + '">').join("") + "</div>" : "") +
     (links.length ? '<div class="gs-sec">' + t("gsFollow") + '</div><div class="gs-links">' + links.map(([k, l]) => '<button class="btn small" data-url="' + m.links[k] + '">' + l + "</button>").join("") + "</div>" : "") +
     '<p class="gs-igdb">Powered by <b>IGDB.com</b></p>';
   body.querySelectorAll("[data-url]").forEach((el) => el.addEventListener("click", () => window.egs.openExternal(el.dataset.url)));
-  const v = body.querySelector(".gs-video");
-  if (v) v.addEventListener("click", () => { v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + v.dataset.yt + '?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>'; });
+  body.querySelectorAll("[data-shot]").forEach((el) => el.addEventListener("click", () => { $("lightbox-img").src = el.dataset.shot.replace("t_screenshot_big", "t_1080p"); $("lightbox").hidden = false; }));
 }
 function closeGameSheet() { $("game-sheet").hidden = true; $("gsheet-body").innerHTML = ""; }
 $("gsheet-close").addEventListener("click", closeGameSheet);
 $("gsheet-scrim").addEventListener("click", closeGameSheet);
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("game-sheet").hidden) closeGameSheet(); });
+$("lightbox").addEventListener("click", () => { $("lightbox").hidden = true; $("lightbox-img").src = ""; });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("lightbox").hidden) { $("lightbox").hidden = true; } else if (!$("game-sheet").hidden) closeGameSheet(); } });
 $("lib-search").addEventListener("input", () => renderLibrary());
 $("lib-sort").addEventListener("change", () => renderLibrary());
 $("lib-plat").addEventListener("change", () => renderLibrary());

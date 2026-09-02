@@ -374,3 +374,8 @@ body { padding-top: 40px; }
 .ad-p { font-size: 12.5px; color: #b8bcc8; margin: 0 0 10px; line-height: 1.5; }
 .ad-foot { display: flex; justify-content: space-between; margin-top: 8px; }
 .ad-foot .linklike { font-size: 11px; color: #7a7a86; background: none; border: 0; cursor: pointer; }
+
+/* ===== Lightbox (screenshots in de app) ===== */
+.lightbox { position: fixed; inset: 0; z-index: 130; background: rgba(8,6,13,.9); display: grid; place-items: center; cursor: zoom-out; }
+.lightbox[hidden] { display: none; }
+.lightbox img { max-width: 92vw; max-height: 88vh; border-radius: 12px; box-shadow: 0 30px 80px rgba(0,0,0,.8); }
