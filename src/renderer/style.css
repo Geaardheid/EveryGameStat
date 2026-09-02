@@ -298,3 +298,28 @@ input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; }
 .sr-play::before { content: "●"; margin-right: 4px; font-size: 8px; }
 
 .tab-ico svg { width: 21px; height: 21px; display: block; }
+
+/* ===== Game-sheet (IGDB-info per game) ===== */
+.gsheet { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; }
+.gsheet[hidden] { display: none; }
+.gsheet-scrim { position: absolute; inset: 0; background: rgba(8,6,13,.72); backdrop-filter: blur(6px); }
+.gsheet-panel { position: relative; width: min(880px, 92vw); max-height: 88vh; overflow: auto; background: var(--surface, #1d1d22); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 24px 26px 18px; box-shadow: 0 30px 70px -30px rgba(0,0,0,.9); }
+.gsheet-close { position: absolute; top: 12px; right: 14px; width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #fff; font-size: 20px; cursor: pointer; }
+.gs-head { display: flex; gap: 18px; align-items: flex-start; }
+.gs-cover { width: 140px; aspect-ratio: 3/4; object-fit: cover; border-radius: 10px; flex: none; box-shadow: 0 10px 24px rgba(0,0,0,.5); }
+.gs-cover.ph { background: rgba(255,255,255,.06); }
+.gs-title h2 { margin: 0 0 4px; font-family: var(--font-display); font-size: 22px; }
+.gs-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 6px; }
+.gs-chips span { font-size: 11px; padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,.14); color: #ddd; }
+.gs-modes { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #9a9aa6; margin-bottom: 12px; }
+.gs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.gs-summary { margin: 18px 0 6px; font-size: 13.5px; line-height: 1.6; color: #d7d7de; }
+.gs-sec { font-family: var(--font-lbl, monospace); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #9a9aa6; margin: 18px 0 8px; }
+.gs-video { position: relative; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; cursor: pointer; background: #000; }
+.gs-video img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+.gs-video iframe { width: 100%; height: 100%; border: 0; }
+.gs-play { position: absolute; inset: 0; display: grid; place-items: center; font-size: 42px; color: #fff; text-shadow: 0 4px 20px rgba(0,0,0,.7); }
+.gs-shots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.gs-shots img { height: 110px; border-radius: 8px; cursor: pointer; flex: none; }
+.gs-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.gs-igdb { margin: 18px 0 0; font-size: 11px; color: #7a7a86; text-align: right; }

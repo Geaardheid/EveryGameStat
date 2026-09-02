@@ -74,6 +74,8 @@ const I18N = {
     libAllPlatforms: "All platforms",
     libLoading: "Loading your library\u2026",
     libCount: (n) => n + " games",
+    gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
+    gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Playing now \u00b7 " + g,
@@ -176,6 +178,8 @@ const I18N = {
     libAllPlatforms: "Alle platforms",
     libLoading: "Bibliotheek laden\u2026",
     libCount: (n) => n + " games",
+    gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
+    gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Speelt nu \u00b7 " + g,
@@ -648,11 +652,50 @@ function renderLibrary() {
       '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
     card.appendChild(coverEl);
     card.appendChild(body);
+    card.addEventListener("click", () => openGameSheet(g));
     frag.appendChild(card);
   });
   if (!rows.length) grid.innerHTML = '<div class="empty">\u2014</div>';
   else grid.appendChild(frag);
 }
+/* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
+const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];
+function ytThumb(id) { return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"; }
+async function openGameSheet(g) {
+  const sheet = $("game-sheet"), body = $("gsheet-body");
+  sheet.hidden = false;
+  body.innerHTML = '<div class="gs-head"><div class="gs-cover ph"></div><div class="gs-title"><h2>' + escT(g.name) + "</h2><p class=\"muted\">" + escT(g.platform) + " \u00b7 " + fmtHours(g.minutes) + " " + t("stHours") + '</p></div></div><p class="muted">' + t("gsLoading") + "</p>";
+  const appid = g.platform === "Steam" && /^\d+$/.test(String(g.external_id || "")) ? String(g.external_id) : null;
+  const r = await window.egs.gameInfo(appid, g.name);
+  if (sheet.hidden) return;
+  const m = r && r.ok && r.found ? r.meta : null;
+  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); return; }
+  const links = SHEET_LINKS.filter(([k]) => m.links && m.links[k]);
+  const owned = g.platform === "Steam";
+  const steamUrl = (m.links && m.links.steam) || (m.steam_appid ? "https://store.steampowered.com/app/" + m.steam_appid : null);
+  body.innerHTML =
+    '<div class="gs-head">' + (m.cover ? '<img class="gs-cover" src="' + m.cover + '" alt="">' : '<div class="gs-cover ph"></div>') +
+      '<div class="gs-title"><h2>' + escT(m.name || g.name) + "</h2>" +
+      '<p class="muted">' + [m.released ? m.released.slice(0, 4) : null, m.rating ? m.rating + "/100" : null, (m.platforms || []).join(" \u00b7 ")].filter(Boolean).join(" \u00b7 ") + "</p>" +
+      '<div class="gs-chips">' + (m.genres || []).map((x) => "<span>" + escT(x) + "</span>").join("") + "</div>" +
+      '<div class="gs-modes">' + (m.modes || []).map((x) => "<span>\u25cf " + escT(x) + "</span>").join("") + "</div>" +
+      '<div class="gs-actions">' +
+        (steamUrl ? '<button class="btn primary" data-url="' + steamUrl + '">' + (owned ? t("gsViewSteam") : t("gsBuySteam")) + "</button>" : "") +
+        (!owned && m.steam_appid ? '<button class="btn" data-url="https://store.steampowered.com/app/' + m.steam_appid + '">' + t("gsWishlist") + "</button>" : "") +
+      "</div></div></div>" +
+    (m.summary ? '<p class="gs-summary">' + escT(m.summary) + "</p>" : "") +
+    (m.videos && m.videos.length ? '<div class="gs-sec">' + t("gsTrailer") + '</div><div class="gs-video" data-yt="' + m.videos[0].id + '"><img src="' + ytThumb(m.videos[0].id) + '" alt=""><span class="gs-play">\u25b6</span></div>' : "") +
+    (m.screenshots && m.screenshots.length ? '<div class="gs-sec">' + t("gsScreens") + '</div><div class="gs-shots">' + m.screenshots.map((s) => '<img src="' + s + '" loading="lazy" alt="" data-url="' + s + '">').join("") + "</div>" : "") +
+    (links.length ? '<div class="gs-sec">' + t("gsFollow") + '</div><div class="gs-links">' + links.map(([k, l]) => '<button class="btn small" data-url="' + m.links[k] + '">' + l + "</button>").join("") + "</div>" : "") +
+    '<p class="gs-igdb">Powered by <b>IGDB.com</b></p>';
+  body.querySelectorAll("[data-url]").forEach((el) => el.addEventListener("click", () => window.egs.openExternal(el.dataset.url)));
+  const v = body.querySelector(".gs-video");
+  if (v) v.addEventListener("click", () => { v.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + v.dataset.yt + '?autoplay=1" allow="autoplay; fullscreen" allowfullscreen></iframe>'; });
+}
+function closeGameSheet() { $("game-sheet").hidden = true; $("gsheet-body").innerHTML = ""; }
+$("gsheet-close").addEventListener("click", closeGameSheet);
+$("gsheet-scrim").addEventListener("click", closeGameSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("game-sheet").hidden) closeGameSheet(); });
 $("lib-search").addEventListener("input", () => renderLibrary());
 $("lib-sort").addEventListener("change", () => renderLibrary());
 $("lib-plat").addEventListener("change", () => renderLibrary());

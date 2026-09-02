@@ -97,16 +97,20 @@ let presenceBeat = null;
 function presenceCurrent() {
   return presenceSrc.rl ? "Rocket League" : presenceSrc.proc;
 }
-let rlScoreLine = null;
+let rlScoreLine = null, rlState = null; /* "menu" | "in_match" — gaat mee naar de site-kaart ("pot bezig") */
 async function presencePush(force) {
   if (!config.get().token) return;
   const cur = presenceCurrent();
   if (config.get().discord_rpc !== false) discord.setActivity(cur, cur === "Rocket League" ? rlScoreLine : null);
   else discord.setActivity(null);
-  if (!force && cur === presenceSent) return;
+  /* state + detail alleen voor Rocket League; de site toont "pot bezig · 2 - 1" */
+  const state = cur === "Rocket League" ? (rlState === "in_match" ? "in_match" : "menu") : null;
+  const detail = cur === "Rocket League" && rlState === "in_match" ? rlScoreLine : null;
+  const sig = cur + "|" + state + "|" + detail;
+  if (!force && sig === presenceSent) return;
   try {
-    const r = await api.social("presence_set", { game: cur });
-    if (r && r.ok) { presenceSent = cur; sendToUI("presence", { game: cur }); }
+    const r = await api.social("presence_set", { game: cur, state, detail });
+    if (r && r.ok) { presenceSent = sig; sendToUI("presence", { game: cur, state, detail }); }
   } catch (e) {}
 }
 function presenceUpdate(src, val) {
@@ -145,8 +149,10 @@ function startAdapters() {
       onStatus: (s) => {
         sendToUI("adapter-status", { id: "rocketleague", ...s });
         if (s.state) {
+          rlState = s.state;
           if (s.state !== "in_match") rlScoreLine = null;
           presenceUpdate("rl", s.state === "connected" || s.state === "in_match");
+          presencePush(true); /* state-wissel (menu ↔ pot) direct doorgeven */
         }
       },
       onScore: (goals, myTeam) => {
@@ -300,8 +306,12 @@ ipcMain.handle("set-setting", (_e, kv) => {
   return { ok: true };
 });
 
+ipcMain.handle("game-info", async (_e, steamAppid, name) => {
+  try { return await api.gameInfo(steamAppid, name); } catch (e) { return { ok: false, error: "offline" }; }
+});
 ipcMain.handle("open-external", (_e, url) => {
-  if (/^https:\/\/(everygamestat\.com|github\.com)\//.test(url)) shell.openExternal(url);
+  /* alleen https; game-links (Steam, YouTube, socials, officiële site) komen uit IGDB */
+  if (/^https:\/\/[^\s"'<>]+$/.test(String(url || ""))) shell.openExternal(url);
 });
 
 /* ---------- Rocket League autosetup: TAStatsAPI.ini schrijven ---------- */

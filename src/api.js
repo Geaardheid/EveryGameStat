@@ -46,8 +46,16 @@ async function social(action, extra) {
 async function profile() {
   return call({ action: "profile", token: token() });
 }
+/* IGDB-metadata via de EGS game-info function (gecachet server-side). */
+async function gameInfo(steam_appid, name) {
+  const r = await fetch(SB_URL + "/functions/v1/game-info", {
+    method: "POST", headers: { "Content-Type": "application/json", "apikey": SB_KEY },
+    body: JSON.stringify({ steam_appid, name })
+  });
+  return r.json().catch(() => ({ ok: false }));
+}
 async function ping() {
   return call({ action: "ping", token: token() });
 }
 
-module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social };
+module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo };

@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld("egs", {
   onPresence: (cb) => ipcRenderer.on("presence", (_e, d) => cb(d)),
   setSetting: (kv) => ipcRenderer.invoke("set-setting", kv),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
+  gameInfo: (steamAppid, name) => ipcRenderer.invoke("game-info", steamAppid, name),
   rlSetupStatus: () => ipcRenderer.invoke("rl-setup-status"),
   rlSetupAuto: () => ipcRenderer.invoke("rl-setup-auto"),
   rlSetupPick: () => ipcRenderer.invoke("rl-setup-pick"),
