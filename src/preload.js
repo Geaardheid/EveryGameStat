@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld("egs", {
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
   gameInfo: (steamAppid, name) => ipcRenderer.invoke("game-info", steamAppid, name),
   webSession: (path) => ipcRenderer.invoke("web-session", path),
+  win: (cmd) => ipcRenderer.invoke("win", cmd),
   rlSetupStatus: () => ipcRenderer.invoke("rl-setup-status"),
   rlSetupAuto: () => ipcRenderer.invoke("rl-setup-auto"),
   rlSetupPick: () => ipcRenderer.invoke("rl-setup-pick"),

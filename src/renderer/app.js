@@ -76,7 +76,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
     libShowApps: "Show apps (Netflix, Spotify …)",
-    tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser",
+    tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -182,7 +182,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
     libShowApps: "Apps tonen (Netflix, Spotify …)",
-    tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser",
+    tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -255,6 +255,7 @@ async function boot() {
   lang = state.lang || "nl";
   applyI18n();
   $("ver").textContent = "v" + state.version;
+  const tv = $("tb-ver"); if (tv) tv.textContent = "v" + state.version;
   updateQueueNote(state.queued);
   if (!state.linked) { show("view-link"); return; }
   fillMain();
@@ -323,6 +324,8 @@ window.egs.onUpdate((d) => {
     $("upd-txt").textContent = t("updReady")(d.version || "?");
     $("upd-restart").hidden = false;
   }
+  const tb = $("tb-upd");
+  if (tb) { if (d.state === "ready") { tb.hidden = false; tb.textContent = "\u2b06 v" + (d.version || "") + " \u2014 " + (lang === "nl" ? "herstart om te installeren" : "restart to install"); tb.onclick = () => window.egs.restartUpdate(); } else if (d.state === "downloading") { tb.hidden = false; tb.textContent = "\u2b07 v" + (d.version || ""); } else tb.hidden = true; }
   const st = $("upd-status");
   if (st) {
     st.textContent = d.state === "checking" ? t("updChecking")
@@ -539,6 +542,8 @@ function updateBadge(n) {
 }
 window.egs.onSocialUnread((d) => updateBadge(d.total || 0));
 window.egs.onPresence((d) => {
+  const tb = $("tb-presence");
+  if (tb) { if (d && d.game) { tb.hidden = false; tb.textContent = "\u25cf " + d.game + (d.state === "in_match" ? " \u00b7 " + (d.detail || (lang === "nl" ? "pot bezig" : "in match")) : ""); } else tb.hidden = true; }
   const box = $("now-playing");
   if (d.game) { box.hidden = false; $("now-playing-txt").textContent = t("nowPlaying")(d.game); }
   else box.hidden = true;
@@ -671,7 +676,6 @@ let webLoadedOnce = false, webAuthed = false;
 async function openWeb(path) {
   show("view-web");
   const wv = $("web-frame");
-  $("web-url").textContent = "everygamestat.com" + path;
   if (!webAuthed) {
     const r = await window.egs.webSession(path);
     if (r && r.ok && r.url) { wv.src = r.url; webAuthed = true; webLoadedOnce = true; return; }
@@ -680,12 +684,11 @@ async function openWeb(path) {
   wv.src = base + (base.includes("?") ? "&" : "?") + "app=1";
   webLoadedOnce = true;
 }
-$("web-back").addEventListener("click", () => { const wv = $("web-frame"); if (wv.canGoBack && wv.canGoBack()) wv.goBack(); });
-$("web-home").addEventListener("click", () => openWeb("/me"));
-$("web-vs").addEventListener("click", () => openWeb("/vs"));
-$("web-ext").addEventListener("click", () => { try { window.egs.openExternal($("web-frame").getURL().replace(/[?&]app=1/, "")); } catch (e) {} });
-$("web-frame").addEventListener("did-navigate-in-page", (e) => { try { $("web-url").textContent = new URL(e.url).host + new URL(e.url).pathname; } catch (_) {} });
-$("web-frame").addEventListener("did-navigate", (e) => { try { $("web-url").textContent = new URL(e.url).host + new URL(e.url).pathname; } catch (_) {} });
+/* Alt+← gaat terug in het sitevenster; verder is de site zelf de navigatie. */
+document.addEventListener("keydown", (e) => { if (e.altKey && e.key === "ArrowLeft") { const wv = $("web-frame"); if (wv && wv.canGoBack && wv.canGoBack()) wv.goBack(); } });
+/* titelbalk */
+document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
+$("btn-quit").addEventListener("click", () => window.egs.win("quit"));
 
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];

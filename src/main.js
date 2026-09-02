@@ -52,6 +52,7 @@ function createWindow() {
     resizable: true,
     fullscreenable: false,
     autoHideMenuBar: true,
+    frame: false,               /* eigen titelbalk (EGS-identiteit) */
     backgroundColor: "#28282D",
     icon: path.join(__dirname, "..", "assets", "icon.png"),
     webPreferences: {
@@ -291,7 +292,17 @@ ipcMain.handle("check-updates", async () => {
 });
 
 ipcMain.handle("restart-update", () => {
-  try { require("electron-updater").autoUpdater.quitAndInstall(); } catch (e) {}
+  quitting = true;
+  /* stil installeren: geen installer-venster, direct herstarten */
+  try { require("electron-updater").autoUpdater.quitAndInstall(true, true); } catch (e) {}
+});
+ipcMain.handle("win", (_e, cmd) => {
+  if (!win) return;
+  if (cmd === "min") win.minimize();
+  else if (cmd === "max") { win.isMaximized() ? win.unmaximize() : win.maximize(); }
+  else if (cmd === "close") win.close();        /* = naar tray */
+  else if (cmd === "quit") { quitting = true; app.quit(); }
+  return win.isMaximized();
 });
 
 ipcMain.handle("recent", async () => {
