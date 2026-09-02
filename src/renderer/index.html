@@ -33,6 +33,7 @@
   <button class="tab active" data-tab="home" title="Home"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg></span><span class="tab-lbl" data-i18n="tabHome"></span></button>
   <button class="tab" data-tab="social" title="Social"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M15.4 14.6c2.6.2 4.6 1.7 5.2 4.4"/></svg></span><span class="tab-lbl" data-i18n="tabSocial"></span><span class="badge" id="soc-badge" hidden></span></button>
   <button class="tab" data-tab="library" title="Library"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></span><span class="tab-lbl" data-i18n="tabLibrary"></span></button>
+  <button class="tab" data-tab="web" title="Stats"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="tab-lbl" data-i18n="tabWeb"></span></button>
   <button class="tab" data-tab="board" title="Leaderboard"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3.5a5 5 0 0 1-10 0Z"/><path d="M7 5H4.5a0 0 0 0 0 0 0c0 2.6 1.1 4.3 2.9 4.9M17 5h2.5c0 2.6-1.1 4.3-2.9 4.9"/><path d="M12 12.5V16"/><path d="M8.5 20h7M10 16h4v4"/></svg></span><span class="tab-lbl" data-i18n="tabBoard"></span></button>
   <div class="rail-spacer"></div>
   <button class="tab" id="btn-settings" title="Settings"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v2.4M12 18.8v2.4M2.8 12h2.4M18.8 12h2.4M5.5 5.5l1.7 1.7M16.8 16.8l1.7 1.7M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7"/></svg></span><span class="tab-lbl" data-i18n="settingsHead"></span></button>
@@ -177,6 +178,16 @@
     <button class="gsheet-close" id="gsheet-close" aria-label="Close">&times;</button>
     <div id="gsheet-body"></div>
   </div>
+</div>
+<div id="view-web" class="view" hidden>
+  <div class="web-bar">
+    <button class="btn small" id="web-back" title="Back">&larr;</button>
+    <button class="btn small" id="web-home" data-i18n="webMyCard"></button>
+    <button class="btn small" id="web-vs">VS</button>
+    <span class="web-url mono dim" id="web-url"></span>
+    <button class="btn small" id="web-ext" data-i18n="webOpen"></button>
+  </div>
+  <webview id="web-frame" partition="persist:egsweb" allowpopups="false"></webview>
 </div>
 <div id="view-library" class="view" hidden>
   <div class="lib-head">

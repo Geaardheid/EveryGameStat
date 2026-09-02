@@ -57,7 +57,8 @@ function createWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webviewTag: true /* ingebouwd sitevenster: de app heeft alles wat de site heeft */
     }
   });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
@@ -306,6 +307,9 @@ ipcMain.handle("set-setting", (_e, kv) => {
   return { ok: true };
 });
 
+ipcMain.handle("web-session", async (_e, path) => {
+  try { return await api.social("web_session", { path }); } catch (e) { return { ok: false, error: "offline" }; }
+});
 ipcMain.handle("game-info", async (_e, steamAppid, name) => {
   try { return await api.gameInfo(steamAppid, name); } catch (e) { return { ok: false, error: "offline" }; }
 });

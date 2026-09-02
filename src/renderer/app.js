@@ -76,6 +76,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
     libShowApps: "Show apps (Netflix, Spotify …)",
+    tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -181,6 +182,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
     libShowApps: "Apps tonen (Netflix, Spotify …)",
+    tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -228,7 +230,7 @@ const $ = (id) => document.getElementById(id);
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
-const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board"];
+const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-web"];
 function show(view) {
   ALL_VIEWS.forEach((v) => { $(v).hidden = v !== view; });
   const tabbed = view !== "view-link" && state && state.linked;
@@ -241,8 +243,9 @@ function show(view) {
   if (view === "view-social") loadSocial();
   if (view === "view-library") loadLibrary();
   if (view === "view-board") loadBoard();
+  if (view === "view-web" && !webLoadedOnce) openWeb("/me");
 }
-const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board" };
+const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board", web: "view-web" };
 document.querySelectorAll("#tabbar .tab[data-tab]").forEach((b) => {
   b.addEventListener("click", () => show(TABMAP[b.dataset.tab]));
 });
@@ -655,12 +658,35 @@ function renderLibrary() {
       '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
     card.appendChild(coverEl);
     card.appendChild(body);
-    card.addEventListener("click", () => openGameSheet(g));
+    card.addEventListener("click", () => openWeb("/me/lib/" + encodeURIComponent(g.platform) + "/" + encodeURIComponent(String(g.external_id))));
     frag.appendChild(card);
   });
   if (!rows.length) grid.innerHTML = '<div class="empty">\u2014</div>';
   else grid.appendChild(frag);
 }
+/* ===== WEB: de echte site, ingelogd, in de app. Eerste keer via een eenmalige
+   magic-link (web_session); daarna houdt de webview-partition de sessie vast.
+   ?app=1 verbergt op de site header/footer/tabbar. ===== */
+let webLoadedOnce = false, webAuthed = false;
+async function openWeb(path) {
+  show("view-web");
+  const wv = $("web-frame");
+  $("web-url").textContent = "everygamestat.com" + path;
+  if (!webAuthed) {
+    const r = await window.egs.webSession(path);
+    if (r && r.ok && r.url) { wv.src = r.url; webAuthed = true; webLoadedOnce = true; return; }
+  }
+  const base = "https://everygamestat.com" + path;
+  wv.src = base + (base.includes("?") ? "&" : "?") + "app=1";
+  webLoadedOnce = true;
+}
+$("web-back").addEventListener("click", () => { const wv = $("web-frame"); if (wv.canGoBack && wv.canGoBack()) wv.goBack(); });
+$("web-home").addEventListener("click", () => openWeb("/me"));
+$("web-vs").addEventListener("click", () => openWeb("/vs"));
+$("web-ext").addEventListener("click", () => { try { window.egs.openExternal($("web-frame").getURL().replace(/[?&]app=1/, "")); } catch (e) {} });
+$("web-frame").addEventListener("did-navigate-in-page", (e) => { try { $("web-url").textContent = new URL(e.url).host + new URL(e.url).pathname; } catch (_) {} });
+$("web-frame").addEventListener("did-navigate", (e) => { try { $("web-url").textContent = new URL(e.url).host + new URL(e.url).pathname; } catch (_) {} });
+
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];
 function ytThumb(id) { return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"; }
