@@ -317,6 +317,7 @@ ipcMain.handle("set-setting", (_e, kv) => {
   return { ok: true };
 });
 
+ipcMain.handle("hubs", async () => { try { return await api.hubs(); } catch (e) { return { ok: false, error: "offline" }; } });
 ipcMain.handle("web-session", async (_e, path) => {
   try { return await api.social("web_session", { path }); } catch (e) { return { ok: false, error: "offline" }; }
 });
@@ -425,7 +426,7 @@ app.whenReady().then(() => {
     const { autoUpdater } = require("electron-updater");
     autoUpdater.autoDownload = true;
     autoUpdater.autoInstallOnAppQuit = true;
-    autoUpdater.on("error", () => {});
+    autoUpdater.on("error", (err) => sendToUI("update", { state: "error", message: String(err && err.message || err).slice(0, 160) }));
     autoUpdater.on("update-available", (info) => sendToUI("update", { state: "downloading", version: info?.version }));
     autoUpdater.on("update-downloaded", (info) => sendToUI("update", { state: "ready", version: info?.version }));
     autoUpdater.on("update-not-available", () => sendToUI("update", { state: "none" }));

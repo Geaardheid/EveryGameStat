@@ -54,8 +54,11 @@ async function gameInfo(steam_appid, name) {
   });
   return r.json().catch(() => ({ ok: false }));
 }
+async function hubs() {
+  return call({ action: "hubs", token: token() });
+}
 async function ping() {
   return call({ action: "ping", token: token() });
 }
 
-module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo };
+module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs };

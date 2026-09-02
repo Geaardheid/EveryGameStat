@@ -77,6 +77,7 @@ const I18N = {
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
     libShowApps: "Show apps (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely", adReport: "Report ad", adRemove: "Remove ads",
+    libFail: "Could not load right now.", tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -183,6 +184,7 @@ const I18N = {
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
     libShowApps: "Apps tonen (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten", adReport: "Meld advertentie", adRemove: "Advertenties verwijderen",
+    libFail: "Kon nu niet laden.", tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -230,7 +232,7 @@ const $ = (id) => document.getElementById(id);
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
-const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board"];
+const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-stats"];
 function show(view) {
   ALL_VIEWS.forEach((v) => { $(v).hidden = v !== view; });
   const tabbed = view !== "view-link" && state && state.linked;
@@ -243,8 +245,9 @@ function show(view) {
   if (view === "view-social") loadSocial();
   if (view === "view-library") loadLibrary();
   if (view === "view-board") loadBoard();
+  if (view === "view-stats") loadStats();
 }
-const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board" };
+const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board", stats: "view-stats" };
 document.querySelectorAll("#tabbar .tab[data-tab]").forEach((b) => {
   b.addEventListener("click", () => show(TABMAP[b.dataset.tab]));
 });
@@ -253,8 +256,10 @@ async function boot() {
   state = await window.egs.getState();
   lang = state.lang || "nl";
   applyI18n();
-  $("ver").textContent = "v" + state.version;
-  const tv = $("tb-ver"); if (tv) tv.textContent = "v" + state.version;
+  /* zichtbaar label: Alpha 0.x — intern telt de updater 1.x door (kan niet omlaag) */
+  const alphaLabel = "Alpha 0." + (String(state.version).split(".")[1] || "0") + "." + (String(state.version).split(".")[2] || "0");
+  $("ver").textContent = alphaLabel;
+  const tv = $("tb-ver"); if (tv) tv.textContent = alphaLabel;
   updateQueueNote(state.queued);
   if (!state.linked) { show("view-link"); return; }
   fillMain();
@@ -332,7 +337,7 @@ window.egs.onUpdate((d) => {
       : d.state === "none" ? t("updNone")
       : d.state === "downloading" ? t("updDownloading")(d.version || "?")
       : d.state === "ready" ? t("updReady")(d.version || "?")
-      : d.state === "error" ? t("updError") : "";
+      : d.state === "error" ? (t("updError") + (d.message ? " \u2014 " + d.message : "")) : "";
   }
 });
 $("upd-restart").addEventListener("click", () => window.egs.restartUpdate());
@@ -714,6 +719,59 @@ function renderLibrary() {
 /* Site-pagina's openen in de browser (het ingebouwde venster is eruit: rendert
    niet betrouwbaar op elke pc). Ingelogd via je eigen browser-sessie. */
 function openWeb(path) { window.egs.openExternal("https://everygamestat.com" + path); }
+/* ===== STATS: ingebouwde game-hubs — dezelfde bron als de site (platform_game_data).
+   Per game: titel, accentkleur, de belangrijkste cijfers; klik = alles. Niets geschat. ===== */
+const HUBS = {
+  royale:   { name: "Clash Royale",   c: "#4DA6FF", pick: ["trophies","best","wins","losses","three_crown","battles"], all: ["trophies","best","level","wins","losses","battles","three_crown","cards","arena","clan","war_wins","donations","star_points","streak","fav_card"] },
+  brawl:    { name: "Brawl Stars",    c: "#FFD400", pick: ["trophies","highest","wins3v3","solo","duo","brawlers"], all: ["trophies","highest","level","wins3v3","solo","duo","brawlers","club"] },
+  clash:    { name: "Clash of Clans", c: "#F2A93B", pick: ["th","trophies","best","war_stars","attacks","defenses"], all: ["th","level","trophies","best","war_stars","attacks","defenses","builder_trophies","donations","capital","clan","role"] },
+  pubg:     { name: "PUBG",           c: "#E8A93B", pick: ["kd","winrate","kills","wins","matches","avg_damage"], all: ["kills","wins","matches","kd","winrate","top10","top10_rate","damage","avg_damage","headshots","headshot_pct","longest_kill","most_kills","assists","revives","dbnos","road_kills","vehicle_destroys"] },
+  fortnite: { name: "Fortnite",       c: "#2EA3FF", pick: ["wins","kd","kills","matches","winrate","level"], all: ["wins","kills","deaths","kd","matches","winrate","top10","top25","kpm","score","minutes","outlived","level"] },
+  dbd:      { name: "Dead by Daylight", c: "#C8302E", pick: ["escapes","total_kills","bloodpoints","prestige","gens","heals"], all: ["bloodpoints","escapes","hatch_escapes","sacrifices","kills","total_kills","gens","heals","unhooks","skillchecks","survivor_pips","killer_pips","prestige","max_level","hits_near_hook"] },
+  lol:      { name: "League of Legends", c: "#C8963C", pick: ["level"], all: ["level"], ranks: true },
+  tft:      { name: "Teamfight Tactics", c: "#7BA7D9", pick: [], all: [], ranks: true },
+  xbox:     { name: "Xbox",           c: "#107C10", pick: ["gamerscore_earned","games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
+  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
+};
+const STAT_LBL = { trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", prestige: "Prestige", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
+const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
+let hubData = [];
+async function loadStats() {
+  const grid = $("stats-grid"); $("stats-detail").hidden = true; grid.hidden = false;
+  grid.innerHTML = '<p class="muted">' + t("libLoading") + "</p>";
+  const r = await window.egs.hubs();
+  if (!r || !r.ok) { grid.innerHTML = '<p class="muted">' + t("libFail") + "</p>"; return; }
+  hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]);
+  $("stats-sub").textContent = hubData.length + " games";
+  if (!hubData.length) { grid.innerHTML = '<p class="muted">' + t("statsEmpty") + "</p>"; return; }
+  grid.innerHTML = "";
+  hubData.forEach((h, i) => {
+    const def = HUBS[h.game_key], d = h.data || {};
+    const card = document.createElement("div"); card.className = "hub-card"; card.style.setProperty("--hc", def.c);
+    const tiles = def.pick.map((k) => '<div class="hub-tile"><b>' + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("");
+    const ranks = def.ranks && Array.isArray(d.ranks) && d.ranks.length ? '<div class="hub-ranks">' + d.ranks.map((rk) => '<span>' + escT((rk.queue || "").replace("RANKED_", "").replace("_", " ")) + ": <b>" + escT((rk.tier || "?") + " " + (rk.rank || "")) + "</b> " + escT(rk.lp != null ? rk.lp + " LP" : "") + "</span>").join("") + "</div>" : "";
+    card.innerHTML = '<div class="hub-head"><h3>' + escT(def.name) + "</h3><span class=\"mono dim\">" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
+      '<div class="hub-tiles">' + tiles + "</div>" + ranks +
+      '<div class="hub-foot"><span class="dim">' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString() : "\u2013") + '</span><button class="btn small">' + t("statsAll") + "</button></div>";
+    card.querySelector("button").addEventListener("click", () => openHub(i));
+    grid.appendChild(card);
+  });
+}
+function openHub(i) {
+  const h = hubData[i], def = HUBS[h.game_key], d = h.data || {};
+  const box = $("stats-detail"); $("stats-grid").hidden = true; box.hidden = false;
+  const tiles = def.all.map((k) => '<div class="hub-tile"><b>' + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("");
+  const modes = d.modes && typeof d.modes === "object" ? '<div class="hub-sub">Per mode</div><div class="hub-modes">' + Object.entries(d.modes).map(([m, v]) => '<div class="hub-mode"><b>' + escT(m) + "</b>" + Object.entries(v).slice(0, 6).map(([k, x]) => "<span>" + escT(STAT_LBL[k] || k) + " " + escT(fmtStat(x)) + "</span>").join("") + "</div>").join("") + "</div>" : "";
+  const list = (arr, title, f) => Array.isArray(arr) && arr.length ? '<div class="hub-sub">' + title + '</div><div class="hub-list">' + arr.map(f).join("") + "</div>" : "";
+  const extras = list(d.top_brawlers, "Top brawlers", (b) => "<span><b>" + escT(b.name) + "</b> " + escT(fmtStat(b.trophies)) + " \uD83C\uDFC6 \u00b7 P" + escT(fmtStat(b.power)) + "</span>")
+    + list(d.deck, "Current deck", (c) => "<span>" + (c.icon ? '<img src="' + encodeURI(c.icon) + '" alt="">' : "") + escT(c.name) + " \u00b7 " + escT(fmtStat(c.elixir)) + "\u26a1</span>")
+    + list(d.ranks, "Ranks", (rk) => "<span>" + escT((rk.queue || "").replace("RANKED_", "").replace("_", " ")) + ": <b>" + escT((rk.tier || "?") + " " + (rk.rank || "")) + "</b> " + escT(rk.lp != null ? rk.lp + " LP" : "") + " \u00b7 " + escT(fmtStat(rk.wins)) + "W/" + escT(fmtStat(rk.losses)) + "L</span>")
+    + list(d.trophy_titles && d.trophy_titles.slice(0, 12), "Trophy cabinet", (tt) => "<span>" + (tt.icon ? '<img src="' + encodeURI(tt.icon) + '" alt="">' : "") + escT(tt.name) + " \u00b7 " + escT(fmtStat(tt.progress)) + "%" + (tt.platinum ? " \uD83C\uDFC6" : "") + "</span>");
+  box.innerHTML = '<div class="hub-detail" style="--hc:' + def.c + '"><div class="hub-head"><button class="btn small" id="hub-back">\u2190 ' + t("statsBack") + "</button><h2>" + escT(def.name) + "</h2><span class=\"mono dim\">" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
+    '<div class="hub-tiles big">' + tiles + "</div>" + modes + extras + "</div>";
+  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-grid").hidden = false; });
+}
+
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];
 function ytThumb(id) { return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"; }
