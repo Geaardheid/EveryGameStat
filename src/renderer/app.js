@@ -75,6 +75,7 @@ const I18N = {
     libLoading: "Loading your library\u2026",
     libCount: (n) => n + " games",
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
+    libShowApps: "Show apps (Netflix, Spotify …)",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -179,6 +180,7 @@ const I18N = {
     libLoading: "Bibliotheek laden\u2026",
     libCount: (n) => n + " games",
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
+    libShowApps: "Apps tonen (Netflix, Spotify …)",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -616,7 +618,8 @@ function renderLibrary() {
   const q = $("lib-search").value.trim().toLowerCase();
   const plat = $("lib-plat").value;
   const sort = $("lib-sort").value;
-  let rows = libData.filter((g) => (!q || String(g.name || "").toLowerCase().includes(q)) && (!plat || g.platform === plat));
+  const showApps = $("lib-apps").checked;
+  let rows = libData.filter((g) => (showApps || !g.software) && (!q || String(g.name || "").toLowerCase().includes(q)) && (!plat || g.platform === plat));
   if (sort === "name") rows.sort((a, b) => String(a.name).localeCompare(String(b.name)));
   else if (sort === "ach") rows.sort((a, b) => (b.ach_e || 0) - (a.ach_e || 0));
   else if (sort === "last") rows.sort((a, b) => String(b.last || "").localeCompare(String(a.last || "")));
@@ -699,6 +702,7 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("game
 $("lib-search").addEventListener("input", () => renderLibrary());
 $("lib-sort").addEventListener("change", () => renderLibrary());
 $("lib-plat").addEventListener("change", () => renderLibrary());
+$("lib-apps").addEventListener("change", () => renderLibrary());
 
 /* ===== LEADERBOARD ===== */
 let boardData = null, boardMetric = "hours";
