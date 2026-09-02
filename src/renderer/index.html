@@ -11,6 +11,13 @@
 <header id="titlebar">
   <div class="tb-brand"><img src="../../assets/icon.png" alt=""><span>EVERY <b>GAME</b> STAT</span><em id="tb-ver"></em></div>
   <div class="tb-mid"><span id="tb-presence" class="tb-chip" hidden></span><span id="tb-upd" class="tb-chip gold" hidden></span></div>
+  <div class="tb-actions">
+    <button id="tb-search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
+    <button id="tb-social" title="Social"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="tb-badge" id="tb-soc-badge" hidden></span></button>
+    <button id="tb-bell" title="Notifications"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><span class="tb-badge" id="tb-bell-badge" hidden></span></button>
+    <button id="tb-me" title="My card"><img id="tb-avatar" src="../../assets/icon.png" alt=""></button>
+  </div>
+  <div id="tb-notif" class="tb-pop" hidden></div>
   <div class="tb-win">
     <button data-win="min" title="Minimaliseren"><svg viewBox="0 0 10 10"><path d="M1 5h8" stroke="currentColor" stroke-width="1.2"/></svg></button>
     <button data-win="max" title="Maximaliseren"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
@@ -58,6 +65,11 @@
   </div>
   <div class="home-grid">
     <aside class="pcol">
+      <div class="ad-box" id="ad-box">
+        <button class="ad-x" id="ad-x" title="Close">&times;</button>
+        <div class="ad-slot" id="ad-slot"></div>
+        <div class="ad-foot"><button class="linklike" id="ad-report" data-i18n="adReport"></button><button class="linklike" id="ad-remove" data-i18n="adRemove"></button></div>
+      </div>
       <div class="panel pcard-panel">
         <div class="pcard-top">
           <img src="../../assets/icon.png" class="avatar" id="who-avatar" alt="">

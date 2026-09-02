@@ -353,3 +353,24 @@ body { padding-top: 40px; }
 #tabbar { top: 40px; }
 .view { top: 40px; }
 #web-frame { display: flex; flex: 1; width: 100%; height: 100%; min-height: 0; }
+
+/* ===== Titelbalk-acties ===== */
+.tb-actions { -webkit-app-region: no-drag; display: flex; align-items: center; gap: 2px; margin-right: 6px; border-right: 1px solid rgba(255,255,255,.08); padding-right: 8px; height: 100%; }
+.tb-actions button { position: relative; width: 36px; height: 30px; border: 0; border-radius: 8px; background: transparent; color: #cfd2da; cursor: pointer; display: grid; place-items: center; }
+.tb-actions button:hover { background: rgba(255,255,255,.08); color: #fff; }
+.tb-actions svg { width: 17px; height: 17px; }
+.tb-actions img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(242,176,61,.6); }
+.tb-badge { position: absolute; top: 3px; right: 5px; min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px; background: #F2B03D; color: #1B1607; font: 700 9.5px var(--font-lbl, monospace); display: grid; place-items: center; }
+.tb-pop { position: fixed; top: 44px; right: 150px; width: 300px; z-index: 120; background: #1d1d22; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 6px; box-shadow: 0 20px 50px -20px rgba(0,0,0,.9); }
+.tb-pop[hidden] { display: none; }
+.tb-notif-i { display: block; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; color: #eee; font: 500 13px var(--font-body, sans-serif); cursor: pointer; }
+.tb-notif-i:hover { background: rgba(255,255,255,.06); }
+.tb-notif-empty { padding: 14px; text-align: center; color: #7a7a86; font-size: 12.5px; }
+/* ===== Advertentievak ===== */
+.ad-box { position: relative; margin-bottom: 14px; padding: 16px 16px 10px; border-radius: 14px; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.08); }
+.ad-box[hidden] { display: none; }
+.ad-x { position: absolute; top: 8px; right: 10px; width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.35); color: #ddd; cursor: pointer; }
+.ad-h { font-family: var(--font-display); font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.ad-p { font-size: 12.5px; color: #b8bcc8; margin: 0 0 10px; line-height: 1.5; }
+.ad-foot { display: flex; justify-content: space-between; margin-top: 8px; }
+.ad-foot .linklike { font-size: 11px; color: #7a7a86; background: none; border: 0; cursor: pointer; }

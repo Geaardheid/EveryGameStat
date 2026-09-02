@@ -76,7 +76,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
     libShowApps: "Show apps (Netflix, Spotify …)",
-    tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely",
+    tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely", adReport: "Report ad", adRemove: "Remove ads",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -182,7 +182,7 @@ const I18N = {
     libCount: (n) => n + " games",
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
     libShowApps: "Apps tonen (Netflix, Spotify …)",
-    tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten",
+    tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten", adReport: "Meld advertentie", adRemove: "Advertenties verwijderen",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -293,7 +293,7 @@ function renderProfile() {
   if (!p) return;
   if (p.name) $("who-name").textContent = p.name;
   if (p.slug) state.slug = p.slug;
-  if (p.avatar) $("who-avatar").src = p.avatar;
+  if (p.avatar) { $("who-avatar").src = p.avatar; const ta = $("tb-avatar"); if (ta) ta.src = p.avatar; }
   $("st-games").textContent = fmtNum(p.totals.games);
   $("st-hours").textContent = fmtHours(p.totals.minutes);
   $("st-ach").textContent = fmtNum(p.totals.ach_earned);
@@ -324,6 +324,7 @@ window.egs.onUpdate((d) => {
     $("upd-txt").textContent = t("updReady")(d.version || "?");
     $("upd-restart").hidden = false;
   }
+  notif.update = d.state === "ready" ? (d.version || "?") : null; refreshBell();
   const tb = $("tb-upd");
   if (tb) { if (d.state === "ready") { tb.hidden = false; tb.textContent = "\u2b06 v" + (d.version || "") + " \u2014 " + (lang === "nl" ? "herstart om te installeren" : "restart to install"); tb.onclick = () => window.egs.restartUpdate(); } else if (d.state === "downloading") { tb.hidden = false; tb.textContent = "\u2b07 v" + (d.version || ""); } else tb.hidden = true; }
   const st = $("upd-status");
@@ -539,7 +540,49 @@ function updateBadge(n) {
   const b = $("soc-badge");
   b.hidden = !n;
   b.textContent = n > 99 ? "99+" : n;
+  const tb = $("tb-soc-badge"); if (tb) { tb.hidden = !n; tb.textContent = n > 99 ? "99+" : n; }
+  refreshBell();
 }
+/* ===== Meldingen (titelbalk): ongelezen social + update + laatste duel-potje ===== */
+const notif = { social: 0, update: null, duel: null };
+function refreshBell() {
+  notif.social = Number(($("soc-badge") && !$("soc-badge").hidden && $("soc-badge").textContent) || 0);
+  const n = (notif.social ? 1 : 0) + (notif.update ? 1 : 0) + (notif.duel ? 1 : 0);
+  const b = $("tb-bell-badge"); if (b) { b.hidden = !n; b.textContent = n; }
+}
+function renderNotif() {
+  const box = $("tb-notif"); const items = [];
+  if (notif.update) items.push({ t: "\u2b06 " + t("updReady")(notif.update), go: () => window.egs.restartUpdate() });
+  if (notif.social) items.push({ t: "\uD83D\uDCAC " + notif.social + " " + (lang === "nl" ? "ongelezen" : "unread"), go: () => show("view-social") });
+  if (notif.duel) items.push({ t: "\u2694\uFE0F " + notif.duel, go: () => openWeb("/vs") });
+  box.innerHTML = items.length ? items.map((it, i) => '<button class="tb-notif-i" data-i="' + i + '">' + escT(it.t) + "</button>").join("")
+    : '<div class="tb-notif-empty">' + (lang === "nl" ? "Geen meldingen" : "No notifications") + "</div>";
+  box.querySelectorAll(".tb-notif-i").forEach((el) => el.addEventListener("click", () => { box.hidden = true; items[+el.dataset.i].go(); }));
+}
+$("tb-bell").addEventListener("click", () => { const box = $("tb-notif"); box.hidden = !box.hidden; if (!box.hidden) renderNotif(); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#tb-bell") && !e.target.closest("#tb-notif")) $("tb-notif").hidden = true; });
+$("tb-search").addEventListener("click", () => openWeb("/tracker"));
+$("tb-social").addEventListener("click", () => show("view-social"));
+$("tb-me").addEventListener("click", () => openWeb("/me"));
+
+/* ===== Advertentievak: house ads tot een app-netwerk (Playwire/Venatus) je toelaat.
+   AdSense mag niet in desktop-apps — daarom hier geen AdSense. ===== */
+const HOUSE_ADS = [
+  { h: "EGS Premium", p: (l) => l === "nl" ? "Geen advertenties, extra kaartstijlen, vroege features. Binnenkort via Patreon." : "No ads, extra card styles, early features. Coming via Patreon.", cta: (l) => l === "nl" ? "Meer info" : "Learn more", url: "https://everygamestat.com/#premium" },
+  { h: "EGS Discord", p: (l) => l === "nl" ? "Bugs melden, features stemmen, duels vinden." : "Report bugs, vote on features, find duels.", cta: "Discord", url: "https://discord.gg/6pMx68veeN" },
+  { h: (l) => l === "nl" ? "Daag een vriend uit" : "Challenge a friend", p: (l) => l === "nl" ? "Best of 5 in Clash Royale of Brawl Stars \u2014 automatisch geteld." : "Best of 5 in Clash Royale or Brawl Stars \u2014 counted automatically.", cta: (l) => l === "nl" ? "Naar Duels" : "Go to Duels", web: "/vs" }
+];
+function renderAd() {
+  const slot = $("ad-slot"); if (!slot) return;
+  const a = HOUSE_ADS[Math.floor(Math.random() * HOUSE_ADS.length)];
+  const f = (v) => typeof v === "function" ? v(lang) : v;
+  slot.innerHTML = '<div class="ad-h">' + escT(f(a.h)) + '</div><p class="ad-p">' + escT(f(a.p)) + '</p><button class="btn gold sm" id="ad-cta">' + escT(f(a.cta)) + "</button>";
+  $("ad-cta").addEventListener("click", () => a.web ? openWeb(a.web) : window.egs.openExternal(a.url));
+}
+$("ad-x").addEventListener("click", () => { $("ad-box").hidden = true; });
+$("ad-report").addEventListener("click", () => window.egs.openExternal("https://discord.gg/6pMx68veeN"));
+$("ad-remove").addEventListener("click", () => window.egs.openExternal("https://everygamestat.com/#premium"));
+renderAd();
 window.egs.onSocialUnread((d) => updateBadge(d.total || 0));
 window.egs.onPresence((d) => {
   const tb = $("tb-presence");
