@@ -798,17 +798,29 @@ async function openGameSheet(g) {
         (!owned && m.steam_appid ? '<button class="btn" data-url="https://store.steampowered.com/app/' + m.steam_appid + '">' + t("gsWishlist") + "</button>" : "") +
       "</div></div></div>" +
     (m.summary ? '<p class="gs-summary">' + escT(m.summary) + "</p>" : "") +
-    (m.videos && m.videos.length ? '<div class="gs-sec">' + t("gsTrailer") + '</div><div class="gs-video" data-url="https://www.youtube.com/watch?v=' + m.videos[0].id + '"><img src="' + ytThumb(m.videos[0].id) + '" alt=""><span class="gs-play">\u25b6</span></div>' : "") +
+    (m.videos && m.videos.length ? '<div class="gs-sec">' + t("gsTrailer") + '</div><div class="gs-videos">' + m.videos.slice(0, 3).map((v) => '<div class="gs-video" data-yt="' + v.id + '"><img src="' + ytThumb(v.id) + '" alt=""><span class="gs-play">\u25b6</span></div>').join("") + "</div>" : "") +
     (m.screenshots && m.screenshots.length ? '<div class="gs-sec">' + t("gsScreens") + '</div><div class="gs-shots">' + m.screenshots.map((s) => '<img src="' + s + '" loading="lazy" alt="" data-shot="' + s + '">').join("") + "</div>" : "") +
     (links.length ? '<div class="gs-sec">' + t("gsFollow") + '</div><div class="gs-links">' + links.map(([k, l]) => '<button class="btn small" data-url="' + m.links[k] + '">' + l + "</button>").join("") + "</div>" : "") +
     '<p class="gs-igdb">Powered by <b>IGDB.com</b></p>';
   body.querySelectorAll("[data-url]").forEach((el) => el.addEventListener("click", () => window.egs.openExternal(el.dataset.url)));
-  body.querySelectorAll("[data-shot]").forEach((el) => el.addEventListener("click", () => { $("lightbox-img").src = el.dataset.shot.replace("t_screenshot_big", "t_1080p"); $("lightbox").hidden = false; }));
+  const shots = (m.screenshots || []).map((s) => s.replace("t_screenshot_big", "t_1080p"));
+  body.querySelectorAll("[data-shot]").forEach((el, i) => el.addEventListener("click", () => lbOpen(shots, i)));
+  body.querySelectorAll("[data-yt]").forEach((el) => el.addEventListener("click", () => window.egs.openVideo(el.dataset.yt)));
 }
 function closeGameSheet() { $("game-sheet").hidden = true; $("gsheet-body").innerHTML = ""; }
 $("gsheet-close").addEventListener("click", closeGameSheet);
 $("gsheet-scrim").addEventListener("click", closeGameSheet);
-$("lightbox").addEventListener("click", () => { $("lightbox").hidden = true; $("lightbox-img").src = ""; });
+/* ===== Lightbox met slider ===== */
+let lbItems = [], lbIdx = 0;
+function lbOpen(items, i) { lbItems = items; lbIdx = i || 0; $("lightbox").hidden = false; lbRender(); }
+function lbClose() { $("lightbox").hidden = true; $("lightbox-img").src = ""; }
+function lbStep(d) { if (lbItems.length < 2) return; lbIdx = (lbIdx + d + lbItems.length) % lbItems.length; lbRender(); }
+function lbRender() { $("lightbox-img").src = lbItems[lbIdx]; $("lb-count").textContent = lbItems.length > 1 ? (lbIdx + 1) + " / " + lbItems.length : ""; }
+$("lightbox").addEventListener("click", (e) => { if (e.target.id === "lightbox" || e.target.id === "lightbox-img") lbClose(); });
+$("lb-x").addEventListener("click", lbClose);
+$("lb-prev").addEventListener("click", (e) => { e.stopPropagation(); lbStep(-1); });
+$("lb-next").addEventListener("click", (e) => { e.stopPropagation(); lbStep(1); });
+document.addEventListener("keydown", (e) => { if ($("lightbox").hidden) return; if (e.key === "ArrowLeft") lbStep(-1); if (e.key === "ArrowRight") lbStep(1); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("lightbox").hidden) { $("lightbox").hidden = true; } else if (!$("game-sheet").hidden) closeGameSheet(); } });
 $("lib-search").addEventListener("input", () => renderLibrary());
 $("lib-sort").addEventListener("change", () => renderLibrary());

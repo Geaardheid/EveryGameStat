@@ -317,6 +317,17 @@ ipcMain.handle("set-setting", (_e, kv) => {
   return { ok: true };
 });
 
+/* Trailer in een eigen app-venster: https-oorsprong, dus YouTube staat het toe
+   (behalve als de uitgever embedden uitzet — dan toont YouTube dat zelf). */
+let videoWin = null;
+ipcMain.handle("open-video", (_e, id) => {
+  if (!/^[A-Za-z0-9_-]{6,20}$/.test(String(id || ""))) return;
+  if (videoWin && !videoWin.isDestroyed()) videoWin.close();
+  videoWin = new BrowserWindow({ width: 960, height: 560, parent: win, backgroundColor: "#000", autoHideMenuBar: true, title: "Trailer \u00b7 EGS Companion",
+    webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+  videoWin.loadURL("https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0");
+  videoWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+});
 ipcMain.handle("hubs", async () => { try { return await api.hubs(); } catch (e) { return { ok: false, error: "offline" }; } });
 ipcMain.handle("web-session", async (_e, path) => {
   try { return await api.social("web_session", { path }); } catch (e) { return { ok: false, error: "offline" }; }
