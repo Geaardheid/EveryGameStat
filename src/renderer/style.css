@@ -463,3 +463,5 @@ body { padding-top: 52px; } #tabbar { top: 52px; } .view { top: 52px; }
 .tbq-row { display: grid !important; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; }
 .tbq-row img, .tbq-row i { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; background: rgba(255,255,255,.06); display: block; }
 .tbq-row small { color: #7a7a86; font-size: 11px; }
+
+#cod-status { display: block; white-space: pre-wrap; line-height: 1.5; max-width: 560px; }

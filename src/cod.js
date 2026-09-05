@@ -8,7 +8,9 @@ const api = require("./api");
 const config = require("./config");
 
 const PART = "persist:cod";
-const BASE = "https://pd.callofduty.com/api/papi-client";
+/* Activision verhuist paden zonder aankondiging; we proberen de bekende prefixes. */
+const BASES = ["https://pd.callofduty.com/api/papi-client", "https://pd.callofduty.com/api/x/v1"];
+let BASE = BASES[0];
 const TITLES = [
   { key: "bo6", modes: ["mp", "wz"] }, { key: "mw3", modes: ["mp", "wz"] }, { key: "mw2", modes: ["mp", "wz"] },
   { key: "mw", modes: ["mp", "wz"] }, { key: "cw", modes: ["mp"] }, { key: "vg", modes: ["mp"] }
@@ -31,12 +33,12 @@ async function identities() {
   if (!Array.isArray(ids) || !ids.length) throw new Error("no identities (" + JSON.stringify(d).slice(0, 120) + ")");
   return ids.map((x) => ({ platform: x.provider || x.platform, username: x.username }));
 }
-async function get(path) {
-  const r = await ses().fetch(BASE + path, { headers: { "Accept": "application/json, text/plain, */*", "Referer": "https://www.callofduty.com/" } });
+async function get(path, base) {
+  const r = await ses().fetch((base || BASE) + path, { headers: { "Accept": "application/json, text/plain, */*", "Referer": "https://www.callofduty.com/" } });
   const text = await r.text();
   let d = null; try { d = JSON.parse(text); } catch (e) {}
   if (!d) throw new Error("http " + r.status + (r.status === 403 ? " (blocked)" : " (no json)"));
-  if (d.status !== "success") throw new Error(String(d?.data?.message || d?.message || JSON.stringify(d).slice(0, 140)));
+  if (d.status !== "success") throw new Error(String(d?.data?.message || (d.errorCode ? d.errorCode : "") || d?.message || JSON.stringify(d).slice(0, 100)));
   return d.data;
 }
 function shape(mode, d) {
@@ -75,10 +77,14 @@ async function sync() {
     const platform = uno.platform, gamer = encodeURIComponent(uno.username);
     const titles = [], errors = [];
     for (const t of TITLES) for (const mode of t.modes) {
-      try { const d = await get(`/stats/cod/v1/title/${t.key}/platform/${platform}/gamer/${gamer}/profile/type/${mode}`); titles.push({ title: t.key, mode, stats: shape(mode, d) }); }
-      catch (e) { errors.push(t.key + "/" + mode + ": " + e.message); }
+      let done = false;
+      for (const base of BASES) {
+        try { const d = await get(`/stats/cod/v1/title/${t.key}/platform/${platform}/gamer/${gamer}/profile/type/${mode}`, base); titles.push({ title: t.key, mode, stats: shape(mode, d) }); BASE = base; done = true; break; }
+        catch (e) { errors.push(t.key + "/" + mode + (base.includes("/x/") ? "[x]" : "") + ": " + e.message); }
+      }
+      if (done) continue;
     }
-    if (!titles.length) throw new Error(errors[0] || "no_data");
+    if (!titles.length) throw new Error(errors.map((x) => x.slice(0, 60)).join(" \u00b7 ").slice(0, 400));
     const r = await api.social("cod_ingest", { profile: { username: uno.username, platform, titles } });
     if (!r || !r.ok) throw new Error(r && r.error || "ingest_failed");
     config.set({ cod_linked: true, cod_last: Date.now(), cod_user: uno.username });
