@@ -327,7 +327,8 @@ ipcMain.handle("open-video", (_e, id) => {
   if (videoWin && !videoWin.isDestroyed()) videoWin.close();
   videoWin = new BrowserWindow({ width: 960, height: 560, parent: win, backgroundColor: "#000", autoHideMenuBar: true, title: "Trailer \u00b7 EGS Companion",
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
-  videoWin.loadURL("https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0");
+  /* YouTube eist een Referer bij embeds (anders "Fout 153") */
+  videoWin.loadURL("https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0", { httpReferrer: "https://everygamestat.com/" });
   videoWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 });
 ipcMain.handle("public-profile", async (_e, slug) => { try { return await api.publicProfile(slug); } catch (e) { return null; } });
