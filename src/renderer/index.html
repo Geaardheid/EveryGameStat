@@ -10,7 +10,8 @@
 <!-- ============ TITELBALK (eigen identiteit; sleepbaar) ============ -->
 <header id="titlebar">
   <div class="tb-brand"><img src="../../assets/icon.png" alt=""><span>EVERY <b>GAME</b> STAT</span><em id="tb-ver"></em></div>
-  <div class="tb-mid"><span id="tb-presence" class="tb-chip" hidden></span><span id="tb-upd" class="tb-chip gold" hidden></span></div>
+  <div class="tb-now" id="tb-now"><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
+  <div class="tb-mid"><span id="tb-upd" class="tb-chip gold" hidden></span></div>
   <div class="tb-actions">
     <button id="tb-search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
     <button id="tb-social" title="Social"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg><span class="tb-badge" id="tb-soc-badge" hidden></span></button>
@@ -18,6 +19,12 @@
     <button id="tb-me" title="My card"><img id="tb-avatar" src="../../assets/icon.png" alt=""></button>
   </div>
   <div id="tb-notif" class="tb-pop" hidden></div>
+  <div id="tb-me-pop" class="tb-pop tb-me-pop" hidden>
+    <div class="tbm-head"><img id="tbm-av" src="../../assets/icon.png" alt=""><div><b id="tbm-name"></b><small id="tbm-slug" class="mono dim"></small></div></div>
+    <button class="tb-notif-i" id="tbm-profile"></button>
+    <button class="tb-notif-i" id="tbm-card"></button>
+    <button class="tb-notif-i" id="tbm-settings"></button>
+  </div>
   <div class="tb-win">
     <button data-win="min" title="Minimaliseren"><svg viewBox="0 0 10 10"><path d="M1 5h8" stroke="currentColor" stroke-width="1.2"/></svg></button>
     <button data-win="max" title="Maximaliseren"><svg viewBox="0 0 10 10"><rect x="1.5" y="1.5" width="7" height="7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
@@ -206,6 +213,22 @@
   <div class="gsheet-panel">
     <button class="gsheet-close" id="gsheet-close" aria-label="Close">&times;</button>
     <div id="gsheet-body"></div>
+  </div>
+</div>
+<div id="view-profile" class="view" hidden>
+  <div class="prof-wrap">
+    <div class="prof-banner" id="prof-banner"></div>
+    <div class="prof-head">
+      <img class="prof-av" id="prof-av" src="../../assets/icon.png" alt="">
+      <div class="prof-id"><h1 id="prof-name"></h1><div class="mono dim" id="prof-sub"></div><div id="prof-live" class="prof-live" hidden></div></div>
+      <div class="prof-actions" id="prof-actions"></div>
+    </div>
+    <div class="prof-stats" id="prof-stats"></div>
+    <div class="prof-cols">
+      <div class="panel"><div class="panel-h" id="prof-top-h"></div><div id="prof-top"></div></div>
+      <div class="panel"><div class="panel-h" id="prof-plat-h"></div><div id="prof-plat" class="chips"></div></div>
+    </div>
+    <p class="muted" id="prof-note"></p>
   </div>
 </div>
 <div id="view-stats" class="view" hidden>

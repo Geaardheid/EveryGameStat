@@ -54,6 +54,11 @@ async function gameInfo(steam_appid, name) {
   });
   return r.json().catch(() => ({ ok: false }));
 }
+/* Publieke kaart van een andere speler (of jezelf) — zelfde bron als everygamestat.com/p/<slug>. */
+async function publicProfile(slug) {
+  const r = await fetch(SB_URL + "/rest/v1/rpc/get_public_profile", { method: "POST", headers: { "Content-Type": "application/json", "apikey": SB_KEY }, body: JSON.stringify({ p_slug: String(slug || "").toLowerCase() }) });
+  return r.json().catch(() => null);
+}
 async function hubs() {
   return call({ action: "hubs", token: token() });
 }
@@ -61,4 +66,4 @@ async function ping() {
   return call({ action: "ping", token: token() });
 }
 
-module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs };
+module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs, publicProfile };

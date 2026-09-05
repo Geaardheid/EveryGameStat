@@ -330,6 +330,7 @@ ipcMain.handle("open-video", (_e, id) => {
   videoWin.loadURL("https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0");
   videoWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 });
+ipcMain.handle("public-profile", async (_e, slug) => { try { return await api.publicProfile(slug); } catch (e) { return null; } });
 ipcMain.handle("cod", async (_e, cmd) => {
   if (cmd === "login") { cod.login(win); return { ok: true }; }
   if (cmd === "sync") return await cod.sync();

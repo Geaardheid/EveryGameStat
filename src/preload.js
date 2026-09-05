@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld("egs", {
   webSession: (path) => ipcRenderer.invoke("web-session", path),
   hubs: () => ipcRenderer.invoke("hubs"),
   cod: (cmd) => ipcRenderer.invoke("cod", cmd),
+  publicProfile: (slug) => ipcRenderer.invoke("public-profile", slug),
   onCod: (cb) => ipcRenderer.on("cod", (_e, d) => cb(d)),
   openVideo: (id) => ipcRenderer.invoke("open-video", id),
   win: (cmd) => ipcRenderer.invoke("win", cmd),

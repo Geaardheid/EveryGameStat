@@ -78,6 +78,10 @@ const I18N = {
     libShowApps: "Show apps (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely", adReport: "Report ad", adRemove: "Remove ads",
     libFail: "Could not load right now.",
+    tbIdle: "Not playing", tbNow: "Now playing", tbInMatch: "in a match",
+    menuProfile: "My profile", menuCard: "Open my card on the web", menuSettings: "Settings",
+    profTop: "Top games", profPlat: "Linked platforms", profGames: "games", profHours: "hours", profAch: "achievements", profPlats: "platforms",
+    profSince: (d) => "Member since " + d, profPrivate: "This player's card is private.", profNotFound: "No player with this name.", profAddFriend: "Add friend", profMessage: "Message", profOwn: "This is you.", profSearchPh: "Find a player\u2026",
     codTag: "unofficial", codHelp: "Activision has no public API. The Companion logs in with YOUR Activision account in a window of its own and reads your own profile from your PC \u2014 nothing is shared with EGS except the numbers. Formally against Activision's terms; used by every CoD tracker for years, opt-in.",
     codLogin: "Log in with Activision", codSync: "Refresh now", codUnlink: "Unlink", codNone: "Not linked.", codLinked: (u) => "Linked as " + u, codSyncing: "Fetching your profile\u2026", codOk: (n) => n + " stat sets sent to EGS.", codErr: (m) => "Failed: " + m, tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
@@ -187,6 +191,10 @@ const I18N = {
     libShowApps: "Apps tonen (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten", adReport: "Meld advertentie", adRemove: "Advertenties verwijderen",
     libFail: "Kon nu niet laden.",
+    tbIdle: "Niets bezig", tbNow: "Speelt nu", tbInMatch: "pot bezig",
+    menuProfile: "Mijn profiel", menuCard: "Mijn kaart op het web", menuSettings: "Instellingen",
+    profTop: "Topgames", profPlat: "Gekoppelde platforms", profGames: "games", profHours: "uur", profAch: "achievements", profPlats: "platforms",
+    profSince: (d) => "Lid sinds " + d, profPrivate: "De kaart van deze speler is priv\u00e9.", profNotFound: "Geen speler met deze naam.", profAddFriend: "Vriend toevoegen", profMessage: "Bericht", profOwn: "Dit ben jij.", profSearchPh: "Zoek een speler\u2026",
     codTag: "onofficieel", codHelp: "Activision heeft geen publieke API. De Companion logt in een eigen venster in met JOUW Activision-account en leest je eigen profiel vanaf je pc \u2014 alleen de cijfers gaan naar EGS. Formeel tegen Activisions voorwaarden; elke CoD-tracker doet dit al jaren, opt-in.",
     codLogin: "Inloggen bij Activision", codSync: "Nu verversen", codUnlink: "Ontkoppelen", codNone: "Niet gekoppeld.", codLinked: (u) => "Gekoppeld als " + u, codSyncing: "Profiel ophalen\u2026", codOk: (n) => n + " statsets naar EGS gestuurd.", codErr: (m) => "Mislukt: " + m, tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
@@ -236,7 +244,7 @@ const $ = (id) => document.getElementById(id);
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
-const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-stats"];
+const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-stats", "view-profile"];
 function show(view) {
   ALL_VIEWS.forEach((v) => { $(v).hidden = v !== view; });
   const tabbed = view !== "view-link" && state && state.linked;
@@ -531,7 +539,7 @@ $("soc-search").addEventListener("input", () => {
     const r = await window.egs.social("social_search", { q });
     box.innerHTML = "";
     (r.results || []).forEach((p) => {
-      const row = socRow({ name: p.name, slug: p.slug, avatar: p.avatar }, '<button class="btn gold sm">' + t("socAdd") + "</button>");
+      const row = socRow({ name: p.name, slug: p.slug, avatar: p.avatar }, '<button class="btn gold sm">' + t("socAdd") + "</button>", () => openProfileFromSlug(p.slug));
       row.querySelector("button").addEventListener("click", async (e) => {
         const btn = e.target;
         const res = await window.egs.social("friend_request", { target: p.user_id });
@@ -592,8 +600,7 @@ $("ad-remove").addEventListener("click", () => window.egs.openExternal("https://
 renderAd();
 window.egs.onSocialUnread((d) => updateBadge(d.total || 0));
 window.egs.onPresence((d) => {
-  const tb = $("tb-presence");
-  if (tb) { if (d && d.game) { tb.hidden = false; tb.textContent = "\u25cf " + d.game + (d.state === "in_match" ? " \u00b7 " + (d.detail || (lang === "nl" ? "pot bezig" : "in match")) : ""); } else tb.hidden = true; }
+  tbNow(d);
   const box = $("now-playing");
   if (d.game) { box.hidden = false; $("now-playing-txt").textContent = t("nowPlaying")(d.game); }
   else box.hidden = true;
@@ -779,6 +786,47 @@ function openHub(i) {
   $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-grid").hidden = false; });
 }
 
+/* ===== Profielmenu (avatar rechtsboven) ===== */
+$("tb-me").addEventListener("click", (e) => { e.stopPropagation(); const p = $("tb-me-pop"); p.hidden = !p.hidden; $("tb-notif").hidden = true;
+  $("tbm-name").textContent = (profileData && profileData.name) || state.display_name || "EGS"; $("tbm-slug").textContent = state.slug ? "everygamestat.com/p/" + state.slug : "";
+  $("tbm-av").src = (profileData && profileData.avatar) || "../../assets/icon.png";
+  $("tbm-profile").textContent = t("menuProfile"); $("tbm-card").textContent = t("menuCard"); $("tbm-settings").textContent = t("menuSettings"); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#tb-me-pop") && !e.target.closest("#tb-me")) $("tb-me-pop").hidden = true; });
+$("tbm-profile").addEventListener("click", () => { $("tb-me-pop").hidden = true; openProfile(state.slug, true); });
+$("tbm-card").addEventListener("click", () => { $("tb-me-pop").hidden = true; window.egs.openExternal("https://everygamestat.com/" + (state.slug ? "p/" + state.slug : "me")); });
+$("tbm-settings").addEventListener("click", () => { $("tb-me-pop").hidden = true; show("view-settings"); });
+
+/* ===== Profielpagina: jezelf of een andere speler (publieke kaart, zelfde RPC als de site) ===== */
+let profSlug = null;
+async function openProfile(slug, isMe) {
+  show("view-profile"); profSlug = slug || null;
+  $("prof-name").textContent = isMe ? ((profileData && profileData.name) || state.display_name || "") : "\u2026";
+  $("prof-sub").textContent = slug ? "/p/" + slug : ""; $("prof-stats").innerHTML = ""; $("prof-top").innerHTML = ""; $("prof-plat").innerHTML = ""; $("prof-actions").innerHTML = ""; $("prof-note").textContent = ""; $("prof-live").hidden = true;
+  $("prof-top-h").textContent = t("profTop"); $("prof-plat-h").textContent = t("profPlat");
+  if (!slug) { $("prof-note").textContent = isMe ? t("profPrivate") : t("profNotFound"); return; }
+  const d = await window.egs.publicProfile(slug);
+  if (!d) { $("prof-note").textContent = isMe ? t("profPrivate") : t("profNotFound"); return; }
+  $("prof-name").textContent = d.name || slug; $("prof-av").src = d.avatar || "../../assets/icon.png";
+  $("prof-sub").textContent = "/p/" + slug + (d.since ? " \u00b7 " + t("profSince")(new Date(d.since).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { month: "long", year: "numeric" })) : "");
+  const tile = (v, l) => '<div class="prof-tile"><b>' + v + "</b><span>" + l + "</span></div>";
+  $("prof-stats").innerHTML = tile(fmtNum(d.games || 0), t("profGames")) + tile(fmtNum(d.hours || 0), t("profHours")) + tile(d.ach_pct != null ? d.ach_pct + "%" : "\u2013", t("profAch")) + tile((d.platforms || []).length, t("profPlats"));
+  $("prof-top").innerHTML = (d.top_games || []).map((g, i) => '<div class="tg"><span class="tg-n">' + (i + 1) + "</span>" + (g.icon_url || g.cover_url ? '<img src="' + encodeURI(g.icon_url || g.cover_url) + '" alt="">' : "") + '<div class="tg-t"><b>' + escT(g.name) + "</b><span>" + escT(g.platform) + "</span></div><span class=\"tg-h\">" + fmtHours(g.playtime_minutes) + " " + t("stHours") + "</span></div>").join("") || '<p class="muted">\u2013</p>';
+  $("prof-plat").innerHTML = (d.platforms_detail || []).map((p) => '<span class="chip"><b>' + escT(p.platform) + "</b> \u00b7 " + fmtNum(p.hours || 0) + " " + t("stHours") + "</span>").join("");
+  if (d.activity && d.activity.length) { const a = d.activity[0]; $("prof-live").hidden = false; $("prof-live").textContent = "\u25cf " + escT(a.game) + " \u00b7 " + a.matches + " " + (lang === "nl" ? "potten vandaag" : "matches today"); }
+  $("prof-actions").innerHTML = isMe ? '<span class="muted">' + t("profOwn") + "</span>" : '<button class="btn gold sm" id="prof-add">' + t("profAddFriend") + "</button>";
+  const add = $("prof-add"); if (add) add.addEventListener("click", async () => { await window.egs.social("friend_request", { target: slug }); add.textContent = "\u2713"; add.disabled = true; });
+}
+/* zoekresultaten in Social → profiel openen */
+window.openProfileFromSlug = (slug) => openProfile(slug, slug && state.slug === slug);
+
+/* ===== Titelbalk: "nu bezig" links (Medal-stijl) ===== */
+function tbNow(d) {
+  const g = d && d.game;
+  $("tb-now-lbl").textContent = g ? t("tbNow") : t("tbIdle");
+  $("tb-now-game").textContent = g ? g + (d.state === "in_match" ? " \u00b7 " + (d.detail || t("tbInMatch")) : "") : "";
+  $("tb-now").classList.toggle("on", !!g);
+}
+tbNow(null);
 /* ===== Titelbalk + afsluiten (hersteld; was in 0.2.2 per ongeluk mee verwijderd) ===== */
 document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
 $("btn-quit").addEventListener("click", () => window.egs.win("quit"));
