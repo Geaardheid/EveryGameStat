@@ -145,7 +145,7 @@ function startAdapters() {
     adapters.procwatch = pw;
     pw.start();
   }
-  cod.start((s) => sendToUI("cod", s));
+  /* cod.start() uit: Activision sloot de endpoints (sep 2026) */
   if (!adapters.rocketleague) {
     const a = new RocketLeagueAdapter({
       playerName: () => config.get().rl_name || config.get().display_name || "",
