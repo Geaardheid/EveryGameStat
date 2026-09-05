@@ -260,10 +260,9 @@ async function boot() {
   state = await window.egs.getState();
   lang = state.lang || "nl";
   applyI18n();
-  /* zichtbaar label: Alpha 0.x — intern telt de updater 1.x door (kan niet omlaag) */
-  const alphaLabel = "Alpha 0." + (String(state.version).split(".")[1] || "0") + "." + (String(state.version).split(".")[2] || "0");
-  $("ver").textContent = alphaLabel;
-  const tv = $("tb-ver"); if (tv) tv.textContent = alphaLabel;
+  /* echte semver: MAJOR.MINOR.PATCH (0.x = alpha) */
+  $("ver").textContent = "v" + state.version + " \u00b7 alpha";
+  const tv = $("tb-ver"); if (tv) tv.textContent = "v" + state.version + " \u00b7 alpha";
   updateQueueNote(state.queued);
   if (!state.linked) { show("view-link"); return; }
   fillMain();

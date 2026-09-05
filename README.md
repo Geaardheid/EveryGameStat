@@ -46,7 +46,17 @@ npm start        # run in dev
 npm run dist     # build the Windows installer locally
 ```
 
-Releases are built by GitHub Actions: push a tag like `v0.2.1` and the workflow builds and publishes the installer automatically.
+## Releases & versioning
+
+Semantic versioning, `MAJOR.MINOR.PATCH`:
+
+- **MAJOR** — breaking changes (data format, link protocol, minimum site version)
+- **MINOR** — new features (a new adapter, a new tab, a new integration)
+- **PATCH** — bug fixes and small polish, no new features
+
+`0.x.y` = alpha. The first public alpha is **0.1.0**. A tag `vX.Y.Z` on `main` triggers GitHub Actions, which builds the Windows installer and publishes the release; installed apps update themselves via `latest.yml`.
+
+> Note: versions 1.0.1–1.4.0 were an earlier numbering. Installs on those cannot auto-update to 0.x (the updater never downgrades) — install 0.1.0 manually once.
 
 ## License
 
