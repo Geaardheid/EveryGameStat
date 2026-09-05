@@ -62,11 +62,20 @@ function gameIcon(game) {
  * @param {string|null} game  naam van de game, of null (niets aan het spelen)
  * @param {string|null} state extra regel, bijv. "1 - 4" of "23 min this session"
  */
+/* Geen game bezig: tóch een nette EGS-presence i.p.v. Discords eigen "?"-detectie
+   van EGS Companion.exe (die grijze vraagteken-kaart). App-icoon via externe URL. */
+const APP_ICON = "https://everygamestat.com/app-icon.png";
 function setActivity(game, state) {
   if (!game) {
-    lastActivity = null;
     startTs = null;
-    push(null);
+    lastActivity = {
+      details: "EGS Companion",
+      state: "Tracking stats \u00b7 everygamestat.com",
+      largeImageKey: APP_ICON,
+      largeImageText: "EveryGameStat",
+      buttons: [{ label: "EveryGameStat", url: "https://everygamestat.com" }]
+    };
+    ensureClient().then(() => push(lastActivity));
     return;
   }
   if (!startTs) startTs = Date.now();
@@ -76,7 +85,7 @@ function setActivity(game, state) {
     startTimestamp: startTs,
     largeImageKey: gameIcon(game),
     largeImageText: game,
-    smallImageKey: EGS_LOGO,
+    smallImageKey: APP_ICON,
     smallImageText: "EGS Companion",
     buttons: [{ label: "EveryGameStat", url: "https://everygamestat.com" }]
   };
