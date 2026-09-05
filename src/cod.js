@@ -28,7 +28,7 @@ async function identities() {
   const r = await ses().fetch("https://profile.callofduty.com/cod/userInfo/" + cv, { headers: { "Accept": "application/json, text/plain, */*", "Referer": "https://profile.callofduty.com/" } });
   const text = await r.text();
   const m = text.match(/\{[\s\S]*\}/); let d = null; try { d = JSON.parse(m ? m[0] : text); } catch (e) {}
-  if (!d) throw new Error("userInfo http " + r.status);
+  if (!d) throw new Error("userInfo http " + r.status + " " + text.replace(/\s+/g, " ").slice(0, 80));
   const ids = d?.userInfo?.identities || d?.identities || [];
   if (!Array.isArray(ids) || !ids.length) throw new Error("no identities (" + JSON.stringify(d).slice(0, 120) + ")");
   return ids.map((x) => ({ platform: x.provider || x.platform, username: x.username }));
@@ -70,7 +70,11 @@ async function sync() {
   try {
     let list = [];
     try { list = await identities(); }
-    catch (e1) { const ids = await get("/crm/cod/v2/identities"); list = Array.isArray(ids?.titleIdentities) ? ids.titleIdentities : []; if (!list.length) throw e1; }
+    catch (e1) {
+      try { const ids = await get("/crm/cod/v2/identities"); list = Array.isArray(ids?.titleIdentities) ? ids.titleIdentities : []; }
+      catch (e2) { throw new Error("identity: userInfo \u2192 " + e1.message.slice(0, 120) + " | identities \u2192 " + e2.message.slice(0, 80)); }
+      if (!list.length) throw new Error("identity: userInfo \u2192 " + e1.message.slice(0, 120) + " | identities: leeg");
+    }
     /* uno = Activision-ID, werkt voor alle titels; anders eerste identity */
     const uno = list.find((x) => x.platform === "uno") || list[0];
     if (!uno) throw new Error("no_identity");
