@@ -77,7 +77,9 @@ const I18N = {
     gsLoading: "Loading game info\u2026", gsNoKey: "Game info is not configured yet.", gsNotFound: "No extra info found for this game.",
     libShowApps: "Show apps (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "My card", webOpen: "Open in browser", setQuit: "Quit app completely", adReport: "Report ad", adRemove: "Remove ads",
-    libFail: "Could not load right now.", tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
+    libFail: "Could not load right now.",
+    codTag: "unofficial", codHelp: "Activision has no public API. The Companion logs in with YOUR Activision account in a window of its own and reads your own profile from your PC \u2014 nothing is shared with EGS except the numbers. Formally against Activision's terms; used by every CoD tracker for years, opt-in.",
+    codLogin: "Log in with Activision", codSync: "Refresh now", codUnlink: "Unlink", codNone: "Not linked.", codLinked: (u) => "Linked as " + u, codSyncing: "Fetching your profile\u2026", codOk: (n) => n + " stat sets sent to EGS.", codErr: (m) => "Failed: " + m, tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -184,7 +186,9 @@ const I18N = {
     gsLoading: "Game-info laden\u2026", gsNoKey: "Game-info is nog niet ingesteld.", gsNotFound: "Geen extra info gevonden voor deze game.",
     libShowApps: "Apps tonen (Netflix, Spotify …)",
     tabWeb: "Stats", webMyCard: "Mijn kaart", webOpen: "Open in browser", setQuit: "App volledig afsluiten", adReport: "Meld advertentie", adRemove: "Advertenties verwijderen",
-    libFail: "Kon nu niet laden.", tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
+    libFail: "Kon nu niet laden.",
+    codTag: "onofficieel", codHelp: "Activision heeft geen publieke API. De Companion logt in een eigen venster in met JOUW Activision-account en leest je eigen profiel vanaf je pc \u2014 alleen de cijfers gaan naar EGS. Formeel tegen Activisions voorwaarden; elke CoD-tracker doet dit al jaren, opt-in.",
+    codLogin: "Inloggen bij Activision", codSync: "Nu verversen", codUnlink: "Ontkoppelen", codNone: "Niet gekoppeld.", codLinked: (u) => "Gekoppeld als " + u, codSyncing: "Profiel ophalen\u2026", codOk: (n) => n + " statsets naar EGS gestuurd.", codErr: (m) => "Mislukt: " + m, tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -731,9 +735,10 @@ const HUBS = {
   lol:      { name: "League of Legends", c: "#C8963C", pick: ["level"], all: ["level"], ranks: true },
   tft:      { name: "Teamfight Tactics", c: "#7BA7D9", pick: [], all: [], ranks: true },
   xbox:     { name: "Xbox",           c: "#107C10", pick: ["gamerscore_earned","games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
-  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
+  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] },
+  cod:      { name: "Call of Duty",   c: "#C9C29A", pick: ["kd","wins","kills","level","spm","time_played_min"], all: ["level","prestige","kd","kills","deaths","wins","losses","matches","spm","accuracy","headshots","best_killstreak","time_played_min","top10","top5","downs","revives"] }
 };
-const STAT_LBL = { trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", prestige: "Prestige", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
+const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", prestige: "Prestige", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
 let hubData = [];
 async function loadStats() {
@@ -741,7 +746,10 @@ async function loadStats() {
   grid.innerHTML = '<p class="muted">' + t("libLoading") + "</p>";
   const r = await window.egs.hubs();
   if (!r || !r.ok) { grid.innerHTML = '<p class="muted">' + t("libFail") + "</p>"; return; }
-  hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]);
+  hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]).map((h) => {
+    if (h.game_key === "cod" && h.data && Array.isArray(h.data.titles)) { const mp = h.data.titles.find((x) => x.mode === "mp") || h.data.titles[0]; return { ...h, data: { ...(mp ? mp.stats : {}), name: h.data.name, titles: h.data.titles } }; }
+    return h;
+  });
   $("stats-sub").textContent = hubData.length + " games";
   if (!hubData.length) { grid.innerHTML = '<p class="muted">' + t("statsEmpty") + "</p>"; return; }
   grid.innerHTML = "";
@@ -771,6 +779,26 @@ function openHub(i) {
     '<div class="hub-tiles big">' + tiles + "</div>" + modes + extras + "</div>";
   $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-grid").hidden = false; });
 }
+
+/* ===== Titelbalk + afsluiten (hersteld; was in 0.2.2 per ongeluk mee verwijderd) ===== */
+document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
+$("btn-quit").addEventListener("click", () => window.egs.win("quit"));
+/* ===== Call of Duty (Activision-login in de app) ===== */
+function codRender(s) {
+  const st = $("cod-status"); if (!st) return;
+  const linked = s.state === "linked" || s.state === "ok" || s.state === "syncing" || !!s.linked;
+  $("cod-login").hidden = linked; $("cod-sync").hidden = !linked; $("cod-unlink").hidden = !linked;
+  if (s.state === "syncing") st.textContent = t("codSyncing");
+  else if (s.state === "ok") st.textContent = t("codLinked")(s.user || "?") + " \u00b7 " + t("codOk")(s.titles || 0);
+  else if (s.state === "error") st.textContent = t("codErr")(s.message || "?");
+  else if (linked) st.textContent = t("codLinked")(s.user || "?");
+  else st.textContent = t("codNone");
+}
+$("cod-login").addEventListener("click", () => window.egs.cod("login"));
+$("cod-sync").addEventListener("click", async () => { codRender({ state: "syncing" }); const r = await window.egs.cod("sync"); if (!r.ok) codRender({ state: "error", message: r.error }); });
+$("cod-unlink").addEventListener("click", async () => { await window.egs.cod("unlink"); codRender({ state: "unlinked" }); });
+window.egs.onCod(codRender);
+window.egs.cod("status").then((s) => codRender(s || {}));
 
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];

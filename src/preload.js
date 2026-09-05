@@ -24,6 +24,8 @@ contextBridge.exposeInMainWorld("egs", {
   gameInfo: (steamAppid, name) => ipcRenderer.invoke("game-info", steamAppid, name),
   webSession: (path) => ipcRenderer.invoke("web-session", path),
   hubs: () => ipcRenderer.invoke("hubs"),
+  cod: (cmd) => ipcRenderer.invoke("cod", cmd),
+  onCod: (cb) => ipcRenderer.on("cod", (_e, d) => cb(d)),
   openVideo: (id) => ipcRenderer.invoke("open-video", id),
   win: (cmd) => ipcRenderer.invoke("win", cmd),
   rlSetupStatus: () => ipcRenderer.invoke("rl-setup-status"),

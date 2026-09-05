@@ -8,6 +8,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const config = require("./config");
+const cod = require("./cod");
 const api = require("./api");
 const RocketLeagueAdapter = require("./adapters/rocketleague");
 const ProcessWatchAdapter = require("./adapters/processwatch");
@@ -144,6 +145,7 @@ function startAdapters() {
     adapters.procwatch = pw;
     pw.start();
   }
+  cod.start((s) => sendToUI("cod", s));
   if (!adapters.rocketleague) {
     const a = new RocketLeagueAdapter({
       playerName: () => config.get().rl_name || config.get().display_name || "",
@@ -327,6 +329,12 @@ ipcMain.handle("open-video", (_e, id) => {
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
   videoWin.loadURL("https://www.youtube-nocookie.com/embed/" + id + "?autoplay=1&rel=0");
   videoWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
+});
+ipcMain.handle("cod", async (_e, cmd) => {
+  if (cmd === "login") { cod.login(win); return { ok: true }; }
+  if (cmd === "sync") return await cod.sync();
+  if (cmd === "unlink") { await cod.unlink(); return { ok: true }; }
+  return await cod.status();
 });
 ipcMain.handle("hubs", async () => { try { return await api.hubs(); } catch (e) { return { ok: false, error: "offline" }; } });
 ipcMain.handle("web-session", async (_e, path) => {
