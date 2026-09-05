@@ -455,3 +455,11 @@ body { padding-top: 52px; } #tabbar { top: 52px; } .view { top: 52px; }
 .cod-tag { font: 600 9.5px var(--font-lbl, monospace); letter-spacing: .12em; text-transform: uppercase; color: #C9C29A; border: 1px solid rgba(201,194,154,.45); border-radius: 999px; padding: 3px 8px; }
 .cod-row { margin: 10px 0; font-size: 12.5px; }
 .cod-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.tb-q-pop { right: 250px; width: 340px; padding: 8px; }
+#tb-q { width: 100%; box-sizing: border-box; margin-bottom: 6px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.12); border-radius: 9px; color: #fff; padding: 9px 11px; font: 13.5px var(--font-body, sans-serif); outline: none; }
+#tb-q:focus { border-color: #F2B03D; }
+.tbq-h { font: 500 9.5px var(--font-lbl, monospace); letter-spacing: .14em; text-transform: uppercase; color: #7a7a86; padding: 8px 10px 4px; }
+.tbq-row { display: grid !important; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; }
+.tbq-row img, .tbq-row i { width: 30px; height: 30px; border-radius: 7px; object-fit: cover; background: rgba(255,255,255,.06); display: block; }
+.tbq-row small { color: #7a7a86; font-size: 11px; }

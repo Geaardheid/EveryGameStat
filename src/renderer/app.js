@@ -576,9 +576,7 @@ function renderNotif() {
 }
 $("tb-bell").addEventListener("click", () => { const box = $("tb-notif"); box.hidden = !box.hidden; if (!box.hidden) renderNotif(); });
 document.addEventListener("click", (e) => { if (!e.target.closest("#tb-bell") && !e.target.closest("#tb-notif")) $("tb-notif").hidden = true; });
-$("tb-search").addEventListener("click", () => openWeb("/tracker"));
 $("tb-social").addEventListener("click", () => show("view-social"));
-$("tb-me").addEventListener("click", () => openWeb("/me"));
 
 /* ===== Advertentievak: house ads tot een app-netwerk (Playwire/Venatus) je toelaat.
    AdSense mag niet in desktop-apps — daarom hier geen AdSense. ===== */
@@ -668,6 +666,7 @@ $("chat-input").addEventListener("keydown", (e) => { if (e.key === "Enter") send
 /* ===== BIBLIOTHEEK ===== */
 let libData = null;
 async function loadLibrary() {
+  if (loadLibrary.busy) return; loadLibrary.busy = true; setTimeout(() => { loadLibrary.busy = false; }, 5000);
   if (!libData) {
     const r = await window.egs.social("library");
     if (!r || !r.ok) { $("lib-grid").innerHTML = '<div class="empty">' + t("errOffline") + "</div>"; return; }
@@ -786,6 +785,25 @@ function openHub(i) {
   $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-grid").hidden = false; });
 }
 
+/* ===== Zoeken (titelbalk): spelers op EGS + games in je bibliotheek, alles in de app ===== */
+let qTimer = null;
+$("tb-search").addEventListener("click", (e) => { e.stopPropagation(); const p = $("tb-q-pop"); p.hidden = !p.hidden; $("tb-notif").hidden = true; $("tb-me-pop").hidden = true; if (!p.hidden) { $("tb-q").focus(); tbQuery(); } });
+document.addEventListener("click", (e) => { if (!e.target.closest("#tb-q-pop") && !e.target.closest("#tb-search")) $("tb-q-pop").hidden = true; });
+$("tb-q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(tbQuery, 250); });
+$("tb-q").addEventListener("keydown", (e) => { if (e.key === "Escape") $("tb-q-pop").hidden = true; });
+async function tbQuery() {
+  const q = $("tb-q").value.trim().toLowerCase(), box = $("tb-q-res");
+  const games = (libData || []).filter((g) => !g.software && q && String(g.name || "").toLowerCase().includes(q)).slice(0, 5);
+  let people = [];
+  if (q.length >= 2) { try { const r = await window.egs.social("social_search", { q }); people = (r && r.results) || []; } catch (e) {} }
+  if (!q) { box.innerHTML = '<div class="tb-notif-empty">' + t("profSearchPh") + "</div>"; return; }
+  box.innerHTML =
+    (people.length ? '<div class="tbq-h">' + (lang === "nl" ? "Spelers" : "Players") + "</div>" + people.slice(0, 5).map((p, i) => '<button class="tb-notif-i tbq-row" data-p="' + i + '"><img src="' + (p.avatar ? encodeURI(p.avatar) : "../../assets/icon.png") + '" alt=""><span>' + escT(p.name || "?") + "</span><small>/p/" + escT(p.slug || "") + "</small></button>").join("") : "") +
+    (games.length ? '<div class="tbq-h">' + (lang === "nl" ? "Jouw games" : "Your games") + "</div>" + games.map((g, i) => '<button class="tb-notif-i tbq-row" data-g="' + i + '">' + (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : "<i></i>") + "<span>" + escT(g.name) + "</span><small>" + escT(g.platform) + "</small></button>").join("") : "") +
+    (!people.length && !games.length ? '<div class="tb-notif-empty">\u2013</div>' : "");
+  box.querySelectorAll("[data-p]").forEach((el) => el.addEventListener("click", () => { $("tb-q-pop").hidden = true; openProfileFromSlug(people[+el.dataset.p].slug); }));
+  box.querySelectorAll("[data-g]").forEach((el) => el.addEventListener("click", () => { $("tb-q-pop").hidden = true; openGameSheet(games[+el.dataset.g]); }));
+}
 /* ===== Profielmenu (avatar rechtsboven) ===== */
 $("tb-me").addEventListener("click", (e) => { e.stopPropagation(); const p = $("tb-me-pop"); p.hidden = !p.hidden; $("tb-notif").hidden = true;
   $("tbm-name").textContent = (profileData && profileData.name) || state.display_name || "EGS"; $("tbm-slug").textContent = state.slug ? "everygamestat.com/p/" + state.slug : "";
@@ -827,6 +845,8 @@ function tbNow(d) {
   $("tb-now").classList.toggle("on", !!g);
 }
 tbNow(null);
+try { $("tb-q").placeholder = t("profSearchPh"); } catch (e) {}
+setTimeout(() => { try { if (state && state.linked && !libData) loadLibrary(); } catch (e) {} }, 4000);
 /* ===== Titelbalk + afsluiten (hersteld; was in 0.2.2 per ongeluk mee verwijderd) ===== */
 document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
 $("btn-quit").addEventListener("click", () => window.egs.win("quit"));

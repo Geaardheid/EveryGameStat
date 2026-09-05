@@ -1,7 +1,7 @@
 {
   "name": "egs-companion",
   "productName": "EGS Companion",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "EveryGameStat desktop companion \u2014 brings local, per-session game stats to your EGS card. Read-only: local logs and local APIs only, never game memory.",
   "author": "EveryGameStat",
   "license": "MIT",
