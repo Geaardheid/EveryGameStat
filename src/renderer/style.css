@@ -448,3 +448,10 @@ body { padding-top: 52px; } #tabbar { top: 52px; } .view { top: 52px; }
 #view-profile .tg-t { flex: 1; min-width: 0; } #view-profile .tg-t b { display: block; font-size: 13.5px; } #view-profile .tg-t span { font-size: 10.5px; color: #9a9aa6; }
 #view-profile .tg-h { font: 700 12.5px var(--font-num, monospace); color: #F2B03D; }
 #prof-note { padding: 20px 26px; }
+
+/* ===== Call of Duty-koppeling ===== */
+.cod-card { border: 1px solid rgba(201,194,154,.3); }
+.cod-h { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-family: var(--font-display); font-size: 15px; }
+.cod-tag { font: 600 9.5px var(--font-lbl, monospace); letter-spacing: .12em; text-transform: uppercase; color: #C9C29A; border: 1px solid rgba(201,194,154,.45); border-radius: 999px; padding: 3px 8px; }
+.cod-row { margin: 10px 0; font-size: 12.5px; }
+.cod-btns { display: flex; gap: 8px; flex-wrap: wrap; }

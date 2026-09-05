@@ -16,15 +16,27 @@ const TITLES = [
 let loginWin = null, timer = null, onStatus = () => {};
 
 function ses() { return session.fromPartition(PART); }
-async function hasCookie() {
-  try { const c = await ses().cookies.get({ name: "ACT_SSO_COOKIE" }); return c.some((x) => x.domain.includes("callofduty.com") && x.value); } catch (e) { return false; }
+async function cookieValue() {
+  try { const c = await ses().cookies.get({ name: "ACT_SSO_COOKIE" }); const hit = c.find((x) => x.domain.includes("callofduty.com") && x.value); return hit ? hit.value : null; } catch (e) { return null; }
+}
+async function hasCookie() { return !!(await cookieValue()); }
+/* Identiteit zoals de community-wrappers: userInfo op profile.callofduty.com met de cookie in het pad. */
+async function identities() {
+  const cv = await cookieValue(); if (!cv) throw new Error("not_logged_in");
+  const r = await ses().fetch("https://profile.callofduty.com/cod/userInfo/" + cv, { headers: { "Accept": "application/json, text/plain, */*", "Referer": "https://profile.callofduty.com/" } });
+  const text = await r.text();
+  const m = text.match(/\{[\s\S]*\}/); let d = null; try { d = JSON.parse(m ? m[0] : text); } catch (e) {}
+  if (!d) throw new Error("userInfo http " + r.status);
+  const ids = d?.userInfo?.identities || d?.identities || [];
+  if (!Array.isArray(ids) || !ids.length) throw new Error("no identities (" + JSON.stringify(d).slice(0, 120) + ")");
+  return ids.map((x) => ({ platform: x.provider || x.platform, username: x.username }));
 }
 async function get(path) {
   const r = await ses().fetch(BASE + path, { headers: { "Accept": "application/json, text/plain, */*", "Referer": "https://www.callofduty.com/" } });
   const text = await r.text();
   let d = null; try { d = JSON.parse(text); } catch (e) {}
   if (!d) throw new Error("http " + r.status + (r.status === 403 ? " (blocked)" : " (no json)"));
-  if (d.status !== "success") throw new Error(String(d?.data?.message || d?.message || "activision"));
+  if (d.status !== "success") throw new Error(String(d?.data?.message || d?.message || JSON.stringify(d).slice(0, 140)));
   return d.data;
 }
 function shape(mode, d) {
@@ -54,8 +66,9 @@ async function sync() {
   if (!(await hasCookie())) { onStatus({ state: "unlinked" }); return { ok: false, error: "not_logged_in" }; }
   onStatus({ state: "syncing" });
   try {
-    const ids = await get("/crm/cod/v2/identities");
-    const list = Array.isArray(ids?.titleIdentities) ? ids.titleIdentities : [];
+    let list = [];
+    try { list = await identities(); }
+    catch (e1) { const ids = await get("/crm/cod/v2/identities"); list = Array.isArray(ids?.titleIdentities) ? ids.titleIdentities : []; if (!list.length) throw e1; }
     /* uno = Activision-ID, werkt voor alle titels; anders eerste identity */
     const uno = list.find((x) => x.platform === "uno") || list[0];
     if (!uno) throw new Error("no_identity");
