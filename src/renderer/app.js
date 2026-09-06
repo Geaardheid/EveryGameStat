@@ -838,12 +838,19 @@ async function openProfile(slug, isMe) {
 window.openProfileFromSlug = (slug) => openProfile(slug, slug && state.slug === slug);
 
 /* ===== Titelbalk: "nu bezig" links (Medal-stijl) ===== */
+let tbNowSince = null, tbNowTimer = null, tbNowLast = null;
 function tbNow(d) {
   const g = d && d.game;
-  $("tb-now-lbl").textContent = g ? t("tbNow") : t("tbIdle");
-  $("tb-now-game").textContent = g ? g + (d.state === "in_match" ? " \u00b7 " + (d.detail || t("tbInMatch")) : "") : "";
+  if (g && !tbNowSince) tbNowSince = Date.now(); if (!g) tbNowSince = null;
+  tbNowLast = d;
+  $("tb-now-lbl").textContent = g ? t("tbNow") + (tbNowSince ? " \u00b7 " + tbElapsed() : "") : t("tbIdle");
+  const sess = (g && sessTotals && sessTotals.n) ? " \u00b7 " + sessTotals.w + "W/" + sessTotals.l + "L" : "";
+  $("tb-now-game").textContent = g ? g + (d.state === "in_match" ? " \u00b7 " + (d.detail || t("tbInMatch")) : "") + sess : "";
   $("tb-now").classList.toggle("on", !!g);
+  clearInterval(tbNowTimer); if (g) tbNowTimer = setInterval(() => tbNow(tbNowLast), 30000);
 }
+function tbElapsed() { const m = Math.floor((Date.now() - tbNowSince) / 60000); return m < 60 ? m + " min" : Math.floor(m / 60) + "u " + (m % 60) + "m"; }
+let sessTotals = null;
 tbNow(null);
 try { $("tb-q").placeholder = t("profSearchPh"); } catch (e) {}
 setTimeout(() => { try { if (state && state.linked && !libData) loadLibrary(); } catch (e) {} }, 4000);
@@ -1046,6 +1053,7 @@ function renderSession() {
   const w = session.filter((x) => x.result === "win").length;
   const l = session.filter((x) => x.result === "loss").length;
   $("session-line").textContent = t("sessionLine")(session.length, w, l);
+  sessTotals = { n: session.length, w, l }; if (tbNowLast && tbNowLast.game) tbNow(tbNowLast);
 }
 window.egs.onMatch((d) => { session.push(d.match); renderSession(); });
 
