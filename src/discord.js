@@ -41,17 +41,13 @@ async function push(act) {
 /* Per-game art op je Discord-profiel. Discord proxyt externe https-afbeeldingen,
    dus we kunnen rechtstreeks Steam-covers en eigen bucket-art gebruiken.
    Onbekende games vallen terug op het EGS-logo. */
-const EGS_LOGO = "https://everygamestat.com/logo-egs.png";
-const ART = "https://wcsgosrevyyafnerrhge.supabase.co/storage/v1/object/public/art/";
-const steamCover = (appid) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg";
+/* Discord Rich Presence (lokaal) toont GEEN externe URL's — alleen asset-namen die in het
+   Developer Portal onder Rich Presence → Art Assets zijn geüpload. Sleutels hieronder
+   moeten daar bestaan; ontbreekt er een, dan valt Discord terug op 'egs'. */
+const EGS_LOGO = "egs";
 const GAME_ICONS = {
-  "rocket league": steamCover(252950),
-  "dead by daylight": steamCover(381210),
-  "rust": steamCover(252490),
-  "pubg": steamCover(578080),
-  "fortnite": ART + "icon-fortnite.png",
-  "league of legends": ART + "icon-lol.png",
-  "mw4 beta": EGS_LOGO /* geen vrije art beschikbaar */
+  "rocket league": "rocketleague", "dead by daylight": "dbd", "rust": "rust", "pubg": "pubg",
+  "fortnite": "fortnite", "league of legends": "lol", "call of duty": "cod", "minecraft": "minecraft", "fivem": "fivem"
 };
 function gameIcon(game) {
   return GAME_ICONS[String(game || "").toLowerCase()] || EGS_LOGO;
@@ -64,7 +60,7 @@ function gameIcon(game) {
  */
 /* Geen game bezig: tóch een nette EGS-presence i.p.v. Discords eigen "?"-detectie
    van EGS Companion.exe (die grijze vraagteken-kaart). App-icoon via externe URL. */
-const APP_ICON = "https://everygamestat.com/app-icon.png";
+const APP_ICON = "egs";
 function setActivity(game, state) {
   if (!game) {
     startTs = null;
