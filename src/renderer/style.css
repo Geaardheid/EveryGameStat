@@ -465,3 +465,14 @@ body { padding-top: 52px; } #tabbar { top: 52px; } .view { top: 52px; }
 .tbq-row small { color: #7a7a86; font-size: 11px; }
 
 #cod-status { display: block; white-space: pre-wrap; line-height: 1.5; max-width: 560px; }
+
+/* ===== 0.3: balken strakker (zelfde vlak, dunne lijnen, iconen prominenter) ===== */
+#titlebar { background: #131316; border-bottom: 1px solid rgba(255,255,255,.06); }
+#tabbar { background: #131316; border-right: 1px solid rgba(255,255,255,.06); gap: 2px; padding-top: 10px; }
+#tabbar .tab { width: 60px; height: 58px; border-radius: 12px; gap: 4px; }
+#tabbar .tab .tab-ico svg { width: 21px; height: 21px; }
+#tabbar .tab .tab-lbl { font-size: 8px; letter-spacing: .12em; }
+#tabbar .tab.on { background: rgba(242,176,61,.12); }
+.rail-logo { width: 36px; height: 36px; border-radius: 10px; margin-bottom: 8px; }
+.tb-brand span { letter-spacing: .14em; }
+.tb-now { border-left: 1px solid rgba(255,255,255,.06); }

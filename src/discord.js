@@ -63,7 +63,7 @@ function gameIcon(game) {
 /* Geen game bezig: tóch een nette EGS-presence i.p.v. Discords eigen "?"-detectie
    van EGS Companion.exe (die grijze vraagteken-kaart). App-icoon via externe URL. */
 const APP_ICON = EGS_LOGO;
-function setActivity(game, state) {
+function setActivity(game, state, art) {
   if (!game) {
     startTs = null;
     lastActivity = {
@@ -81,7 +81,7 @@ function setActivity(game, state) {
     details: "In a game of " + game,
     state: state || "via EGS Companion",
     startTimestamp: startTs,
-    largeImageKey: gameIcon(game),
+    largeImageKey: art || gameIcon(game),
     largeImageText: game,
     smallImageKey: APP_ICON,
     smallImageText: "EGS Companion",
@@ -101,3 +101,4 @@ function stop() {
 }
 
 module.exports = { setActivity, stop };
+/* art: optionele afbeeldings-URL van de detector (Steam-cover per appid) */

@@ -12,19 +12,25 @@ const cod = require("./cod");
 const api = require("./api");
 const RocketLeagueAdapter = require("./adapters/rocketleague");
 const ProcessWatchAdapter = require("./adapters/processwatch");
+const gamedb = require("./gamedb");
 const discord = require("./discord");
 
 /* standaard gevolgde games (exes aanpasbaar in instellingen) */
 const DEFAULT_TRACKED = [
   { id: "mw4", label: "MW4 Beta", exes: ["cod.exe", "cod26-cod.exe", "cod26-beta.exe", "mw4.exe", "modernwarfare4.exe"] }
 ];
+/* Alle bekende games uit de exe-database + eigen extra exe's uit instellingen. */
 function trackedGames() {
   const cfg = config.get();
-  const custom = cfg.tracked_exes && cfg.tracked_exes.mw4;
-  return DEFAULT_TRACKED.map((g) => ({
-    ...g,
-    exes: Array.isArray(custom) && custom.length ? custom : g.exes
-  }));
+  const custom = Array.isArray(cfg.tracked_exes && cfg.tracked_exes.mw4) ? cfg.tracked_exes.mw4 : [];
+  const list = gamedb.EXES.map((g, i) => ({ id: "g" + i, label: g.label, exes: g.exes, appid: g.appid || null, art: g.art || null, family: g.family || null }));
+  if (custom.length) list[0] = { ...list[0], exes: [...new Set([...list[0].exes, ...custom])] };
+  return list;
+}
+/* Naam/cover per Steam-appid uit je eigen bibliotheek (voor Steam-detectie én Discord-art). */
+let libByAppid = {};
+async function refreshLibIndex() {
+  try { const r = await api.library(); libByAppid = {}; for (const g of (r && r.games) || []) if (g.platform === "Steam" && /^\d+$/.test(String(g.external_id))) libByAppid[String(g.external_id)] = { name: g.name, cover: g.cover }; } catch (e) {}
 }
 
 let win = null;
@@ -96,14 +102,15 @@ function sendToUI(channel, payload) {
 const presenceSrc = { proc: null, rl: false };
 let presenceSent = null;
 let presenceBeat = null;
+/* voorrang: Rocket League (live), dan Steam (exacte naam), dan proces-lijst */
 function presenceCurrent() {
-  return presenceSrc.rl ? "Rocket League" : presenceSrc.proc;
+  return presenceSrc.rl ? "Rocket League" : (presenceSrc.steam || presenceSrc.proc || null);
 }
 let rlScoreLine = null, rlState = null; /* "menu" | "in_match" — gaat mee naar de site-kaart ("pot bezig") */
 async function presencePush(force) {
   if (!config.get().token) return;
   const cur = presenceCurrent();
-  if (config.get().discord_rpc !== false) discord.setActivity(cur, cur === "Rocket League" ? rlScoreLine : null);
+  if (config.get().discord_rpc !== false) discord.setActivity(cur, cur === "Rocket League" ? rlScoreLine : null, presenceArt[cur] || null);
   else discord.setActivity(null);
   /* state + detail alleen voor Rocket League; de site toont "pot bezig · 2 - 1" */
   const state = cur === "Rocket League" ? (rlState === "in_match" ? "in_match" : "menu") : null;
@@ -122,16 +129,53 @@ function presenceUpdate(src, val) {
   if (!presenceCurrent() && presenceBeat) { clearInterval(presenceBeat); presenceBeat = null; }
 }
 
+const ART = "https://wcsgosrevyyafnerrhge.supabase.co/storage/v1/object/public/art/";
+const steamCover = (appid) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg";
+const presenceArt = {}; /* gamenaam → afbeelding voor Discord/kaart */
+/* Steam: elke Steam-game via RunningAppID (ook games die niet in de exe-lijst staan) */
+let steamSession = null, steamTimer = null;
+function startSteamWatch() {
+  if (steamTimer) return;
+  refreshLibIndex(); setInterval(refreshLibIndex, 30 * 60 * 1000);
+  steamTimer = setInterval(async () => {
+    const appid = await gamedb.steamRunningAppId();
+    const now = Date.now();
+    if (appid) {
+      const lib = libByAppid[String(appid)];
+      const name = (lib && lib.name) || ("Steam app " + appid);
+      presenceArt[name] = steamCover(appid);
+      if (!steamSession || steamSession.appid !== appid) {
+        if (steamSession) endSteamSession(now);
+        steamSession = { appid, name, startedAt: now };
+      }
+      presenceUpdate("steam", name);
+    } else if (steamSession) { endSteamSession(now); presenceUpdate("steam", null); }
+  }, 15000);
+}
+function endSteamSession(endMs) {
+  const s = steamSession; steamSession = null; if (!s || endMs - s.startedAt < 60000) return;
+  const session = { game: s.name, client_session_id: require("crypto").randomUUID(), started_at: new Date(s.startedAt).toISOString(), ended_at: new Date(endMs).toISOString() };
+  sendToUI("proc-session", session);
+  api.ingestSessions([session]).then((r) => { if (!r || !r.ok) config.queueSession(session); }).catch(() => config.queueSession(session));
+}
 function startAdapters() {
   const cfg = config.get();
   if (!cfg.token) return; /* niet gekoppeld: nog niets starten */
+  startSteamWatch();
   if (!adapters.procwatch) {
     const pw = new ProcessWatchAdapter({
       games: trackedGames,
-      onStatus: (id, s) => {
+      onStatus: async (id, s) => {
         sendToUI("proc-status", { id, ...s });
         const g = trackedGames().find((x) => x.id === id);
-        if (g) presenceUpdate("proc", s.running ? g.label : (presenceSrc.proc === g.label ? null : presenceSrc.proc));
+        if (!g) return;
+        let label = g.label;
+        if (s.running && g.family === "cod") {
+          /* welke CoD? venstertitel (Battle.net) of Steam-appid */
+          try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt); if (t) label = t; } catch (e) {}
+        }
+        if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
+        presenceUpdate("proc", s.running ? label : (presenceSrc.proc && presenceSrc.proc.startsWith(g.label.split(":")[0]) ? null : presenceSrc.proc));
       },
       onSession: async (session) => {
         sendToUI("proc-session", session);

@@ -109,7 +109,7 @@ const I18N = {
     chatPh: "Type a message\u2026",
     chatSend: "Send",
     chatEmpty: "Say hi \ud83d\udc4b",
-    setMw4Exes: "MW4 Beta process names",
+    setMw4Exes: "Extra Call of Duty process names", detName: "Game detection \u00b7 every game", detHint: "Steam games are recognised automatically; Battle.net, Xbox app, Epic and Riot via a built-in list. Playtime per session lands on your card.",
     setMw4ExesHint: "Comma-separated .exe names. Only change if the game isn't detected (check Task Manager \u2192 Details).",
     rlHelpText: "One-time Rocket League setup:\n\nCreate or edit this file:\n  Documents\\My Games\\Rocket League\\\n  TAGame\\Config\\TAStatsAPI.ini\n\nPut exactly this in it:\n  [TAGame.MatchStatsExporter_TA]\n  Port=49123\n  PacketSendRate=30\n\nThen restart Rocket League."
   },
@@ -222,7 +222,7 @@ const I18N = {
     chatPh: "Typ een bericht\u2026",
     chatSend: "Versturen",
     chatEmpty: "Zeg hoi \ud83d\udc4b",
-    setMw4Exes: "MW4 Beta-procesnamen",
+    setMw4Exes: "Extra Call of Duty-procesnamen", detName: "Game-detectie \u00b7 elke game", detHint: "Steam-games worden automatisch herkend; Battle.net, Xbox-app, Epic en Riot via een ingebouwde lijst. Speeltijd per sessie komt op je kaart.",
     setMw4ExesHint: "Komma-gescheiden .exe-namen. Alleen aanpassen als de game niet gedetecteerd wordt (check Taakbeheer \u2192 Details).",
     rlHelpText: "Eenmalige Rocket League-setup:\n\nMaak of bewerk dit bestand:\n  Documenten\\My Games\\Rocket League\\\n  TAGame\\Config\\TAStatsAPI.ini\n\nZet er precies dit in:\n  [TAGame.MatchStatsExporter_TA]\n  Port=49123\n  PacketSendRate=30\n\nHerstart daarna Rocket League."
   }
@@ -416,12 +416,14 @@ function renderMw4Base() {
   }
 }
 /* F9-hint eenmalig tonen onder de adapter */
+const detRunning = {};
 window.egs.onProcStatus((d) => {
-  if (d.id !== "mw4") return;
   const dot = document.querySelector("#ad-mw4 .dot");
-  if (d.running) {
+  if (d.running) detRunning[d.id] = d; else delete detRunning[d.id];
+  const anyOn = Object.values(detRunning)[0];
+  if (anyOn) {
     dot.dataset.state = "in_match";
-    $("mw4-state").textContent = t("procOn")(Math.max(1, Math.round(d.sinceMs / 60000)));
+    $("mw4-state").textContent = (tbNowLast && tbNowLast.game ? tbNowLast.game + " \u00b7 " : "") + t("procOn")(Math.max(1, Math.round(anyOn.sinceMs / 60000)));
   } else {
     dot.dataset.state = "off";
     renderMw4Base();
@@ -598,6 +600,7 @@ $("ad-remove").addEventListener("click", () => window.egs.openExternal("https://
 renderAd();
 window.egs.onSocialUnread((d) => updateBadge(d.total || 0));
 window.egs.onPresence((d) => {
+  try { const dot = document.querySelector("#ad-mw4 .dot"); if (dot && !Object.keys(detRunning).length) { dot.dataset.state = d && d.game ? "in_match" : "off"; if (d && d.game) $("mw4-state").textContent = d.game; else renderMw4Base(); } } catch (e) {}
   tbNow(d);
   const box = $("now-playing");
   if (d.game) { box.hidden = false; $("now-playing-txt").textContent = t("nowPlaying")(d.game); }
