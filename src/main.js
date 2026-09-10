@@ -25,6 +25,8 @@ function trackedGames() {
   const custom = Array.isArray(cfg.tracked_exes && cfg.tracked_exes.mw4) ? cfg.tracked_exes.mw4 : [];
   const list = gamedb.EXES.map((g, i) => ({ id: "g" + i, label: g.label, exes: g.exes, appid: g.appid || null, art: g.art || null, family: g.family || null }));
   if (custom.length) list[0] = { ...list[0], exes: [...new Set([...list[0].exes, ...custom])] };
+  /* venstertitel-gebonden (Java-Minecraft via javaw.exe) */
+  (gamedb.TITLE_ONLY || []).forEach((g, i) => list.push({ id: "t" + i, label: g.label, exes: [], titleExes: [g.exe], titleContains: g.contains, art: g.art || null }));
   return list;
 }
 /* Naam/cover per Steam-appid uit je eigen bibliotheek (voor Steam-detectie én Discord-art). */
@@ -177,6 +179,7 @@ function startAdapters() {
   if (!adapters.procwatch) {
     const pw = new ProcessWatchAdapter({
       games: trackedGames,
+      windowTitles: (exes) => gamedb.windowTitles(exes),
       onStatus: async (id, s) => {
         sendToUI("proc-status", { id, ...s });
         const g = trackedGames().find((x) => x.id === id);

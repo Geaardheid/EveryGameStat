@@ -69,8 +69,18 @@ class ProcessWatchAdapter {
     if (!games.length) return;
     const procs = await listProcesses();
     const now = Date.now();
+    /* titel-gebonden games (Java-Minecraft draait als javaw.exe): alleen de venstertitel
+       telt, anders zou elke Java-app als game gelden. PowerShell alleen als zo'n exe draait. */
+    let titles = null;
     for (const g of games) {
-      const running = (g.exes || []).some((e) => procs.has(String(e).toLowerCase().trim()));
+      let running = (g.exes || []).some((e) => procs.has(String(e).toLowerCase().trim()));
+      if (!running && g.titleContains && this.opts.windowTitles) {
+        const exes = (g.titleExes || []).filter((e) => procs.has(String(e).toLowerCase().trim()));
+        if (exes.length) {
+          if (!titles) { try { titles = await this.opts.windowTitles(exes); } catch (e) { titles = {}; } }
+          running = Object.values(titles).some((t) => String(t || "").toLowerCase().includes(String(g.titleContains).toLowerCase()));
+        }
+      }
       const st = this.state[g.id];
       if (running) {
         if (!st) {

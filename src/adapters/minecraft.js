@@ -84,7 +84,8 @@ class MinecraftAdapter {
 
   poll() {
     try {
-      const running = !!(this.opts.isRunning && this.opts.isRunning());
+      /* draait = procesdetectie zegt ja, of de log is de laatste 15 minuten beschreven */
+      const running = !!(this.opts.isRunning && this.opts.isRunning()) || (!!this.lastLine && Date.now() - this.lastLine < LOG_STALE_MS);
       const best = activeLog(this.opts.extraLogs ? this.opts.extraLogs() : []);
       if (best && (!this.log || this.log.path !== best.path)) {
         /* nieuwe log: alleen vanaf nu lezen (oude sessies zijn niet van nu) */
@@ -94,6 +95,7 @@ class MinecraftAdapter {
       if (this.log) {
         const st = fs.statSync(this.log.path);
         if (st.size < this.log.offset) { this.log.offset = 0; this.tail = ""; } /* rotatie: nieuw latest.log */
+        if (st.mtimeMs > (this.lastMtime || 0)) { this.lastMtime = st.mtimeMs; if (st.size === this.log.offset) this.lastLine = Date.now(); }
         if (st.size > this.log.offset) {
           const fd = fs.openSync(this.log.path, "r");
           const len = Math.min(st.size - this.log.offset, 2 * 1024 * 1024);
@@ -109,8 +111,7 @@ class MinecraftAdapter {
         }
       }
       /* game weg: segment sluiten. Zonder proces-detectie: log 15 min stil */
-      if (this.seg && (!running && (!this.lastLine || Date.now() - this.lastLine > 60000))) this.close(Date.now());
-      if (this.seg && !running && Date.now() - this.lastLine > LOG_STALE_MS) this.close(Date.now());
+      if (this.seg && !running) this.close(Date.now());
       this.status(running);
     } catch (e) { /* log tijdelijk niet leesbaar: volgende poll */ }
   }
