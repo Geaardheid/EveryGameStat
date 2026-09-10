@@ -670,7 +670,7 @@ function renderMc(st) {
   const dot = document.querySelector("#ad-minecraft .dot"), lbl = $("mc-state");
   if (!dot || !lbl) return;
   if (st && st.running) { dot.dataset.state = st.server || st.world ? "in_match" : "connected"; lbl.textContent = st.server ? t("mcOnServer")(st.server) : st.world ? t("mcOnWorld")(st.world) : t("mcOn"); }
-  else { dot.dataset.state = "off"; lbl.textContent = t("mcOff") + (mcSummary && mcSummary.total && mcSummary.total.sessions ? " \u00b7 " + fmtNum(Math.round(mcSummary.total.minutes / 60)) + " " + t("mcHours") : ""); }
+  else { dot.dataset.state = "off"; lbl.textContent = t("mcOff") + (mcSummary && mcSummary.total && mcSummary.total.sessions ? " \u00b7 " + fmtPlay(mcSummary.total.minutes).v + " " + fmtPlay(mcSummary.total.minutes).u + " \u00b7 " + (mcSummary.servers || []).length + " servers" : ""); }
 }
 window.egs.onMcStatus(renderMc);
 try { window.egs.mcStatus().then(renderMc); } catch (e) {}
@@ -850,6 +850,8 @@ const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "B
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
 const rankTxt = (rk) => (rk.queue || "").replace("RANKED_", "").replace("_", " ") + ": " + (rk.tier || "?") + " " + (rk.rank || "") + (rk.lp != null ? " \u00b7 " + rk.lp + " LP" : "");
 let hubData = [], hubsLoadedAt = 0, mcSummary = null;
+/* speeltijd netjes: < 60 min → "12 min", anders uren met 1 decimaal */
+const fmtPlay = (min) => { min = Number(min) || 0; return min < 60 ? { v: fmtNum(Math.round(min)), u: "min" } : { v: fmtNum(Math.round(min / 6) / 10), u: t("mcHours") }; };
 async function fetchMc() {
   try { const r = await window.egs.sessionsSummary(); if (r && r.ok) { mcSummary = r.minecraft || { servers: [], worlds: [] }; const g = (r.games || []).find((x) => x.game === "Minecraft"); mcSummary.total = g || { sessions: 0, minutes: 0 }; } } catch (e) {}
   return mcSummary;
@@ -889,7 +891,7 @@ async function loadHubsPage() {
     if (def.kind === "local") {
       const has = mcSummary && mcSummary.total && mcSummary.total.sessions > 0;
       status = mcStatusLast && mcStatusLast.running ? t("hubLive") : (has ? t("hubLinked") : t("hubSoon")); cls = mcStatusLast && mcStatusLast.running ? "live" : (has ? "ok" : "soon");
-      if (has) stat = { v: fmtNum(Math.round(mcSummary.total.minutes / 60)), lbl: t("mcHours") };
+      if (has) { const f = fmtPlay(mcSummary.total.minutes); stat = { v: f.v, lbl: f.u }; }
       who = t(def.sub) + (mcSummary && mcSummary.servers && mcSummary.servers.length ? " \u00b7 " + mcSummary.servers.length + " servers" : "");
     } else if (def.kind === "live") {
       status = t("hubLive"); cls = "live";
@@ -953,7 +955,7 @@ function mcCard(i) {
   const top = (m.servers || [])[0];
   const body = document.createElement("div"); body.className = "sc-body";
   body.innerHTML = '<div class="sc-head"><h3>Minecraft</h3><span>' + escT(t("mcTag")) + "</span></div>" +
-    '<div class="sc-hero"><b>' + fmtNum(Math.round(m.total.minutes / 60)) + "</b><span>" + escT(t("mcHours")) + "</span></div>" +
+    '<div class="sc-hero"><b>' + fmtPlay(m.total.minutes).v + "</b><span>" + escT(fmtPlay(m.total.minutes).u) + "</span></div>" +
     '<div class="sc-row"><div><b>' + (m.servers || []).length + "</b><span>" + escT(t("mcServers")) + "</span></div><div><b>" + fmtNum(m.total.sessions) + "</b><span>" + escT(t("mcSessions")) + "</span></div><div><b>" + escT(top ? top.server : "\u2013") + "</b><span>Top server</span></div></div>" +
     '<div class="sc-foot"><span>' + escT(t("hubSubMc")) + "</span><em>" + t("statsAll") + " \u2192</em></div>";
   card.appendChild(art); card.appendChild(body);
@@ -971,7 +973,7 @@ async function openMcHub() {
     '<div class="sd-in"><div><h2>Minecraft</h2><div class="sd-who">' + escT(mcStatusLast && mcStatusLast.user ? mcStatusLast.user + " \u00b7 " : "") + escT(live || t("hubSubMc")) + "</div></div></div>";
   wrap.appendChild(banner);
   const hero = document.createElement("div"); hero.className = "sd-heroes";
-  const hs = [[fmtNum(Math.round(m.total.minutes / 60)), t("mcTotal") + " (" + t("mcHours") + ")"], [String((m.servers || []).length), t("mcServers")], [fmtNum(m.total.sessions), t("mcSessions")], [fmtNum((m.servers || []).reduce((a, x) => a + (x.deaths || 0), 0) + (m.worlds || []).reduce((a, x) => a + (x.deaths || 0), 0)), t("mcDeaths")]];
+  const hs = [[fmtPlay(m.total.minutes).v, t("mcTotal") + " (" + fmtPlay(m.total.minutes).u + ")"], [String((m.servers || []).length), t("mcServers")], [fmtNum(m.total.sessions), t("mcSessions")], [fmtNum((m.servers || []).reduce((a, x) => a + (x.deaths || 0), 0) + (m.worlds || []).reduce((a, x) => a + (x.deaths || 0), 0)), t("mcDeaths")]];
   hs.forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span></div>"; hero.appendChild(el); });
   wrap.appendChild(hero);
   const fmtLast = (iso) => iso ? new Date(iso).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short" }) : "\u2013";
