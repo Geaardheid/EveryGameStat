@@ -52,7 +52,10 @@ const GAME_ICONS = {
   "minecraft": ART + "icon-minecraft.png", "fivem": ART + "game-fivem.png"
 };
 function gameIcon(game) {
-  return GAME_ICONS[String(game || "").toLowerCase()] || EGS_LOGO;
+  const g = String(game || "").toLowerCase();
+  if (GAME_ICONS[g]) return GAME_ICONS[g];
+  for (const k of Object.keys(GAME_ICONS)) if (g.includes(k)) return GAME_ICONS[k]; /* "call of duty: black ops 7" → cod-cover */
+  return EGS_LOGO;
 }
 
 /**
@@ -67,8 +70,9 @@ function setActivity(game, state, art) {
   if (!game) {
     startTs = null;
     lastActivity = {
-      details: "EGS Companion",
-      state: "Tracking stats \u00b7 everygamestat.com",
+      name: "EveryGameStat", type: 0,
+      details: "Tracking stats with EveryGameStat",
+      state: "everygamestat.com",
       largeImageKey: APP_ICON,
       largeImageText: "EveryGameStat",
       buttons: [{ label: "EveryGameStat", url: "https://everygamestat.com" }]
@@ -77,15 +81,19 @@ function setActivity(game, state, art) {
     return;
   }
   if (!startTs) startTs = Date.now();
+  /* Medal-stijl: de gamenaam is de titel ("Playing Rocket League"), de kaart zegt
+     "Tracking stats in Rocket League with EveryGameStat", de game-cover groot,
+     het EGS-logo klein in de hoek, en de regel eronder is de live-stand/server. */
   lastActivity = {
-    details: "In a game of " + game,
-    state: state || "via EGS Companion",
+    name: game + " with EveryGameStat", type: 0, statusDisplayType: 0,
+    details: "Tracking stats in " + game + " with EveryGameStat",
+    state: state || "Playing",
     startTimestamp: startTs,
     largeImageKey: art || gameIcon(game),
     largeImageText: game,
     smallImageKey: APP_ICON,
-    smallImageText: "EGS Companion",
-    buttons: [{ label: "EveryGameStat", url: "https://everygamestat.com" }]
+    smallImageText: "EveryGameStat Companion",
+    buttons: [{ label: "View stats on EveryGameStat", url: "https://everygamestat.com" }]
   };
   ensureClient().then(() => push(lastActivity));
 }
