@@ -11,6 +11,7 @@ const config = require("./config");
 const api = require("./api");
 const RocketLeagueAdapter = require("./adapters/rocketleague");
 const ProcessWatchAdapter = require("./adapters/processwatch");
+const MinecraftAdapter = require("./adapters/minecraft");
 const gamedb = require("./gamedb");
 const discord = require("./discord");
 
@@ -113,14 +114,17 @@ function presenceCurrent() {
   return presenceSrc.rl ? "Rocket League" : (presenceSrc.steam || presenceSrc.proc || null);
 }
 let rlScoreLine = null, rlState = null; /* "menu" | "in_match" — gaat mee naar de site-kaart ("pot bezig") */
+let mcStatus = { running: false, server: null, world: null }; /* Minecraft: server/wereld uit latest.log */
+const runningLabels = new Set(); /* labels van games die de proceswatcher nu ziet */
 async function presencePush(force) {
   if (!config.get().token) return;
   const cur = presenceCurrent();
-  if (config.get().discord_rpc !== false) discord.setActivity(cur, cur === "Rocket League" ? rlScoreLine : null, presenceArt[cur] || null);
+  /* state + detail: Rocket League (stand) en Minecraft (server); de site toont "pot bezig · 2 - 1" / "op play.hypixel.net" */
+  let state = null, detail = null, line = null;
+  if (cur === "Rocket League") { state = rlState === "in_match" ? "in_match" : "menu"; detail = state === "in_match" ? rlScoreLine : null; line = rlScoreLine; }
+  else if (cur === "Minecraft" && (mcStatus.server || mcStatus.world)) { state = "in_match"; detail = mcStatus.server || mcStatus.world; line = mcStatus.server ? "on " + mcStatus.server : mcStatus.world; }
+  if (config.get().discord_rpc !== false) discord.setActivity(cur, line, presenceArt[cur] || null);
   else discord.setActivity(null);
-  /* state + detail alleen voor Rocket League; de site toont "pot bezig · 2 - 1" */
-  const state = cur === "Rocket League" ? (rlState === "in_match" ? "in_match" : "menu") : null;
-  const detail = cur === "Rocket League" && rlState === "in_match" ? rlScoreLine : null;
   const sig = cur + "|" + state + "|" + detail;
   if (!force && sig === presenceSent) return;
   try {
@@ -178,6 +182,7 @@ function startAdapters() {
         const g = trackedGames().find((x) => x.id === id);
         if (!g) return;
         let label = g.label;
+        if (s.running) runningLabels.add(g.label); else runningLabels.delete(g.label);
         if (s.running && g.family === "cod") {
           /* welke CoD? venstertitel (Battle.net) of Steam-appid */
           try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt); if (t) label = t; } catch (e) {}
@@ -197,7 +202,24 @@ function startAdapters() {
     adapters.procwatch = pw;
     pw.start();
   }
-  /* cod.start() uit: Activision sloot de endpoints (sep 2026) */
+  if (!adapters.minecraft) {
+    const mc = new MinecraftAdapter({
+      isRunning: () => runningLabels.has("Minecraft") || presenceSrc.proc === "Minecraft",
+      extraLogs: () => (config.get().mc_log_paths || []),
+      onStatus: (st) => {
+        const changed = st.server !== mcStatus.server || st.world !== mcStatus.world;
+        mcStatus = st;
+        sendToUI("mc-status", st);
+        if (changed) presencePush(true);
+      },
+      onSession: (session) => {
+        sendToUI("proc-session", session);
+        api.ingestSessions([session]).then((r) => { if (!r || !r.ok) config.queueSession(session); else config.flushQueue(api); }).catch(() => config.queueSession(session));
+      }
+    });
+    adapters.minecraft = mc;
+    mc.start();
+  }
   if (!adapters.rocketleague) {
     const a = new RocketLeagueAdapter({
       playerName: () => config.get().rl_name || config.get().display_name || "",
@@ -358,6 +380,7 @@ ipcMain.handle("win", (_e, cmd) => {
   return win.isMaximized();
 });
 
+ipcMain.handle("mc-status", () => mcStatus);
 ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
 ipcMain.handle("recent", async () => {
   try { return await api.recent(15); } catch (e) { return { ok: false, error: "offline" }; }

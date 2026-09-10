@@ -73,6 +73,9 @@ const I18N = {
     emptyLib: "Nothing here yet. Link a platform on the site.", emptyBoard: "No public cards yet.",
     tabHubs: "Hubs", hubsHead: "Game hubs", hubsSub: "The games the Companion is built around", libRecent: "Recently played", libAll: "All games", libMost: "Most played", statsPlatforms: "Platforms",
     hubLive: "Live tracking", hubLinked: "Stats linked", hubNoData: "Not linked", hubSoon: "Coming soon", hubSessions: "sessions", hubMatches: "matches", hubLinkOn: "Link on the site", hubRlNote: "Rocket League is tracked live by the Companion \u00b7 matches land on Home.",
+    mcTag: "per server", mcOff: "not running \u00b7 hours per server via latest.log", mcOn: "running \u00b7 in the menu", mcOnServer: (x) => "on " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
+    mcServers: "Servers", mcWorlds: "Singleplayer worlds", mcTotal: "Total measured", mcHours: "hours", mcSessions: "sessions", mcLast: "last", mcDeaths: "deaths", mcAdv: "advancements", mcEmpty: "Play Minecraft (Java) with the Companion open and your servers appear here. Bedrock has no log, so only total hours via Xbox.",
+    hubSubMc: "Hours per server \u00b7 latest.log",
     hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
     libHead: "Your library",
     libSearchPh: "Search games\u2026",
@@ -191,6 +194,9 @@ const I18N = {
     emptyLib: "Nog niets hier. Koppel een platform op de site.", emptyBoard: "Nog geen publieke kaarten.",
     tabHubs: "Hubs", hubsHead: "Game hubs", hubsSub: "De games waar de Companion om draait", libRecent: "Laatst gespeeld", libAll: "Alle games", libMost: "Meest gespeeld", statsPlatforms: "Platforms",
     hubLive: "Live tracking", hubLinked: "Stats gekoppeld", hubNoData: "Niet gekoppeld", hubSoon: "Binnenkort", hubSessions: "sessies", hubMatches: "potten", hubLinkOn: "Koppel op de site", hubRlNote: "Rocket League wordt live gevolgd door de Companion \u00b7 potten komen op Home.",
+    mcTag: "per server", mcOff: "draait niet \u00b7 uren per server via latest.log", mcOn: "draait \u00b7 in het menu", mcOnServer: (x) => "op " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
+    mcServers: "Servers", mcWorlds: "Singleplayer-werelden", mcTotal: "Totaal gemeten", mcHours: "uur", mcSessions: "sessies", mcLast: "laatst", mcDeaths: "doden", mcAdv: "advancements", mcEmpty: "Speel Minecraft (Java) met de Companion open en je servers verschijnen hier. Bedrock heeft geen log, dus alleen totaaluren via Xbox.",
+    hubSubMc: "Uren per server \u00b7 latest.log",
     hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
     libHead: "Jouw bibliotheek",
     libSearchPh: "Zoek games\u2026",
@@ -658,6 +664,16 @@ function applyPresence(d) {
     }
   }
 }
+let mcStatusLast = null;
+function renderMc(st) {
+  mcStatusLast = st || null;
+  const dot = document.querySelector("#ad-minecraft .dot"), lbl = $("mc-state");
+  if (!dot || !lbl) return;
+  if (st && st.running) { dot.dataset.state = st.server || st.world ? "in_match" : "connected"; lbl.textContent = st.server ? t("mcOnServer")(st.server) : st.world ? t("mcOnWorld")(st.world) : t("mcOn"); }
+  else { dot.dataset.state = "off"; lbl.textContent = t("mcOff") + (mcSummary && mcSummary.total && mcSummary.total.sessions ? " \u00b7 " + fmtNum(Math.round(mcSummary.total.minutes / 60)) + " " + t("mcHours") : ""); }
+}
+window.egs.onMcStatus(renderMc);
+try { window.egs.mcStatus().then(renderMc); } catch (e) {}
 window.egs.onPresence(applyPresence);
 window.egs.onPresenceLocal((d) => { if (d) { if (d.art !== undefined) presArt = d.art; if (!tbNowLast || (tbNowLast.game || null) !== (d.game || null)) applyPresence({ game: d.game, art: d.art }); } });
 window.egs.onOpenSocial(() => show("view-social"));
@@ -817,6 +833,7 @@ const STEAM_H = (id) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + i
 const SITE_ART = "https://everygamestat.com/art/";
 const HUBS = {
   rocketleague: { name: "Rocket League", c: "#F2B03D", art: STEAM_H(252950), kind: "live", sub: "hubSubRl", pick: [], all: [] },
+  minecraft: { name: "Minecraft", c: "#5DBB46", art: null, mark: ART_BUCKET + "icon-minecraft.png", kind: "local", sub: "hubSubMc", pick: [], all: [] },
   dbd:      { name: "Dead by Daylight", c: "#C8302E", art: STEAM_H(381210), kind: "steam", sub: "hubSubDbd", hero: "escapes", pick: ["total_kills","bloodpoints","prestige"], all: ["bloodpoints","escapes","hatch_escapes","sacrifices","kills","total_kills","gens","heals","unhooks","skillchecks","survivor_pips","killer_pips","prestige","max_level","hits_near_hook"] },
   royale:   { name: "Clash Royale",   c: "#4DA6FF", art: SITE_ART + "game-clashroyale.png", kind: "api", sub: "hubSubApi", hero: "trophies", pick: ["best","wins","three_crown"], all: ["trophies","best","level","wins","losses","battles","three_crown","cards","arena","clan","war_wins","donations","star_points","streak","fav_card"] },
   brawl:    { name: "Brawl Stars",    c: "#FFD400", art: null, kind: "api", sub: "hubSubApi", hero: "trophies", pick: ["highest","wins3v3","brawlers"], all: ["trophies","highest","level","wins3v3","solo","duo","brawlers","club"] },
@@ -828,11 +845,15 @@ const HUBS = {
   xbox:     { name: "Xbox",           c: "#107C10", art: null, kind: "platform", sub: "hubSubPlat", hero: "gamerscore_earned", pick: ["games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
   psn:      { name: "PlayStation",    c: "#2E6DB4", art: null, kind: "platform", sub: "hubSubPlat", hero: "trophy_level", pick: ["platinum","gold","silver"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
 };
-const HUB_PAGE_ORDER = ["rocketleague", "dbd", "royale", "brawl", "clash", "fortnite", "pubg", "lol", "tft"];
+const HUB_PAGE_ORDER = ["rocketleague", "minecraft", "dbd", "royale", "brawl", "clash", "fortnite", "pubg", "lol", "tft"];
 const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
 const rankTxt = (rk) => (rk.queue || "").replace("RANKED_", "").replace("_", " ") + ": " + (rk.tier || "?") + " " + (rk.rank || "") + (rk.lp != null ? " \u00b7 " + rk.lp + " LP" : "");
-let hubData = [], hubsLoadedAt = 0;
+let hubData = [], hubsLoadedAt = 0, mcSummary = null;
+async function fetchMc() {
+  try { const r = await window.egs.sessionsSummary(); if (r && r.ok) { mcSummary = r.minecraft || { servers: [], worlds: [] }; const g = (r.games || []).find((x) => x.game === "Minecraft"); mcSummary.total = g || { sessions: 0, minutes: 0 }; } } catch (e) {}
+  return mcSummary;
+}
 async function fetchHubs(force) {
   if (!force && hubData.length && Date.now() - hubsLoadedAt < 60000) return true;
   const r = await window.egs.hubs();
@@ -858,14 +879,19 @@ function artStyle(el, def) {
 async function loadHubsPage() {
   const grid = $("hubs-grid");
   if (!hubData.length) grid.innerHTML = skelRows(6, "skel-hub");
-  await fetchHubs(false);
+  await Promise.all([fetchHubs(false), fetchMc()]);
   grid.innerHTML = "";
   HUB_PAGE_ORDER.forEach((key, i) => {
     const def = HUBS[key]; const h = hubOf(key); const d = (h && h.data) || {};
     const el = document.createElement("div"); el.className = "ghub"; el.style.setProperty("--hc", def.c); el.style.setProperty("--i", i);
     const art = document.createElement("div"); art.className = "gh-art"; artStyle(art, def);
     let status, cls, stat = null, who = "";
-    if (def.kind === "live") {
+    if (def.kind === "local") {
+      const has = mcSummary && mcSummary.total && mcSummary.total.sessions > 0;
+      status = mcStatusLast && mcStatusLast.running ? t("hubLive") : (has ? t("hubLinked") : t("hubSoon")); cls = mcStatusLast && mcStatusLast.running ? "live" : (has ? "ok" : "soon");
+      if (has) stat = { v: fmtNum(Math.round(mcSummary.total.minutes / 60)), lbl: t("mcHours") };
+      who = t(def.sub) + (mcSummary && mcSummary.servers && mcSummary.servers.length ? " \u00b7 " + mcSummary.servers.length + " servers" : "");
+    } else if (def.kind === "live") {
       status = t("hubLive"); cls = "live";
       const n = session.length; stat = n ? { v: n, lbl: t("hubMatches") } : (mw4Total && false ? null : null);
       who = t(def.sub);
@@ -878,6 +904,7 @@ async function loadHubsPage() {
       (stat ? '<div class="gh-stat"><b>' + escT(String(stat.v)) + "</b><span>" + escT(stat.lbl) + "</span></div>" : "");
     el.appendChild(body);
     el.addEventListener("click", () => {
+      if (def.kind === "local") { show("view-stats"); openMcHub(); return; }
       if (def.kind === "live") { show("view-main"); return; }
       if (!h) { window.egs.openExternal("https://everygamestat.com/me"); return; }
       show("view-stats"); openHub(key);
@@ -906,16 +933,67 @@ async function loadStats() {
   const grid = $("stats-grid"), plat = $("stats-plat");
   $("stats-detail").hidden = true; $("stats-home").hidden = false;
   if (!hubData.length) grid.innerHTML = skelRows(4, "skel-hub");
-  const ok = await fetchHubs(false);
+  const [ok] = await Promise.all([fetchHubs(false), fetchMc()]);
   if (!ok) { grid.innerHTML = emptyHtml(t("libFail"), "worried"); return; }
   const games = hubData.filter((h) => HUBS[h.game_key].kind !== "platform");
+  const hasMc = mcSummary && mcSummary.total && mcSummary.total.sessions > 0;
   const plats = hubData.filter((h) => HUBS[h.game_key].kind === "platform");
   $("stats-sub").textContent = hubData.length + " " + (lang === "nl" ? "bronnen" : "sources");
   grid.innerHTML = ""; plat.innerHTML = "";
-  if (!hubData.length) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); $("stats-plat-h").hidden = true; return; }
-  games.forEach((h, i) => grid.appendChild(statCard(h, i, false)));
+  if (!hubData.length && !hasMc) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); $("stats-plat-h").hidden = true; return; }
+  if (hasMc) grid.appendChild(mcCard(0));
+  games.forEach((h, i) => grid.appendChild(statCard(h, i + (hasMc ? 1 : 0), false)));
   $("stats-plat-h").hidden = !plats.length;
   plats.forEach((h, i) => plat.appendChild(statCard(h, i + games.length, true)));
+}
+function mcCard(i) {
+  const def = HUBS.minecraft, m = mcSummary;
+  const card = document.createElement("div"); card.className = "scard"; card.style.setProperty("--hc", def.c); card.style.setProperty("--i", i);
+  const art = document.createElement("div"); art.className = "sc-art"; artStyle(art, def);
+  const top = (m.servers || [])[0];
+  const body = document.createElement("div"); body.className = "sc-body";
+  body.innerHTML = '<div class="sc-head"><h3>Minecraft</h3><span>' + escT(t("mcTag")) + "</span></div>" +
+    '<div class="sc-hero"><b>' + fmtNum(Math.round(m.total.minutes / 60)) + "</b><span>" + escT(t("mcHours")) + "</span></div>" +
+    '<div class="sc-row"><div><b>' + (m.servers || []).length + "</b><span>" + escT(t("mcServers")) + "</span></div><div><b>" + fmtNum(m.total.sessions) + "</b><span>" + escT(t("mcSessions")) + "</span></div><div><b>" + escT(top ? top.server : "\u2013") + "</b><span>Top server</span></div></div>" +
+    '<div class="sc-foot"><span>' + escT(t("hubSubMc")) + "</span><em>" + t("statsAll") + " \u2192</em></div>";
+  card.appendChild(art); card.appendChild(body);
+  card.addEventListener("click", openMcHub);
+  return card;
+}
+async function openMcHub() {
+  if (!mcSummary) await fetchMc();
+  const def = HUBS.minecraft, m = mcSummary || { servers: [], worlds: [], total: { sessions: 0, minutes: 0 } };
+  const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false; box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sd"; wrap.style.setProperty("--hc", def.c);
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  const live = mcStatusLast && mcStatusLast.running ? (mcStatusLast.server ? t("mcOnServer")(mcStatusLast.server) : mcStatusLast.world ? t("mcOnWorld")(mcStatusLast.world) : t("mcOn")) : "";
+  banner.innerHTML = '<button class="btn small sd-back" id="hub-back">\u2190 ' + t("statsBack") + "</button>" +
+    '<div class="sd-in"><div><h2>Minecraft</h2><div class="sd-who">' + escT(mcStatusLast && mcStatusLast.user ? mcStatusLast.user + " \u00b7 " : "") + escT(live || t("hubSubMc")) + "</div></div></div>";
+  wrap.appendChild(banner);
+  const hero = document.createElement("div"); hero.className = "sd-heroes";
+  const hs = [[fmtNum(Math.round(m.total.minutes / 60)), t("mcTotal") + " (" + t("mcHours") + ")"], [String((m.servers || []).length), t("mcServers")], [fmtNum(m.total.sessions), t("mcSessions")], [fmtNum((m.servers || []).reduce((a, x) => a + (x.deaths || 0), 0) + (m.worlds || []).reduce((a, x) => a + (x.deaths || 0), 0)), t("mcDeaths")]];
+  hs.forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span></div>"; hero.appendChild(el); });
+  wrap.appendChild(hero);
+  const fmtLast = (iso) => iso ? new Date(iso).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short" }) : "\u2013";
+  const table = (rows, keyName, title) => {
+    if (!rows || !rows.length) return;
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = title; wrap.appendChild(sub);
+    const max = Math.max(...rows.map((r) => r.minutes || 0), 1);
+    const list = document.createElement("div"); list.className = "mc-rows";
+    rows.forEach((r, i) => {
+      const el = document.createElement("div"); el.className = "mc-row"; el.style.setProperty("--i", i);
+      el.innerHTML = '<span class="mc-rank">' + (i + 1) + '</span><div class="mc-main"><b>' + escT(r[keyName]) + '</b><div class="mc-bar"><i></i></div><small>' + fmtNum(r.sessions) + " " + escT(t("mcSessions")) + " \u00b7 " + escT(t("mcLast")) + " " + fmtLast(r.last) + (r.deaths ? " \u00b7 " + fmtNum(r.deaths) + " " + escT(t("mcDeaths")) : "") + (r.advancements ? " \u00b7 " + fmtNum(r.advancements) + " " + escT(t("mcAdv")) : "") + '</small></div><span class="mc-hours"><b>' + (r.minutes >= 60 ? fmtNum(Math.round(r.minutes / 6) / 10) : fmtNum(r.minutes)) + "</b>" + (r.minutes >= 60 ? escT(t("mcHours")) : "min") + "</span>";
+      el.querySelector(".mc-bar i").style.width = Math.round((r.minutes / max) * 100) + "%";
+      list.appendChild(el);
+    });
+    wrap.appendChild(list);
+  };
+  table(m.servers, "server", t("mcServers"));
+  table(m.worlds, "world", t("mcWorlds"));
+  if (!(m.servers || []).length && !(m.worlds || []).length) { const e = document.createElement("div"); e.innerHTML = emptyHtml(t("mcEmpty"), "controller"); wrap.appendChild(e.firstChild); }
+  box.appendChild(wrap);
+  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-home").hidden = false; });
+  $("view-stats").scrollTop = 0;
 }
 function openHub(key) {
   const h = hubOf(key); if (!h) return;
@@ -1148,6 +1226,8 @@ async function loadSessionTotals() {
   try {
     const r = await window.egs.sessionsSummary();
     if (r && r.ok) {
+      mcSummary = r.minecraft || { servers: [], worlds: [] }; mcSummary.total = (r.games || []).find((x) => x.game === "Minecraft") || { sessions: 0, minutes: 0 };
+      renderMc(mcStatusLast);
       const g = (r.games || []).find((x) => x.game === "MW4 Beta");
       mw4Total = g || { sessions: 0, minutes: 0 };
       const dot = document.querySelector("#ad-mw4 .dot");
