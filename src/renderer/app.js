@@ -78,6 +78,7 @@ const I18N = {
     hubSubMc: "Hours per server \u00b7 latest.log",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
+    gsStats: "Your statistics", gsRatios: "Ratios", gsOther: "Other statistics", gsAch: "Achievements", gsAchPrivate: "Your Steam game details are private \u2014 set them to public in Steam privacy settings to see achievements.", gsNoStats: "This game doesn't publish statistics on Steam.", gsLocked: "locked", gsRare: "of players",
     hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
     libHead: "Your library",
     libSearchPh: "Search games\u2026",
@@ -201,6 +202,7 @@ const I18N = {
     hubSubMc: "Uren per server \u00b7 latest.log",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
+    gsStats: "Jouw statistieken", gsRatios: "Ratio's", gsOther: "Overige statistieken", gsAch: "Achievements", gsAchPrivate: "Je Steam-gamegegevens staan op priv\u00e9 \u2014 zet ze op openbaar in je Steam-privacy om achievements te zien.", gsNoStats: "Deze game publiceert geen statistieken op Steam.", gsLocked: "vergrendeld", gsRare: "van de spelers",
     hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
     libHead: "Jouw bibliotheek",
     libSearchPh: "Zoek games\u2026",
@@ -1261,7 +1263,7 @@ async function openGameSheet(g) {
   const r = await window.egs.gameInfo(appid, g.name);
   if (sheet.hidden) return;
   const m = r && r.ok && r.found ? r.meta : null;
-  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); const c = body.querySelector(".gs-cover.ph"); if (c && g.cover) { const im = document.createElement("img"); im.className = "gs-cover"; im.src = g.cover; c.replaceWith(im); } return; }
+  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); const c = body.querySelector(".gs-cover.ph"); if (c && g.cover) { const im = document.createElement("img"); im.className = "gs-cover"; im.src = g.cover; c.replaceWith(im); } if (appid) loadSteamBlock(body, appid); return; }
   const links = SHEET_LINKS.filter(([k]) => m.links && m.links[k]);
   const owned = g.platform === "Steam";
   const steamUrl = (m.links && m.links.steam) || (m.steam_appid ? "https://store.steampowered.com/app/" + m.steam_appid : null);
@@ -1284,6 +1286,82 @@ async function openGameSheet(g) {
   const shots = (m.screenshots || []).map((s) => s.replace("t_screenshot_big", "t_1080p"));
   body.querySelectorAll("[data-shot]").forEach((el, i) => el.addEventListener("click", () => lbOpen(shots, i)));
   body.querySelectorAll("[data-yt]").forEach((el) => el.addEventListener("click", () => window.egs.openVideo(el.dataset.yt)));
+  if (appid) loadSteamBlock(body, appid);
+}
+/* ===== Steam per-game stats + achievements — zelfde bron en indeling als de gamepagina op de site ===== */
+const CURATED_STATS = {
+  "252490": { /* Rust */
+    sections: [
+      { title: ["PVP", "PVP"], match: /^(kill_player|deaths|headshot|bullet_fired|bullet_hit_player|arrow_fired|arrow_hit_player|rocket_fired|shotgun_fired|wounded|melee)/,
+        labels: { kill_player: ["Players killed", "Spelers gedood"], deaths: ["Deaths", "Keer gestorven"], headshot: ["Headshots", "Headshots"], bullet_fired: ["Bullets fired", "Kogels afgevuurd"], bullet_hit_player: ["Bullets hit players", "Kogels raak op spelers"], arrow_fired: ["Arrows fired", "Pijlen afgeschoten"], arrow_hit_player: ["Arrows hit players", "Pijlen raak op spelers"], rocket_fired: ["Rockets fired", "Raketten afgevuurd"], wounded: ["Times wounded", "Keer gewond geraakt"] } },
+      { title: ["Hunting", "Jacht"], match: /^kill_(bear|boar|chicken|horse|stag|wolf|scientist)$/,
+        labels: { kill_bear: ["Bears killed", "Beren gedood"], kill_boar: ["Boars killed", "Zwijnen gedood"], kill_chicken: ["Chickens killed", "Kippen gedood"], kill_horse: ["Horses killed", "Paarden gedood"], kill_stag: ["Stags killed", "Herten gedood"], kill_wolf: ["Wolves killed", "Wolven gedood"], kill_scientist: ["Scientists killed", "Scientists gedood"] } },
+      { title: ["Gathering", "Verzamelen"], match: /^(harvested?[_.]|acquired[_.])/,
+        labels: { harvested_wood: ["Wood harvested", "Hout gehakt"], harvested_stones: ["Stone harvested", "Steen gehakt"], harvested_cloth: ["Cloth collected", "Stof geplukt"], harvested_leather: ["Leather collected", "Leer verzameld"], "acquired_metal.ore": ["Metal ore acquired", "Metaalerts verzameld"], acquired_scrap: ["Scrap acquired", "Scrap verzameld"], acquired_lowgradefuel: ["Low grade fuel", "Low grade fuel"] } }
+    ],
+    derived: (m) => { const out = []; const kp = m.get("kill_player"), de = m.get("deaths"); if (kp != null && de > 0) out.push({ v: (kp / de).toFixed(2), t: ["K/D ratio", "K/D-ratio"] }); const bf = m.get("bullet_fired"), bh = m.get("bullet_hit_player"); if (bf > 0 && bh != null) out.push({ v: Math.round(100 * bh / bf) + "%", t: ["Bullet accuracy", "Raakpercentage"] }); const hs = m.get("headshot"); if (hs != null && bh > 0) out.push({ v: Math.round(100 * hs / bh) + "%", t: ["Headshot rate", "Headshot-percentage"] }); return out; }
+  },
+  "730": { /* Counter-Strike 2 */
+    sections: [
+      { title: ["Overall", "Totaal"], match: /^total_(kills|deaths|time_played|rounds_played|wins|mvps|damage_done|money_earned|kills_headshot|shots_fired|shots_hit|planted_bombs|defused_bombs|kills_knife|kills_enemy_weapon|kills_enemy_blinded|dominations|revenges|contribution_score)$/,
+        labels: { total_kills: ["Kills", "Kills"], total_deaths: ["Deaths", "Deaths"], total_time_played: ["Seconds played", "Seconden gespeeld"], total_rounds_played: ["Rounds played", "Rondes gespeeld"], total_wins: ["Rounds won", "Rondes gewonnen"], total_mvps: ["MVPs", "MVP's"], total_damage_done: ["Damage done", "Schade toegebracht"], total_money_earned: ["Money earned", "Geld verdiend"], total_kills_headshot: ["Headshot kills", "Headshot-kills"], total_shots_fired: ["Shots fired", "Schoten"], total_shots_hit: ["Shots hit", "Schoten raak"], total_planted_bombs: ["Bombs planted", "Bommen geplant"], total_defused_bombs: ["Bombs defused", "Bommen ontmanteld"], total_kills_knife: ["Knife kills", "Mes-kills"], total_kills_enemy_blinded: ["Kills on blinded enemies", "Kills op verblinde vijanden"], total_dominations: ["Dominations", "Dominations"], total_revenges: ["Revenges", "Wraakacties"], total_contribution_score: ["Contribution score", "Score"] } },
+      { title: ["Per weapon", "Per wapen"], match: /^total_kills_(ak47|m4a1|awp|deagle|glock|usp|p250|famas|galilar|aug|sg556|scar20|g3sg1|ssg08|mp7|mp9|ump45|p90|bizon|mac10|nova|xm1014|mag7|sawedoff|negev|m249|fiveseven|tec9|elite|hkp2000|p90|taser|hegrenade|molotov|knife|cz75|mp5sd|revolver)$/, labels: {} },
+      { title: ["Maps", "Maps"], match: /^total_(wins|rounds)_map_/, labels: {} }
+    ],
+    derived: (m) => { const out = []; const k = m.get("total_kills"), d = m.get("total_deaths"); if (k != null && d > 0) out.push({ v: (k / d).toFixed(2), t: ["K/D ratio", "K/D-ratio"] }); const sf = m.get("total_shots_fired"), sh = m.get("total_shots_hit"); if (sf > 0 && sh != null) out.push({ v: Math.round(100 * sh / sf) + "%", t: ["Accuracy", "Raakpercentage"] }); const hs = m.get("total_kills_headshot"); if (hs != null && k > 0) out.push({ v: Math.round(100 * hs / k) + "%", t: ["Headshot rate", "Headshot-percentage"] }); const w = m.get("total_wins"), r = m.get("total_rounds_played"); if (w != null && r > 0) out.push({ v: Math.round(100 * w / r) + "%", t: ["Round win rate", "Ronde-winrate"] }); const tp = m.get("total_time_played"); if (tp > 0) out.push({ v: fmtNum(Math.round(tp / 3600)) + " h", t: ["Time played", "Speeltijd"] }); return out; }
+  }
+};
+const LL = (pair) => pair[lang === "nl" ? 1 : 0];
+function prettyStat(sname, sid) {
+  let src = sname || String(sid);
+  const looksInternal = !/\s/.test(src) && (/_/.test(src) || /^[A-Z]{1,4}Stats?[A-Z0-9]/.test(src) || /^(DBD|ACH|STATS?|TOTAL|GLOBAL)[_.]/i.test(src));
+  if (sname && !looksInternal) return sname;
+  let x = String(src).replace(/_(disp|display|float|int|stat|value|val)$/i, "").replace(/^[A-Z]{1,4}Stats?(?=[A-Z0-9])/, "").replace(/^(DBD|STAT|STATS|TOTAL|GLOBAL|ACH)[_.]/i, "")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2").replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Za-z])(\d)/g, "$1 $2").replace(/(\d)([A-Za-z])/g, "$1 $2").replace(/[._]+/g, " ").replace(/\bPct\b/gi, "%").replace(/\s+/g, " ").trim();
+  x = x.split(" ").map((w) => /^[A-Z]{2,4}$/.test(w) ? w : (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())).join(" ");
+  return x || String(sid);
+}
+const fmtStatVal = (v) => Number.isInteger(v) ? fmtNum(v) : (Math.round(v * 10) / 10).toLocaleString(lang === "nl" ? "nl-NL" : "en-US");
+function statTiles(rows, labelFor) {
+  return '<div class="gs-stats">' + rows.map((s) => '<div class="gs-stat"><b>' + escT(fmtStatVal(s.value)) + "</b><span>" + escT(labelFor(s)) + "</span></div>").join("") + "</div>";
+}
+async function loadSteamBlock(body, appid) {
+  const host = document.createElement("div"); host.className = "gs-steam"; host.innerHTML = '<div class="gs-sec">' + t("gsStats") + '</div><div class="skel skel-row"></div><div class="skel skel-row"></div>';
+  const igdb = body.querySelector(".gs-igdb"); if (igdb) body.insertBefore(host, igdb); else body.appendChild(host);
+  let r = null; try { r = await window.egs.social("steam_game", { appid, lang }); } catch (e) {}
+  if (!body.isConnected) return;
+  if (!r || !r.ok) { host.innerHTML = ""; return; }
+  const stats = (r.stats || []).filter((s) => typeof s.value === "number" && s.value !== 0);
+  let html = "";
+  if (stats.length) {
+    const cfg = CURATED_STATS[appid];
+    html += '<div class="gs-sec">' + t("gsStats") + " <em>" + stats.length + "</em></div>";
+    if (cfg) {
+      const m = new Map(stats.map((s) => [String(s.id), s.value])); const used = new Set();
+      const derived = cfg.derived ? cfg.derived(m) : [];
+      if (derived.length) html += '<div class="gs-sub">' + t("gsRatios") + '</div><div class="gs-stats hero">' + derived.map((d) => '<div class="gs-stat gold"><b>' + escT(String(d.v)) + "</b><span>" + escT(LL(d.t)) + "</span></div>").join("") + "</div>";
+      for (const sec of cfg.sections) {
+        const rows = stats.filter((s) => sec.match.test(String(s.id))); if (!rows.length) continue;
+        rows.forEach((s) => used.add(String(s.id))); rows.sort((a, b) => b.value - a.value);
+        html += '<div class="gs-sub">' + escT(LL(sec.title)) + " <em>" + rows.length + "</em></div>" + statTiles(rows, (s) => { const l = sec.labels[String(s.id)]; return l ? LL(l) : prettyStat(s.name, s.id); });
+      }
+      const rest = stats.filter((s) => !used.has(String(s.id))).sort((a, b) => b.value - a.value);
+      if (rest.length) html += '<div class="gs-sub">' + t("gsOther") + " <em>" + rest.length + "</em></div>" + statTiles(rest.slice(0, 60), (s) => prettyStat(s.name, s.id));
+    } else {
+      html += statTiles(stats.slice().sort((a, b) => b.value - a.value).slice(0, 60), (s) => prettyStat(s.name, s.id));
+    }
+  }
+  const ach = r.achievements || [];
+  if (ach.length) {
+    const earned = ach.filter((a) => a.achieved).sort((a, b) => (a.global_pct ?? 100) - (b.global_pct ?? 100));
+    const locked = ach.filter((a) => !a.achieved && !a.hidden).sort((a, b) => (b.global_pct ?? 0) - (a.global_pct ?? 0));
+    html += '<div class="gs-sec">' + t("gsAch") + " <em>" + r.earned + "/" + r.total + "</em></div>";
+    if (r.private) html += '<p class="muted">' + escT(t("gsAchPrivate")) + "</p>";
+    html += '<div class="gs-ach">' + [...earned, ...locked].slice(0, 48).map((a) =>
+      '<div class="gs-a' + (a.achieved ? "" : " locked") + '" title="' + escT(a.desc || "") + '">' + (a.icon ? '<img src="' + encodeURI(a.achieved ? a.icon : (a.icon_locked || a.icon)) + '" alt="" loading="lazy">' : "") +
+      '<div class="gs-a-t"><b>' + escT(a.name) + "</b><small>" + (a.global_pct != null ? a.global_pct.toFixed(1) + "% " + escT(t("gsRare")) : escT(a.achieved ? "" : t("gsLocked"))) + "</small></div></div>").join("") + "</div>";
+  } else if (!stats.length) html += '<div class="gs-sec">' + t("gsStats") + '</div><p class="muted">' + escT(t("gsNoStats")) + "</p>";
+  host.innerHTML = html;
 }
 function closeGameSheet() { $("game-sheet").hidden = true; $("gsheet-body").innerHTML = ""; }
 $("gsheet-close").addEventListener("click", closeGameSheet);
