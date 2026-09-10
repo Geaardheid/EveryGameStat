@@ -84,8 +84,8 @@ class MinecraftAdapter {
 
   poll() {
     try {
-      /* draait = procesdetectie zegt ja, of de log is de laatste 15 minuten beschreven */
-      const running = !!(this.opts.isRunning && this.opts.isRunning()) || (!!this.lastLine && Date.now() - this.lastLine < LOG_STALE_MS);
+      /* draait = procesdetectie zegt ja, of de log is de laatste 2 minuten beschreven */
+      const running = !!(this.opts.isRunning && this.opts.isRunning()) || (!!this.lastLine && Date.now() - this.lastLine < 120000);
       const best = activeLog(this.opts.extraLogs ? this.opts.extraLogs() : []);
       if (best && (!this.log || this.log.path !== best.path)) {
         /* nieuwe log: alleen vanaf nu lezen (oude sessies zijn niet van nu) */

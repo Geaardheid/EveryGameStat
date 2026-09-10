@@ -74,6 +74,12 @@ class ProcessWatchAdapter {
     let titles = null;
     for (const g of games) {
       let running = (g.exes || []).some((e) => procs.has(String(e).toLowerCase().trim()));
+      /* games waarvan de exe na afsluiten blijft hangen (CoD-bootstrapper): alleen tellen
+         als het proces ook echt een venster met titel heeft */
+      if (running && g.needsWindow && this.opts.windowTitles) {
+        const exes = (g.exes || []).filter((e) => procs.has(String(e).toLowerCase().trim()));
+        try { const tt = await this.opts.windowTitles(exes); running = Object.values(tt).some((t) => String(t || "").trim().length > 0); } catch (e) {}
+      }
       if (!running && g.titleContains && this.opts.windowTitles) {
         const exes = (g.titleExes || []).filter((e) => procs.has(String(e).toLowerCase().trim()));
         if (exes.length) {
