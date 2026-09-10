@@ -426,8 +426,35 @@ ipcMain.handle("hubs", async () => { try { return await api.hubs(); } catch (e) 
 ipcMain.handle("web-session", async (_e, path) => {
   try { return await api.social("web_session", { path }); } catch (e) { return { ok: false, error: "offline" }; }
 });
+/* Game-info: IGDB via de site-functie; valt voor Steam-games terug op de Steam Store-API
+   (geen sleutel nodig), zodat de sheet ook werkt als IGDB even niet beschikbaar is. */
+const steamInfoCache = new Map();
+async function steamInfo(appid) {
+  if (steamInfoCache.has(appid)) return steamInfoCache.get(appid);
+  const r = await fetch("https://store.steampowered.com/api/appdetails?appids=" + appid + "&l=english");
+  const j = await r.json(); const d = j && j[appid] && j[appid].success ? j[appid].data : null;
+  if (!d) return null;
+  const meta = {
+    name: d.name, steam_appid: String(appid), source: "steam",
+    cover: "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg",
+    summary: String(d.short_description || "").replace(/<[^>]+>/g, ""),
+    genres: (d.genres || []).map((g) => g.description).slice(0, 6),
+    released: d.release_date && d.release_date.date ? d.release_date.date : null,
+    rating: d.metacritic && d.metacritic.score ? d.metacritic.score : null,
+    platforms: Object.entries(d.platforms || {}).filter(([, v]) => v).map(([k]) => ({ windows: "PC", mac: "Mac", linux: "Linux" })[k] || k),
+    modes: (d.categories || []).map((c) => c.description).filter((x) => /player|co-op|pvp/i.test(x)).slice(0, 4),
+    links: { steam: "https://store.steampowered.com/app/" + appid, ...(d.website && /^https:/.test(d.website) ? { official: d.website } : {}) },
+    screenshots: (d.screenshots || []).slice(0, 8).map((s) => s.path_full), videos: []
+  };
+  steamInfoCache.set(appid, meta);
+  return meta;
+}
 ipcMain.handle("game-info", async (_e, steamAppid, name) => {
-  try { return await api.gameInfo(steamAppid, name); } catch (e) { return { ok: false, error: "offline" }; }
+  let r = null;
+  try { r = await api.gameInfo(steamAppid, name); } catch (e) { r = { ok: false, error: "offline" }; }
+  if (r && r.ok && r.found) return r;
+  if (steamAppid) { try { const meta = await steamInfo(String(steamAppid)); if (meta) return { ok: true, found: true, meta }; } catch (e) {} }
+  return r || { ok: false, error: "offline" };
 });
 ipcMain.handle("open-external", (_e, url) => {
   /* alleen https; game-links (Steam, YouTube, socials, officiële site) komen uit IGDB */

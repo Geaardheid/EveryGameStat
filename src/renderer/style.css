@@ -627,3 +627,7 @@ body.tabbed .view, .view {
 .tb-win button { width: 48px; }
 .tb-pop { top: calc(var(--tb) + 4px); }
 .egs-loader { background: var(--frame); }
+/* liggende covers: passend op een geblurde kopie, in plaats van uitvergroot en afgesneden */
+.gcard .gc-wrap { position: relative; aspect-ratio: 2/3; background: #131316; }
+.gcard .gc-wrap.wide .gc-cover { position: relative; object-fit: contain; height: 100%; z-index: 1; padding: 0; }
+.gcard .gc-bg { position: absolute; inset: -12px; background-size: cover; background-position: center; filter: blur(18px) saturate(1.3) brightness(.75); }

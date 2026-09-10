@@ -764,11 +764,22 @@ function gameCard(g, i) {
   card.className = "gcard";
   card.style.setProperty("--i", Math.min(i || 0, 30));
   let coverEl;
-  if (g.cover) {
-    coverEl = document.createElement("img"); coverEl.className = "gc-cover"; coverEl.loading = "lazy"; coverEl.src = g.cover;
-    coverEl.addEventListener("error", () => { const ph = document.createElement("div"); ph.className = "gc-cover ph"; ph.textContent = (g.name || "?")[0].toUpperCase(); coverEl.replaceWith(ph); });
+  const appid = g.platform === "Steam" && /^\d+$/.test(String(g.external_id || "")) ? String(g.external_id) : null;
+  const portrait = appid ? "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg" : null;
+  const wrap = document.createElement("div"); wrap.className = "gc-wrap";
+  if (g.cover || portrait) {
+    coverEl = document.createElement("img"); coverEl.className = "gc-cover"; coverEl.loading = "lazy"; coverEl.src = portrait || g.cover;
+    let triedFallback = !portrait || !g.cover;
+    coverEl.addEventListener("error", () => {
+      if (!triedFallback) { triedFallback = true; coverEl.src = g.cover; return; }
+      const ph = document.createElement("div"); ph.className = "gc-cover ph"; ph.textContent = (g.name || "?")[0].toUpperCase(); coverEl.replaceWith(ph);
+    });
+    /* liggende art (Steam-header, Xbox-banner): niet opblazen, maar passend tonen op een geblurde kopie */
+    coverEl.addEventListener("load", () => {
+      if (coverEl.naturalWidth > coverEl.naturalHeight * 1.1) { wrap.classList.add("wide"); const bg = document.createElement("div"); bg.className = "gc-bg"; bg.style.backgroundImage = 'url("' + coverEl.src + '")'; wrap.prepend(bg); }
+    });
   } else { coverEl = document.createElement("div"); coverEl.className = "gc-cover ph"; coverEl.textContent = (g.name || "?")[0].toUpperCase(); }
-  const wrap = document.createElement("div"); wrap.className = "gc-wrap"; wrap.appendChild(coverEl);
+  wrap.appendChild(coverEl);
   const plat = document.createElement("span"); plat.className = "gc-plat"; plat.textContent = g.platform || "";
   const body = document.createElement("div"); body.className = "gc-body";
   const ach = g.ach_t ? '<span class="gc-ach">' + (g.ach_e ?? 0) + "/" + g.ach_t + "</span>" : "<span></span>";
@@ -1250,7 +1261,7 @@ async function openGameSheet(g) {
   const r = await window.egs.gameInfo(appid, g.name);
   if (sheet.hidden) return;
   const m = r && r.ok && r.found ? r.meta : null;
-  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); return; }
+  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); const c = body.querySelector(".gs-cover.ph"); if (c && g.cover) { const im = document.createElement("img"); im.className = "gs-cover"; im.src = g.cover; c.replaceWith(im); } return; }
   const links = SHEET_LINKS.filter(([k]) => m.links && m.links[k]);
   const owned = g.platform === "Steam";
   const steamUrl = (m.links && m.links.steam) || (m.steam_appid ? "https://store.steampowered.com/app/" + m.steam_appid : null);
