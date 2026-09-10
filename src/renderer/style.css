@@ -591,3 +591,6 @@ input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; }
 .mc-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--hc), color-mix(in srgb, var(--hc) 60%, #fff)); box-shadow: 0 0 10px color-mix(in srgb, var(--hc) 60%, transparent); transition: width .7s var(--ease); }
 .mc-hours { text-align: right; font-family: var(--font-lbl); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .mc-hours b { display: block; font-family: var(--font-num); font-size: 22px; font-weight: 600; color: var(--hc); line-height: 1.1; letter-spacing: -.01em; }
+/* cache-render zonder herhaalde intro-animatie */
+.noanim > * { animation: none !important; }
+.sd-empty .empty { gap: 16px; }

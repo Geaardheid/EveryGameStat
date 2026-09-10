@@ -47,9 +47,18 @@ const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) { app.quit(); }
 app.on("second-instance", () => { showWindow(); });
 
+/* Tonen zonder witte flits: verborgen vensters verliezen hun GPU-buffer, dus eerst
+   onzichtbaar tonen, één frame laten tekenen, dan pas opacity omhoog. */
 function showWindow() {
-  if (!win) createWindow();
-  if (!win.isVisible()) { if (!win.isMaximized()) win.maximize(); win.show(); }
+  if (!win) return createWindow(false);
+  if (!win.isVisible()) {
+    win.setOpacity(0);
+    if (!win.isMaximized()) win.maximize();
+    win.show();
+    const reveal = () => { try { win.setOpacity(1); } catch (e) {} };
+    win.webContents.executeJavaScript("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))").then(reveal, reveal);
+    setTimeout(reveal, 400);
+  }
   win.focus();
 }
 
@@ -66,10 +75,11 @@ function createWindow(startHidden) {
     fullscreenable: false,
     autoHideMenuBar: true,
     frame: false,               /* eigen titelbalk (EGS-identiteit) */
-    backgroundColor: "#28282D",
+    backgroundColor: "#0E0D10",
     icon: path.join(__dirname, "..", "assets", "icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
       contextIsolation: true,
       nodeIntegration: false
     }
@@ -386,8 +396,8 @@ ipcMain.handle("win", (_e, cmd) => {
 
 ipcMain.handle("mc-status", () => mcStatus);
 ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
-ipcMain.handle("recent", async () => {
-  try { return await api.recent(15); } catch (e) { return { ok: false, error: "offline" }; }
+ipcMain.handle("recent", async (_e, limit) => {
+  try { return await api.recent(Math.min(Math.max(Number(limit) || 15, 1), 50)); } catch (e) { return { ok: false, error: "offline" }; }
 });
 
 ipcMain.handle("set-setting", (_e, kv) => {

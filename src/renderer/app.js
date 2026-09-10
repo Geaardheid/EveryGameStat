@@ -76,6 +76,8 @@ const I18N = {
     mcTag: "per server", mcOff: "not running \u00b7 hours per server via latest.log", mcOn: "running \u00b7 in the menu", mcOnServer: (x) => "on " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer worlds", mcTotal: "Total measured", mcHours: "hours", mcSessions: "sessions", mcLast: "last", mcDeaths: "deaths", mcAdv: "advancements", mcEmpty: "Play Minecraft (Java) with the Companion open and your servers appear here. Bedrock has no log, so only total hours via Xbox.",
     hubSubMc: "Hours per server \u00b7 latest.log",
+    rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
+    loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
     hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
     libHead: "Your library",
     libSearchPh: "Search games\u2026",
@@ -197,6 +199,8 @@ const I18N = {
     mcTag: "per server", mcOff: "draait niet \u00b7 uren per server via latest.log", mcOn: "draait \u00b7 in het menu", mcOnServer: (x) => "op " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer-werelden", mcTotal: "Totaal gemeten", mcHours: "uur", mcSessions: "sessies", mcLast: "laatst", mcDeaths: "doden", mcAdv: "advancements", mcEmpty: "Speel Minecraft (Java) met de Companion open en je servers verschijnen hier. Bedrock heeft geen log, dus alleen totaaluren via Xbox.",
     hubSubMc: "Uren per server \u00b7 latest.log",
+    rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
+    loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
     hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
     libHead: "Jouw bibliotheek",
     libSearchPh: "Zoek games\u2026",
@@ -849,7 +853,35 @@ const HUB_PAGE_ORDER = ["rocketleague", "minecraft", "dbd", "royale", "brawl", "
 const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
 const rankTxt = (rk) => (rk.queue || "").replace("RANKED_", "").replace("_", " ") + ": " + (rk.tier || "?") + " " + (rk.rank || "") + (rk.lp != null ? " \u00b7 " + rk.lp + " LP" : "");
-let hubData = [], hubsLoadedAt = 0, mcSummary = null;
+let hubData = [], hubsLoadedAt = 0, mcSummary = null, rlMatches = null, hubOrigin = "view-stats";
+/* hubs zonder eigen art: de cover uit je eigen bibliotheek (Xbox/PS/Steam) van dezelfde game */
+async function ensureLib() {
+  if (libData) return libData;
+  try { const r = await window.egs.social("library"); if (r && r.ok) libData = r.games || []; } catch (e) {}
+  return libData || [];
+}
+function libCover(name) {
+  const n = String(name || "").toLowerCase();
+  const hit = (libData || []).filter((g) => g.cover && String(g.name || "").toLowerCase().startsWith(n)).sort((a, b) => b.minutes - a.minutes)[0];
+  return hit ? hit.cover : null;
+}
+async function fetchRl() {
+  try { const r = await window.egs.recent(50); if (r && r.ok) rlMatches = r.matches || []; } catch (e) {}
+  return rlMatches;
+}
+function rlStats(list) {
+  const all = [...(list || []), ...session.filter((m) => !(list || []).some((x) => x.played_at === m.played_at))];
+  const n = all.length, w = all.filter((m) => m.result === "win").length, l = all.filter((m) => m.result === "loss").length;
+  const sum = (k) => all.reduce((a, m) => a + (Number(m[k]) || 0), 0);
+  const today = all.filter((m) => new Date(m.played_at).toDateString() === new Date().toDateString()).length;
+  return { n, w, l, wr: n ? Math.round((w / Math.max(1, w + l)) * 100) : null, g: sum("goals"), a: sum("assists"), s: sum("saves"), sh: sum("shots"), today, all: all.sort((x, y) => String(y.played_at).localeCompare(String(x.played_at))) };
+}
+function errBox(retryFn) {
+  const d = document.createElement("div"); d.className = "empty";
+  d.innerHTML = '<img class="mascot" src="' + MASCOT("worried") + '" alt=""><span>' + escT(t("loadErr")) + '</span>';
+  const b = document.createElement("button"); b.className = "btn small"; b.textContent = t("retry"); b.addEventListener("click", retryFn); d.appendChild(b);
+  return d;
+}
 /* speeltijd netjes: < 60 min → "12 min", anders uren met 1 decimaal */
 const fmtPlay = (min) => { min = Number(min) || 0; return min < 60 ? { v: fmtNum(Math.round(min)), u: "min" } : { v: fmtNum(Math.round(min / 6) / 10), u: t("mcHours") }; };
 async function fetchMc() {
@@ -874,15 +906,30 @@ function heroStat(def, d) {
 }
 function artStyle(el, def) {
   el.style.setProperty("--hc", def.c);
+  const lib = def.art ? null : libCover(def.name);
   if (def.art) el.style.backgroundImage = 'url("' + def.art + '")';
+  else if (lib) el.style.backgroundImage = 'url("' + lib + '")';
   else if (def.mark) { el.style.backgroundImage = 'url("' + def.mark + '")'; el.classList.add("mark"); }
 }
 /* ---- Game hubs-tab ---- */
+let hubsBusy = false;
 async function loadHubsPage() {
   const grid = $("hubs-grid");
-  if (!hubData.length) grid.innerHTML = skelRows(6, "skel-hub");
-  await Promise.all([fetchHubs(false), fetchMc()]);
-  grid.innerHTML = "";
+  const cached = hubData.length > 0;
+  if (cached) renderHubsPage(false); else grid.innerHTML = skelRows(6, "skel-hub");
+  if (hubsBusy) return; hubsBusy = true;
+  try {
+    const before = JSON.stringify([hubData, mcSummary, rlMatches && rlMatches.length]);
+    const ok = await Promise.all([fetchHubs(false), fetchMc(), fetchRl(), ensureLib()]);
+    if (!ok[0] && !cached) { grid.innerHTML = ""; grid.appendChild(errBox(() => loadHubsPage())); return; }
+    const after = JSON.stringify([hubData, mcSummary, rlMatches && rlMatches.length]);
+    if (!cached || before !== after) renderHubsPage(cached);
+  } catch (e) { if (!cached) { grid.innerHTML = ""; grid.appendChild(errBox(() => loadHubsPage())); } }
+  finally { hubsBusy = false; }
+}
+function renderHubsPage(quiet) {
+  const grid = $("hubs-grid");
+  grid.innerHTML = ""; grid.classList.toggle("noanim", !!quiet);
   HUB_PAGE_ORDER.forEach((key, i) => {
     const def = HUBS[key]; const h = hubOf(key); const d = (h && h.data) || {};
     const el = document.createElement("div"); el.className = "ghub"; el.style.setProperty("--hc", def.c); el.style.setProperty("--i", i);
@@ -894,8 +941,11 @@ async function loadHubsPage() {
       if (has) { const f = fmtPlay(mcSummary.total.minutes); stat = { v: f.v, lbl: f.u }; }
       who = t(def.sub) + (mcSummary && mcSummary.servers && mcSummary.servers.length ? " \u00b7 " + mcSummary.servers.length + " servers" : "");
     } else if (def.kind === "live") {
-      status = t("hubLive"); cls = "live";
-      const n = session.length; stat = n ? { v: n, lbl: t("hubMatches") } : (mw4Total && false ? null : null);
+      const rs = rlStats(rlMatches);
+      const on = tbNowLast && tbNowLast.game === "Rocket League";
+      status = on ? t("hubLive") : (rs.n ? t("hubLinked") : t("hubSetup")); cls = on ? "live" : (rs.n ? "ok" : "soon");
+      if (rs.n) stat = { v: rs.wr != null ? rs.wr + "%" : String(rs.n), lbl: rs.wr != null ? t("rlWinrate") + " \u00b7 " + rs.n + " " + t("rlMatches") : t("rlMatches") };
+      else el.classList.add("off");
       who = t(def.sub);
     } else if (h) { status = t("hubLinked"); cls = "ok"; const hs = heroStat(def, d); if (hs) stat = { v: fmtStat(hs.v), lbl: hs.lbl || STAT_LBL[hs.k] || hs.k }; who = escT(d.name || d.riot_id || d.tag || t(def.sub)); }
     else { status = t("hubNoData"); cls = "soon"; el.classList.add("off"); who = t(def.sub) + " \u00b7 " + t("hubLinkOn"); }
@@ -906,8 +956,9 @@ async function loadHubsPage() {
       (stat ? '<div class="gh-stat"><b>' + escT(String(stat.v)) + "</b><span>" + escT(stat.lbl) + "</span></div>" : "");
     el.appendChild(body);
     el.addEventListener("click", () => {
+      hubOrigin = "view-hubs";
       if (def.kind === "local") { show("view-stats"); openMcHub(); return; }
-      if (def.kind === "live") { show("view-main"); return; }
+      if (def.kind === "live") { show("view-stats"); openRlHub(); return; }
       if (!h) { window.egs.openExternal("https://everygamestat.com/me"); return; }
       show("view-stats"); openHub(key);
     });
@@ -928,25 +979,94 @@ function statCard(h, i, isPlat) {
     (def.ranks && Array.isArray(d.ranks) && d.ranks.length ? '<div class="hub-ranks">' + d.ranks.slice(0, 2).map((rk) => "<span>" + escT(rankTxt(rk)) + "</span>").join("") + "</div>" : "") +
     '<div class="sc-foot"><span>' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "\u2013") + "</span><em>" + t("statsAll") + " \u2192</em></div>";
   card.appendChild(art); card.appendChild(body);
-  card.addEventListener("click", () => openHub(h.game_key));
+  card.addEventListener("click", () => { hubOrigin = "view-stats"; openHub(h.game_key); });
   return card;
 }
+let statsBusy = false;
 async function loadStats() {
-  const grid = $("stats-grid"), plat = $("stats-plat");
+  const grid = $("stats-grid");
   $("stats-detail").hidden = true; $("stats-home").hidden = false;
-  if (!hubData.length) grid.innerHTML = skelRows(4, "skel-hub");
-  const [ok] = await Promise.all([fetchHubs(false), fetchMc()]);
-  if (!ok) { grid.innerHTML = emptyHtml(t("libFail"), "worried"); return; }
+  const cached = hubData.length > 0 || (rlMatches && rlMatches.length);
+  if (cached) renderStats(false); else grid.innerHTML = skelRows(4, "skel-hub");
+  if (statsBusy) return; statsBusy = true;
+  try {
+    const before = JSON.stringify([hubData, mcSummary, rlMatches && rlMatches.length]);
+    const ok = await Promise.all([fetchHubs(false), fetchMc(), fetchRl(), ensureLib()]);
+    if (!ok[0] && !cached) { grid.innerHTML = ""; grid.appendChild(errBox(() => loadStats())); return; }
+    const after = JSON.stringify([hubData, mcSummary, rlMatches && rlMatches.length]);
+    if (!cached || before !== after) renderStats(cached);
+  } catch (e) { if (!cached) { grid.innerHTML = ""; grid.appendChild(errBox(() => loadStats())); } }
+  finally { statsBusy = false; }
+}
+function renderStats(quiet) {
+  const grid = $("stats-grid"), plat = $("stats-plat");
+  grid.classList.toggle("noanim", !!quiet); plat.classList.toggle("noanim", !!quiet);
   const games = hubData.filter((h) => HUBS[h.game_key].kind !== "platform");
-  const hasMc = mcSummary && mcSummary.total && mcSummary.total.sessions > 0;
+  const hasMc = !!(mcSummary && mcSummary.total && mcSummary.total.sessions > 0);
+  const rs = rlStats(rlMatches); const hasRl = rs.n > 0;
   const plats = hubData.filter((h) => HUBS[h.game_key].kind === "platform");
-  $("stats-sub").textContent = hubData.length + " " + (lang === "nl" ? "bronnen" : "sources");
+  const nSrc = hubData.length + (hasMc ? 1 : 0) + (hasRl ? 1 : 0);
+  $("stats-sub").textContent = nSrc + " " + (lang === "nl" ? "bronnen" : "sources");
   grid.innerHTML = ""; plat.innerHTML = "";
-  if (!hubData.length && !hasMc) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); $("stats-plat-h").hidden = true; return; }
-  if (hasMc) grid.appendChild(mcCard(0));
-  games.forEach((h, i) => grid.appendChild(statCard(h, i + (hasMc ? 1 : 0), false)));
+  if (!hubData.length && !hasMc && !hasRl) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); $("stats-plat-h").hidden = true; return; }
+  let i = 0;
+  if (hasRl) grid.appendChild(rlCard(i++, rs));
+  if (hasMc) grid.appendChild(mcCard(i++));
+  games.forEach((h) => grid.appendChild(statCard(h, i++, false)));
   $("stats-plat-h").hidden = !plats.length;
-  plats.forEach((h, i) => plat.appendChild(statCard(h, i + games.length, true)));
+  plats.forEach((h) => plat.appendChild(statCard(h, i++, true)));
+}
+function rlCard(i, rs) {
+  const def = HUBS.rocketleague;
+  const card = document.createElement("div"); card.className = "scard"; card.style.setProperty("--hc", def.c); card.style.setProperty("--i", i);
+  const art = document.createElement("div"); art.className = "sc-art"; artStyle(art, def);
+  const body = document.createElement("div"); body.className = "sc-body";
+  body.innerHTML = '<div class="sc-head"><h3>Rocket League</h3><span>' + escT(t("hubSubRl")) + "</span></div>" +
+    '<div class="sc-hero"><b>' + (rs.wr != null ? rs.wr + "%" : "\u2013") + "</b><span>" + escT(t("rlWinrate")) + " \u00b7 " + rs.n + " " + escT(t("rlMatches")) + "</span></div>" +
+    '<div class="sc-row"><div><b>' + fmtNum(rs.g) + "</b><span>" + escT(t("rlGoals")) + "</span></div><div><b>" + fmtNum(rs.a) + "</b><span>" + escT(t("rlAssists")) + "</span></div><div><b>" + fmtNum(rs.s) + "</b><span>" + escT(t("rlSaves")) + "</span></div></div>" +
+    '<div class="sc-foot"><span>' + (rs.today ? rs.today + " " + escT(t("rlMatches")) + " " + escT(t("rlToday")) : escT(t("hubSubRl"))) + "</span><em>" + t("statsAll") + " \u2192</em></div>";
+  card.appendChild(art); card.appendChild(body);
+  card.addEventListener("click", () => { hubOrigin = "view-stats"; openRlHub(); });
+  return card;
+}
+async function openRlHub() {
+  if (!rlMatches) await fetchRl();
+  const def = HUBS.rocketleague, rs = rlStats(rlMatches);
+  const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false; box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sd"; wrap.style.setProperty("--hc", def.c);
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  const live = tbNowLast && tbNowLast.game === "Rocket League" ? t("hubLive") + (tbNowLast.detail ? " \u00b7 " + tbNowLast.detail : "") : t("hubSubRl");
+  banner.innerHTML = '<button class="btn small sd-back" id="hub-back">\u2190 ' + t("statsBack") + "</button>" +
+    '<div class="sd-in"><div><h2>Rocket League</h2><div class="sd-who">' + escT(live) + "</div></div></div>";
+  wrap.appendChild(banner);
+  if (!rs.n) {
+    const e = document.createElement("div"); e.className = "sd-empty"; e.innerHTML = emptyHtml(t("rlEmpty"), "controller");
+    const b = document.createElement("button"); b.className = "btn gold"; b.textContent = t("rlSetupGo"); b.addEventListener("click", () => { show("view-main"); $("rl-setup-box").hidden = false; });
+    e.firstChild.appendChild(b); wrap.appendChild(e);
+  } else {
+    const hero = document.createElement("div"); hero.className = "sd-heroes";
+    const per = (v) => rs.n ? (Math.round((v / rs.n) * 10) / 10).toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : "\u2013";
+    [[rs.wr != null ? rs.wr + "%" : "\u2013", t("rlWinrate") + " \u00b7 " + rs.w + " " + t("rlWins") + " / " + rs.l + " " + t("rlLosses")], [fmtNum(rs.n), t("rlMatches")], [per(rs.g), t("rlGoals") + " " + t("rlPerMatch")], [per(rs.s), t("rlSaves") + " " + t("rlPerMatch")]]
+      .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span>"; hero.appendChild(el); });
+    wrap.appendChild(hero);
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = t("statsAll"); wrap.appendChild(sub);
+    const g = document.createElement("div"); g.className = "sd-grid";
+    [[fmtNum(rs.g), t("rlGoals")], [fmtNum(rs.a), t("rlAssists")], [fmtNum(rs.s), t("rlSaves")], [fmtNum(rs.sh), t("rlShots")], [per(rs.a), t("rlAssists") + " " + t("rlPerMatch")], [fmtNum(rs.today), t("rlMatches") + " " + t("rlToday")]]
+      .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span>"; g.appendChild(el); });
+    wrap.appendChild(g);
+    const sub2 = document.createElement("div"); sub2.className = "hub-sub"; sub2.textContent = t("rlLast"); wrap.appendChild(sub2);
+    const list = document.createElement("div"); list.className = "matches";
+    rs.all.slice(0, 30).forEach((m, i) => { const row = matchRow(m); row.style.animationDelay = Math.min(i, 12) * 30 + "ms"; list.appendChild(row); });
+    wrap.appendChild(list);
+  }
+  box.appendChild(wrap);
+  $("hub-back").addEventListener("click", hubBack);
+  $("view-stats").scrollTop = 0;
+}
+function hubBack() {
+  const box = $("stats-detail"); box.hidden = true; $("stats-home").hidden = false;
+  if (hubOrigin === "view-hubs") show("view-hubs");
+  else { renderStats(true); $("view-stats").scrollTop = 0; }
 }
 function mcCard(i) {
   const def = HUBS.minecraft, m = mcSummary;
@@ -959,7 +1079,7 @@ function mcCard(i) {
     '<div class="sc-row"><div><b>' + (m.servers || []).length + "</b><span>" + escT(t("mcServers")) + "</span></div><div><b>" + fmtNum(m.total.sessions) + "</b><span>" + escT(t("mcSessions")) + "</span></div><div><b>" + escT(top ? top.server : "\u2013") + "</b><span>Top server</span></div></div>" +
     '<div class="sc-foot"><span>' + escT(t("hubSubMc")) + "</span><em>" + t("statsAll") + " \u2192</em></div>";
   card.appendChild(art); card.appendChild(body);
-  card.addEventListener("click", openMcHub);
+  card.addEventListener("click", () => { hubOrigin = "view-stats"; openMcHub(); });
   return card;
 }
 async function openMcHub() {
@@ -994,7 +1114,7 @@ async function openMcHub() {
   table(m.worlds, "world", t("mcWorlds"));
   if (!(m.servers || []).length && !(m.worlds || []).length) { const e = document.createElement("div"); e.innerHTML = emptyHtml(t("mcEmpty"), "controller"); wrap.appendChild(e.firstChild); }
   box.appendChild(wrap);
-  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-home").hidden = false; });
+  $("hub-back").addEventListener("click", hubBack);
   $("view-stats").scrollTop = 0;
 }
 function openHub(key) {
@@ -1040,7 +1160,7 @@ function openHub(key) {
   list(d.deck, "Current deck", (c) => "<span>" + (c.icon ? '<img src="' + encodeURI(c.icon) + '" alt="">' : "") + escT(c.name) + " \u00b7 " + escT(fmtStat(c.elixir)) + "</span>");
   list(d.trophy_titles && d.trophy_titles.slice(0, 16), "Trophy cabinet", (tt) => "<span>" + (tt.icon ? '<img src="' + encodeURI(tt.icon) + '" alt="">' : "") + escT(tt.name) + " \u00b7 " + escT(fmtStat(tt.progress)) + "%" + (tt.platinum ? " \u00b7 Platinum" : "") + "</span>");
   box.appendChild(wrap);
-  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-home").hidden = false; });
+  $("hub-back").addEventListener("click", hubBack);
   box.scrollTop = 0; $("view-stats").scrollTop = 0;
 }
 
@@ -1303,7 +1423,7 @@ function renderSession() {
   $("session-line").textContent = t("sessionLine")(session.length, w, l);
   sessTotals = { n: session.length, w, l }; if (tbNowLast && tbNowLast.game) tbNow(tbNowLast);
 }
-window.egs.onMatch((d) => { session.push(d.match); renderSession(); const m = d.match || {}; toast(t("toastMatch")((m.result || "?").toUpperCase() + " \u00b7 " + (m.goals ?? "\u2013") + "G " + (m.assists ?? "\u2013") + "A " + (m.saves ?? "\u2013") + "S"), t("toastDone"), m.result === "win" ? "cheer" : "controller"); });
+window.egs.onMatch((d) => { session.push(d.match); renderSession(); rlMatches = null; const m = d.match || {}; toast(t("toastMatch")((m.result || "?").toUpperCase() + " \u00b7 " + (m.goals ?? "\u2013") + "G " + (m.assists ?? "\u2013") + "A " + (m.saves ?? "\u2013") + "S"), t("toastDone"), m.result === "win" ? "cheer" : "controller"); });
 
 async function loadRecent() {
   /* laatste gesyncte potten tonen zolang de sessie leeg is */
