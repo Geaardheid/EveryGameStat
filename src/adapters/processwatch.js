@@ -73,7 +73,9 @@ class ProcessWatchAdapter {
        telt, anders zou elke Java-app als game gelden. PowerShell alleen als zo'n exe draait. */
     let titles = null;
     for (const g of games) {
-      let running = (g.exes || []).some((e) => procs.has(String(e).toLowerCase().trim()));
+      const hit = (g.exes || []).find((e) => procs.has(String(e).toLowerCase().trim()));
+      let running = !!hit;
+      g._via = hit || null;
       /* games waarvan de exe na afsluiten blijft hangen (CoD-bootstrapper): alleen tellen
          als het proces ook echt een venster met titel heeft */
       if (running && g.needsWindow && this.opts.windowTitles) {
@@ -85,12 +87,13 @@ class ProcessWatchAdapter {
         if (exes.length) {
           if (!titles) { try { titles = await this.opts.windowTitles(exes); } catch (e) { titles = {}; } }
           running = Object.values(titles).some((t) => String(t || "").toLowerCase().includes(String(g.titleContains).toLowerCase()));
+        if (running) g._via = exes[0] + " \u00b7 " + g.titleContains;
         }
       }
       const st = this.state[g.id];
       if (running) {
         if (!st) {
-          this.state[g.id] = { startedAt: now, misses: 0, label: g.label };
+          this.state[g.id] = { startedAt: now, misses: 0, label: g.label, via: g._via };
           this.emitStatus(g.id, true, 0);
         } else {
           st.misses = 0;
@@ -127,7 +130,8 @@ class ProcessWatchAdapter {
   }
 
   emitStatus(id, running, sinceMs) {
-    try { this.opts.onStatus(id, { running, sinceMs }); } catch (e) {}
+    const st = this.state[id];
+    try { this.opts.onStatus(id, { running, sinceMs, via: st && st.via ? st.via : null }); } catch (e) {}
   }
 }
 

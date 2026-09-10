@@ -464,7 +464,7 @@ window.egs.onProcStatus((d) => {
   const anyOn = Object.values(detRunning)[0];
   if (anyOn) {
     dot.dataset.state = "in_match";
-    $("mw4-state").textContent = (tbNowLast && tbNowLast.game ? tbNowLast.game + " \u00b7 " : "") + t("procOn")(Math.max(1, Math.round(anyOn.sinceMs / 60000)));
+    $("mw4-state").textContent = (tbNowLast && tbNowLast.game ? tbNowLast.game + " \u00b7 " : "") + t("procOn")(Math.max(1, Math.round(anyOn.sinceMs / 60000))) + (anyOn.via ? " \u00b7 " + anyOn.via : "");
   } else {
     dot.dataset.state = "off";
     renderMw4Base();

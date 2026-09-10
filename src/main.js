@@ -24,7 +24,8 @@ function trackedGames() {
   const cfg = config.get();
   const custom = Array.isArray(cfg.tracked_exes && cfg.tracked_exes.mw4) ? cfg.tracked_exes.mw4 : [];
   const list = gamedb.EXES.map((g, i) => ({ id: "g" + i, label: g.label, exes: g.exes, appid: g.appid || null, art: g.art || null, family: g.family || null, needsWindow: g.family === "cod" }));
-  if (custom.length) list[0] = { ...list[0], exes: [...new Set([...list[0].exes, ...custom])] };
+  /* eigen procesnamen: elk een eigen item, genoemd naar de exe (niet meer aan CoD geplakt) */
+  custom.forEach((e, i) => list.push({ id: "c" + i, label: String(e).replace(/\.exe$/i, ""), exes: [e] }));
   /* venstertitel-gebonden (Java-Minecraft via javaw.exe) */
   (gamedb.TITLE_ONLY || []).forEach((g, i) => list.push({ id: "t" + i, label: g.label, exes: [], titleExes: [g.exe], titleContains: g.contains, art: g.art || null }));
   return list;
