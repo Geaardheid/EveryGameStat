@@ -69,7 +69,11 @@ function windowTitles(exeNames) {
     });
   });
 }
-function codTitleFrom(windowTitle, appid) {
+/* Per seizoen een eigen exe in de unified client; de venstertitel zegt alleen "Call of Duty". */
+const COD_EXE_TITLES = { "cod26-cod.exe": "Call of Duty: Modern Warfare IV", "cod25-cod.exe": "Call of Duty: Black Ops 7", "cod24-cod.exe": "Call of Duty: Black Ops 6", "cod23-cod.exe": "Call of Duty: Modern Warfare III", "cod22-cod.exe": "Call of Duty: Modern Warfare II" };
+function codTitleFrom(windowTitle, appid, exe) {
+  const e = String(exe || "").toLowerCase().split(" ")[0];
+  if (COD_EXE_TITLES[e]) return COD_EXE_TITLES[e];
   const t = String(windowTitle || "").toLowerCase();
   for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
   return null;

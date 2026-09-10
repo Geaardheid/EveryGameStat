@@ -129,6 +129,8 @@ class ProcessWatchAdapter {
     } catch (e) {}
   }
 
+  /* label achteraf verfijnen (bijv. "Call of Duty" → "Call of Duty: Black Ops 7"), zodat ook de sessie zo heet */
+  setLabel(id, label) { const st = this.state[id]; if (st && label) st.label = label; }
   emitStatus(id, running, sinceMs) {
     const st = this.state[id];
     try { this.opts.onStatus(id, { running, sinceMs, via: st && st.via ? st.via : null }); } catch (e) {}

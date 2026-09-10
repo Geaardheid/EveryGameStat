@@ -199,7 +199,7 @@ function startAdapters() {
         if (s.running) runningLabels.add(g.label); else runningLabels.delete(g.label);
         if (s.running && g.family === "cod") {
           /* welke CoD? venstertitel (Battle.net) of Steam-appid */
-          try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt); if (t) label = t; } catch (e) {}
+          try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt, null, s.via); if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); } } catch (e) {}
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
         presenceUpdate("proc", s.running ? label : (presenceSrc.proc && presenceSrc.proc.startsWith(g.label.split(":")[0]) ? null : presenceSrc.proc));
