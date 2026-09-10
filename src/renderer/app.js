@@ -300,7 +300,6 @@ async function boot() {
   applyI18n();
   /* echte semver: MAJOR.MINOR.PATCH (0.x = alpha) */
   $("ver").textContent = "v" + state.version + " \u00b7 alpha";
-  const tv = $("tb-ver"); if (tv) tv.textContent = "v" + state.version + " \u00b7 alpha";
   updateQueueNote(state.queued);
   if (!state.linked) { show("view-link"); loaderOff(); return; }
   fillMain();

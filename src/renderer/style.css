@@ -571,3 +571,10 @@ input[type="checkbox"] { accent-color: var(--gold); width: 16px; height: 16px; }
 .sd-empty { padding: 60px 0; }
 @media (max-width: 1200px) { .sd-heroes { grid-template-columns: repeat(2, 1fr); } }
 .soc-note { font-size: 10px; } .soc-lefthead .panel-head { margin: 0; } #upd-status { align-self: center; font-size: 11px; } #btn-quit { margin-left: 8px; }
+
+/* ============ 0.4.2: logo puur in de hoek, zoals Medal ============ */
+#titlebar { padding-left: 0; gap: 0; }
+.tb-brand { width: var(--rail); height: 100%; display: grid; place-items: center; flex: none; margin: 0; }
+.tb-brand img { width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 4px 12px rgba(0,0,0,.5); -webkit-app-region: no-drag; }
+.tb-now { border-left: 0; padding-left: 22px; }
+#tabbar { padding-top: 10px; }
