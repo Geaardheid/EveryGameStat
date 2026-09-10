@@ -71,6 +71,9 @@ const I18N = {
     npPlaying: "Now playing", npSince: (m) => m + " min this session", npMatch: "in a match", memberSince: (d) => "Member since " + d,
     toastLinked: "Linked \u00b7 welcome to the Companion", toastSession: (g, m) => g + " \u00b7 " + m + " min saved to your card", toastMatch: (r) => "Rocket League \u00b7 " + r + " synced", toastAch: "Achievement unlocked", toastDone: "Saved",
     emptyLib: "Nothing here yet. Link a platform on the site.", emptyBoard: "No public cards yet.",
+    tabHubs: "Hubs", hubsHead: "Game hubs", hubsSub: "The games the Companion is built around", libRecent: "Recently played", libAll: "All games", libMost: "Most played", statsPlatforms: "Platforms",
+    hubLive: "Live tracking", hubLinked: "Stats linked", hubNoData: "Not linked", hubSoon: "Coming soon", hubSessions: "sessions", hubMatches: "matches", hubLinkOn: "Link on the site", hubRlNote: "Rocket League is tracked live by the Companion \u00b7 matches land on Home.",
+    hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
     libHead: "Your library",
     libSearchPh: "Search games\u2026",
     libSortHours: "Most played", libSortName: "Name", libSortAch: "Achievements", libSortLast: "Recently played",
@@ -186,6 +189,9 @@ const I18N = {
     npPlaying: "Speelt nu", npSince: (m) => m + " min deze sessie", npMatch: "pot bezig", memberSince: (d) => "Lid sinds " + d,
     toastLinked: "Gekoppeld \u00b7 welkom in de Companion", toastSession: (g, m) => g + " \u00b7 " + m + " min op je kaart gezet", toastMatch: (r) => "Rocket League \u00b7 " + r + " gesynct", toastAch: "Achievement unlocked", toastDone: "Opgeslagen",
     emptyLib: "Nog niets hier. Koppel een platform op de site.", emptyBoard: "Nog geen publieke kaarten.",
+    tabHubs: "Hubs", hubsHead: "Game hubs", hubsSub: "De games waar de Companion om draait", libRecent: "Laatst gespeeld", libAll: "Alle games", libMost: "Meest gespeeld", statsPlatforms: "Platforms",
+    hubLive: "Live tracking", hubLinked: "Stats gekoppeld", hubNoData: "Niet gekoppeld", hubSoon: "Binnenkort", hubSessions: "sessies", hubMatches: "potten", hubLinkOn: "Koppel op de site", hubRlNote: "Rocket League wordt live gevolgd door de Companion \u00b7 potten komen op Home.",
+    hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
     libHead: "Jouw bibliotheek",
     libSearchPh: "Zoek games\u2026",
     libSortHours: "Meest gespeeld", libSortName: "Naam", libSortAch: "Achievements", libSortLast: "Laatst gespeeld",
@@ -267,7 +273,7 @@ function loaderOff() {
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
-const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-stats", "view-profile"];
+const ALL_VIEWS = ["view-link", "view-main", "view-settings", "view-social", "view-library", "view-board", "view-stats", "view-profile", "view-hubs"];
 function show(view) {
   ALL_VIEWS.forEach((v) => { $(v).hidden = v !== view; });
   const tabbed = view !== "view-link" && state && state.linked;
@@ -281,8 +287,9 @@ function show(view) {
   if (view === "view-library") loadLibrary();
   if (view === "view-board") loadBoard();
   if (view === "view-stats") loadStats();
+  if (view === "view-hubs") loadHubsPage();
 }
-const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board", stats: "view-stats" };
+const TABMAP = { home: "view-main", social: "view-social", library: "view-library", board: "view-board", stats: "view-stats", hubs: "view-hubs" };
 document.querySelectorAll("#tabbar .tab[data-tab]").forEach((b) => {
   b.addEventListener("click", () => show(TABMAP[b.dataset.tab]));
 });
@@ -345,12 +352,12 @@ function renderProfile() {
   const tg = p.top_games || [];
   $("top-panel").hidden = !tg.length;
   $("top-games").innerHTML = tg.map((g, i) =>
-    '<div class="tg" style="--i:' + i + '">' + '<span class="tg-n">' + (i + 1) + "</span>" +
+    '<div class="tg">' + '<span class="tg-n">' + (i + 1) + "</span>" +
     (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : '<span class="tg-ph"></span>') +
     '<span><div class="tg-name">' + String(g.name || "").replace(/[<>&]/g, "") + '</div><div class="tg-plat">' + String(g.platform || "").replace(/[<>&]/g, "") + "</div></span>" +
     '<span class="tg-hours">' + fmtHours(g.minutes) + " " + t("stHours") + "</span></div>"
   ).join("");
-  $("top-games").classList.add("stag");
+  $("top-games").classList.add("stag"); $("top-games").querySelectorAll(".tg").forEach((el, i) => el.style.setProperty("--i", i));
   if (p.cached) { $("queue-note").textContent = t("cachedNote"); }
 }
 $("btn-refresh").addEventListener("click", loadProfile);
@@ -544,7 +551,7 @@ async function loadSocial() {
     incBox.appendChild(row);
   });
   const outBox = $("soc-outgoing"); outBox.innerHTML = "";
-  out.forEach((p) => outBox.appendChild(socRow(p, '<span class="mono dim" style="font-size:10px">' + t("socPending") + "</span>")));
+  out.forEach((p) => outBox.appendChild(socRow(p, '<span class="mono dim soc-note">' + t("socPending") + "</span>")));
   /* vrienden */
   const fBox = $("soc-friends"); fBox.innerHTML = "";
   const friends = r.friends || [];
@@ -575,7 +582,7 @@ $("soc-search").addEventListener("input", () => {
       row.querySelector("button").addEventListener("click", async (e) => {
         const btn = e.target;
         const res = await window.egs.social("friend_request", { target: p.user_id });
-        btn.outerHTML = '<span class="mono dim" style="font-size:10px">' + (res && res.accepted ? t("socNowFriends") : t("socSent")) + "</span>";
+        btn.outerHTML = '<span class="mono dim soc-note">' + (res && res.accepted ? t("socNowFriends") : t("socSent")) + "</span>";
         loadSocial();
       });
       box.appendChild(row);
@@ -729,110 +736,233 @@ async function loadLibrary() {
   }
   renderLibrary();
 }
+let libPlat = "";
+const steamHero = (appid) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_hero.jpg";
+function gameCard(g, i) {
+  const card = document.createElement("div");
+  card.className = "gcard";
+  card.style.setProperty("--i", Math.min(i || 0, 30));
+  let coverEl;
+  if (g.cover) {
+    coverEl = document.createElement("img"); coverEl.className = "gc-cover"; coverEl.loading = "lazy"; coverEl.src = g.cover;
+    coverEl.addEventListener("error", () => { const ph = document.createElement("div"); ph.className = "gc-cover ph"; ph.textContent = (g.name || "?")[0].toUpperCase(); coverEl.replaceWith(ph); });
+  } else { coverEl = document.createElement("div"); coverEl.className = "gc-cover ph"; coverEl.textContent = (g.name || "?")[0].toUpperCase(); }
+  const wrap = document.createElement("div"); wrap.className = "gc-wrap"; wrap.appendChild(coverEl);
+  const plat = document.createElement("span"); plat.className = "gc-plat"; plat.textContent = g.platform || "";
+  const body = document.createElement("div"); body.className = "gc-body";
+  const ach = g.ach_t ? '<span class="gc-ach">' + (g.ach_e ?? 0) + "/" + g.ach_t + "</span>" : "<span></span>";
+  body.innerHTML = '<div class="gc-name" title="' + escT(g.name) + '">' + escT(g.name) + "</div>" +
+    '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
+  card.appendChild(wrap); card.appendChild(plat); card.appendChild(body);
+  if (g.ach_t) {
+    const pct = Math.min(100, Math.round(((g.ach_e || 0) / g.ach_t) * 100));
+    const bar = document.createElement("div"); bar.className = "gc-bar" + (pct >= 100 ? " done" : ""); const fill = document.createElement("i"); fill.style.width = pct + "%"; bar.appendChild(fill); card.appendChild(bar);
+  }
+  card.addEventListener("click", () => openGameSheet(g));
+  return card;
+}
+function renderLibChips(all) {
+  const box = $("lib-chips"); box.innerHTML = "";
+  const per = {}; all.forEach((g) => { per[g.platform] = (per[g.platform] || 0) + 1; });
+  const mk = (val, label, n) => { const b = document.createElement("button"); b.className = "lchip" + (libPlat === val ? " on" : ""); b.innerHTML = escT(label) + "<small>" + n + "</small>"; b.addEventListener("click", () => { libPlat = val; renderLibrary(); }); return b; };
+  box.appendChild(mk("", t("libAllPlatforms"), all.length));
+  Object.entries(per).sort((a, b) => b[1] - a[1]).forEach(([p, n]) => box.appendChild(mk(p, p, n)));
+}
+function renderLibHero(g) {
+  const hero = $("lib-hero"); hero.hidden = !g; if (!g) return;
+  const appid = g.platform === "Steam" && /^\d+$/.test(String(g.external_id || "")) ? String(g.external_id) : null;
+  hero.innerHTML = "";
+  const art = document.createElement("div"); art.className = "lh-art";
+  if (appid) { art.style.backgroundImage = 'url("' + steamHero(appid) + '")'; const test = new Image(); test.onerror = () => { art.classList.add("blur"); art.style.backgroundImage = g.cover ? 'url("' + g.cover + '")' : ""; }; test.src = steamHero(appid); }
+  else if (g.cover) { art.classList.add("blur"); art.style.backgroundImage = 'url("' + g.cover + '")'; }
+  const body = document.createElement("div"); body.className = "lh-body";
+  body.innerHTML = (g.cover ? '<img class="lh-cover" src="' + encodeURI(g.cover) + '" alt="">' : "") +
+    '<div class="lh-txt"><span class="eyebrow">' + t("libMost") + "</span><div class=\"lh-name\">" + escT(g.name) + "</div>" +
+    '<div class="lh-meta"><span><b>' + fmtHours(g.minutes) + "</b>" + t("stHours") + "</span>" + (g.ach_t ? "<span><b>" + (g.ach_e ?? 0) + "/" + g.ach_t + "</b>" + t("stAch") + "</span>" : "") + "<span><b>" + escT(g.platform) + "</b></span>" +
+    (g.last ? "<span>" + escT(new Date(g.last).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", year: "numeric" })) + "</span>" : "") + "</div></div>";
+  hero.appendChild(art); hero.appendChild(body);
+  hero.onclick = () => openGameSheet(g);
+}
 function renderLibrary() {
   if (!libData) return;
   const q = $("lib-search").value.trim().toLowerCase();
-  const plat = $("lib-plat").value;
   const sort = $("lib-sort").value;
   const showApps = $("lib-apps").checked;
-  let rows = libData.filter((g) => (showApps || !g.software) && (!q || String(g.name || "").toLowerCase().includes(q)) && (!plat || g.platform === plat));
+  const base = libData.filter((g) => showApps || !g.software);
+  renderLibChips(base);
+  let rows = base.filter((g) => (!q || String(g.name || "").toLowerCase().includes(q)) && (!libPlat || g.platform === libPlat));
   if (sort === "name") rows.sort((a, b) => String(a.name).localeCompare(String(b.name)));
-  else if (sort === "ach") rows.sort((a, b) => (b.ach_e || 0) - (a.ach_e || 0));
+  else if (sort === "ach") rows.sort((a, b) => ((b.ach_e || 0) / (b.ach_t || 1)) - ((a.ach_e || 0) / (a.ach_t || 1)) || (b.ach_e || 0) - (a.ach_e || 0));
   else if (sort === "last") rows.sort((a, b) => String(b.last || "").localeCompare(String(a.last || "")));
   else rows.sort((a, b) => b.minutes - a.minutes);
-  $("lib-count").textContent = t("libCount")(rows.length);
-  const grid = $("lib-grid");
-  grid.innerHTML = "";
+  $("lib-count").textContent = t("libCount")(rows.length) + (libPlat ? " \u00b7 " + libPlat : "");
+  /* hero + laatst gespeeld alleen in de rustige stand (geen zoekterm) */
+  const browsing = !q;
+  const top = browsing ? rows.slice().sort((a, b) => b.minutes - a.minutes)[0] : null;
+  renderLibHero(top || null);
+  const recent = browsing ? rows.filter((g) => g.last).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 12) : [];
+  $("lib-recent-h").hidden = !recent.length; $("lib-recent").hidden = !recent.length;
+  const rBox = $("lib-recent"); rBox.innerHTML = ""; recent.forEach((g, i) => rBox.appendChild(gameCard(g, i)));
+  $("lib-all-h").hidden = !browsing || !rows.length;
+  const grid = $("lib-grid"); grid.innerHTML = "";
   const frag = document.createDocumentFragment();
-  rows.slice(0, 400).forEach((g, i) => {
-    const card = document.createElement("div");
-    card.className = "gcard";
-    card.style.setProperty("--i", Math.min(i, 30));
-    let coverEl;
-    if (g.cover) {
-      coverEl = document.createElement("img");
-      coverEl.className = "gc-cover";
-      coverEl.loading = "lazy";
-      coverEl.src = g.cover;
-      coverEl.addEventListener("error", () => {
-        const ph = document.createElement("div");
-        ph.className = "gc-cover ph";
-        ph.textContent = (g.name || "?")[0].toUpperCase();
-        coverEl.replaceWith(ph);
-      });
-    } else {
-      coverEl = document.createElement("div");
-      coverEl.className = "gc-cover ph";
-      coverEl.textContent = (g.name || "?")[0].toUpperCase();
-    }
-    const body = document.createElement("div");
-    body.className = "gc-body";
-    const ach = g.ach_t ? '<span class="gc-ach">' + (g.ach_e ?? 0) + "/" + g.ach_t + "</span>" : "<span></span>";
-    body.innerHTML = '<div class="gc-name" title="' + escT(g.name) + '">' + escT(g.name) + "</div>" +
-      '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
-    const wrap = document.createElement("div"); wrap.className = "gc-wrap"; wrap.appendChild(coverEl);
-    card.appendChild(wrap);
-    card.appendChild(body);
-    card.addEventListener("click", () => openGameSheet(g));
-    frag.appendChild(card);
-  });
+  rows.slice(0, 400).forEach((g, i) => frag.appendChild(gameCard(g, i)));
   if (!rows.length) grid.innerHTML = emptyHtml(libData.length ? "\u2013" : t("emptyLib"), "shrug");
   else grid.appendChild(frag);
 }
 /* Site-pagina's openen in de browser (het ingebouwde venster is eruit: rendert
    niet betrouwbaar op elke pc). Ingelogd via je eigen browser-sessie. */
 function openWeb(path) { window.egs.openExternal("https://everygamestat.com" + path); }
-/* ===== STATS: ingebouwde game-hubs — dezelfde bron als de site (platform_game_data).
-   Per game: titel, accentkleur, de belangrijkste cijfers; klik = alles. Niets geschat. ===== */
+/* ===== GAME HUBS + STATS — zelfde bron als de site (platform_game_data). Niets geschat. ===== */
+const STEAM_H = (id) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + id + "/header.jpg";
+const SITE_ART = "https://everygamestat.com/art/";
 const HUBS = {
-  royale:   { name: "Clash Royale",   c: "#4DA6FF", pick: ["trophies","best","wins","losses","three_crown","battles"], all: ["trophies","best","level","wins","losses","battles","three_crown","cards","arena","clan","war_wins","donations","star_points","streak","fav_card"] },
-  brawl:    { name: "Brawl Stars",    c: "#FFD400", pick: ["trophies","highest","wins3v3","solo","duo","brawlers"], all: ["trophies","highest","level","wins3v3","solo","duo","brawlers","club"] },
-  clash:    { name: "Clash of Clans", c: "#F2A93B", pick: ["th","trophies","best","war_stars","attacks","defenses"], all: ["th","level","trophies","best","war_stars","attacks","defenses","builder_trophies","donations","capital","clan","role"] },
-  pubg:     { name: "PUBG",           c: "#E8A93B", pick: ["kd","winrate","kills","wins","matches","avg_damage"], all: ["kills","wins","matches","kd","winrate","top10","top10_rate","damage","avg_damage","headshots","headshot_pct","longest_kill","most_kills","assists","revives","dbnos","road_kills","vehicle_destroys"] },
-  fortnite: { name: "Fortnite",       c: "#2EA3FF", pick: ["wins","kd","kills","matches","winrate","level"], all: ["wins","kills","deaths","kd","matches","winrate","top10","top25","kpm","score","minutes","outlived","level"] },
-  dbd:      { name: "Dead by Daylight", c: "#C8302E", pick: ["escapes","total_kills","bloodpoints","prestige","gens","heals"], all: ["bloodpoints","escapes","hatch_escapes","sacrifices","kills","total_kills","gens","heals","unhooks","skillchecks","survivor_pips","killer_pips","prestige","max_level","hits_near_hook"] },
-  lol:      { name: "League of Legends", c: "#C8963C", pick: ["level"], all: ["level"], ranks: true },
-  tft:      { name: "Teamfight Tactics", c: "#7BA7D9", pick: [], all: [], ranks: true },
-  xbox:     { name: "Xbox",           c: "#107C10", pick: ["gamerscore_earned","games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
-  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
+  rocketleague: { name: "Rocket League", c: "#F2B03D", art: STEAM_H(252950), kind: "live", sub: "hubSubRl", pick: [], all: [] },
+  dbd:      { name: "Dead by Daylight", c: "#C8302E", art: STEAM_H(381210), kind: "steam", sub: "hubSubDbd", hero: "escapes", pick: ["total_kills","bloodpoints","prestige"], all: ["bloodpoints","escapes","hatch_escapes","sacrifices","kills","total_kills","gens","heals","unhooks","skillchecks","survivor_pips","killer_pips","prestige","max_level","hits_near_hook"] },
+  royale:   { name: "Clash Royale",   c: "#4DA6FF", art: SITE_ART + "game-clashroyale.png", kind: "api", sub: "hubSubApi", hero: "trophies", pick: ["best","wins","three_crown"], all: ["trophies","best","level","wins","losses","battles","three_crown","cards","arena","clan","war_wins","donations","star_points","streak","fav_card"] },
+  brawl:    { name: "Brawl Stars",    c: "#FFD400", art: null, kind: "api", sub: "hubSubApi", hero: "trophies", pick: ["highest","wins3v3","brawlers"], all: ["trophies","highest","level","wins3v3","solo","duo","brawlers","club"] },
+  clash:    { name: "Clash of Clans", c: "#F2A93B", art: SITE_ART + "game-clashofclans.png", kind: "api", sub: "hubSubApi", hero: "th", pick: ["best","war_stars","attacks"], all: ["th","level","trophies","best","war_stars","attacks","defenses","builder_trophies","donations","capital","clan","role"] },
+  fortnite: { name: "Fortnite",       c: "#2EA3FF", art: SITE_ART + "game-fortnite.jpg", kind: "api", sub: "hubSubApi", hero: "wins", pick: ["kd","kills","matches"], all: ["wins","kills","deaths","kd","matches","winrate","top10","top25","kpm","score","minutes","outlived","level"] },
+  pubg:     { name: "PUBG",           c: "#E8A93B", art: STEAM_H(578080), kind: "api", sub: "hubSubApi", hero: "kd", pick: ["wins","kills","matches"], all: ["kills","wins","matches","kd","winrate","top10","top10_rate","damage","avg_damage","headshots","headshot_pct","longest_kill","most_kills","assists","revives","dbnos","road_kills","vehicle_destroys"] },
+  lol:      { name: "League of Legends", c: "#C8963C", art: null, mark: ART_BUCKET + "icon-lol.png", kind: "api", sub: "hubSubApi", hero: "level", pick: [], all: ["level"], ranks: true },
+  tft:      { name: "Teamfight Tactics", c: "#7BA7D9", art: null, mark: ART_BUCKET + "icon-lol.png", kind: "api", sub: "hubSubApi", hero: null, pick: [], all: [], ranks: true },
+  xbox:     { name: "Xbox",           c: "#107C10", art: null, kind: "platform", sub: "hubSubPlat", hero: "gamerscore_earned", pick: ["games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
+  psn:      { name: "PlayStation",    c: "#2E6DB4", art: null, kind: "platform", sub: "hubSubPlat", hero: "trophy_level", pick: ["platinum","gold","silver"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
 };
-const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", prestige: "Prestige", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
+const HUB_PAGE_ORDER = ["rocketleague", "dbd", "royale", "brawl", "clash", "fortnite", "pubg", "lol", "tft"];
+const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
-let hubData = [];
-async function loadStats() {
-  const grid = $("stats-grid"); $("stats-detail").hidden = true; grid.hidden = false;
-  grid.innerHTML = skelRows(4, "skel-hub");
+const rankTxt = (rk) => (rk.queue || "").replace("RANKED_", "").replace("_", " ") + ": " + (rk.tier || "?") + " " + (rk.rank || "") + (rk.lp != null ? " \u00b7 " + rk.lp + " LP" : "");
+let hubData = [], hubsLoadedAt = 0;
+async function fetchHubs(force) {
+  if (!force && hubData.length && Date.now() - hubsLoadedAt < 60000) return true;
   const r = await window.egs.hubs();
-  if (!r || !r.ok) { grid.innerHTML = emptyHtml(t("libFail"), "worried"); return; }
+  if (!r || !r.ok) return false;
   hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]);
-  $("stats-sub").textContent = hubData.length + " games";
-  if (!hubData.length) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); return; }
+  hubsLoadedAt = Date.now();
+  return true;
+}
+const hubOf = (key) => hubData.find((h) => h.game_key === key) || null;
+/* eerste cijfer dat er is: hero, anders eerste uit pick */
+function heroStat(def, d) {
+  const keys = [def.hero, ...def.pick].filter(Boolean);
+  for (const k of keys) if (d[k] != null && d[k] !== "") return { k, v: d[k] };
+  if (def.ranks && Array.isArray(d.ranks) && d.ranks.length) return { k: "rank", v: (d.ranks[0].tier || "?") + " " + (d.ranks[0].rank || ""), lbl: "Rank" };
+  return null;
+}
+function artStyle(el, def) {
+  el.style.setProperty("--hc", def.c);
+  if (def.art) el.style.backgroundImage = 'url("' + def.art + '")';
+  else if (def.mark) { el.style.backgroundImage = 'url("' + def.mark + '")'; el.classList.add("mark"); }
+}
+/* ---- Game hubs-tab ---- */
+async function loadHubsPage() {
+  const grid = $("hubs-grid");
+  if (!hubData.length) grid.innerHTML = skelRows(6, "skel-hub");
+  await fetchHubs(false);
   grid.innerHTML = "";
-  hubData.forEach((h, i) => {
-    const def = HUBS[h.game_key], d = h.data || {};
-    const card = document.createElement("div"); card.className = "hub-card"; card.style.setProperty("--hc", def.c); card.style.setProperty("--i", i);
-    const tiles = def.pick.map((k) => '<div class="hub-tile"><b>' + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("");
-    const ranks = def.ranks && Array.isArray(d.ranks) && d.ranks.length ? '<div class="hub-ranks">' + d.ranks.map((rk) => '<span>' + escT((rk.queue || "").replace("RANKED_", "").replace("_", " ")) + ": <b>" + escT((rk.tier || "?") + " " + (rk.rank || "")) + "</b> " + escT(rk.lp != null ? rk.lp + " LP" : "") + "</span>").join("") + "</div>" : "";
-    card.innerHTML = '<div class="hub-head"><h3>' + escT(def.name) + "</h3><span class=\"mono dim\">" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
-      '<div class="hub-tiles">' + tiles + "</div>" + ranks +
-      '<div class="hub-foot"><span class="dim">' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString() : "\u2013") + '</span><button class="btn small">' + t("statsAll") + "</button></div>";
-    card.querySelector("button").addEventListener("click", () => openHub(i));
-    grid.appendChild(card);
+  HUB_PAGE_ORDER.forEach((key, i) => {
+    const def = HUBS[key]; const h = hubOf(key); const d = (h && h.data) || {};
+    const el = document.createElement("div"); el.className = "ghub"; el.style.setProperty("--hc", def.c); el.style.setProperty("--i", i);
+    const art = document.createElement("div"); art.className = "gh-art"; artStyle(art, def);
+    let status, cls, stat = null, who = "";
+    if (def.kind === "live") {
+      status = t("hubLive"); cls = "live";
+      const n = session.length; stat = n ? { v: n, lbl: t("hubMatches") } : (mw4Total && false ? null : null);
+      who = t(def.sub);
+    } else if (h) { status = t("hubLinked"); cls = "ok"; const hs = heroStat(def, d); if (hs) stat = { v: fmtStat(hs.v), lbl: hs.lbl || STAT_LBL[hs.k] || hs.k }; who = escT(d.name || d.riot_id || d.tag || t(def.sub)); }
+    else { status = t("hubNoData"); cls = "soon"; el.classList.add("off"); who = t(def.sub) + " \u00b7 " + t("hubLinkOn"); }
+    el.appendChild(art);
+    const pill = document.createElement("span"); pill.className = "gh-pill " + cls; pill.innerHTML = "<i></i>" + escT(status); el.appendChild(pill);
+    const body = document.createElement("div"); body.className = "gh-body";
+    body.innerHTML = '<div class="gh-txt"><div class="gh-name">' + escT(def.name) + '</div><div class="gh-sub">' + who + "</div></div>" +
+      (stat ? '<div class="gh-stat"><b>' + escT(String(stat.v)) + "</b><span>" + escT(stat.lbl) + "</span></div>" : "");
+    el.appendChild(body);
+    el.addEventListener("click", () => {
+      if (def.kind === "live") { show("view-main"); return; }
+      if (!h) { window.egs.openExternal("https://everygamestat.com/me"); return; }
+      show("view-stats"); openHub(key);
+    });
+    grid.appendChild(el);
   });
 }
-function openHub(i) {
-  const h = hubData[i], def = HUBS[h.game_key], d = h.data || {};
-  const box = $("stats-detail"); $("stats-grid").hidden = true; box.hidden = false;
-  const tiles = def.all.map((k) => '<div class="hub-tile"><b>' + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("");
-  const modes = d.modes && typeof d.modes === "object" ? '<div class="hub-sub">Per mode</div><div class="hub-modes">' + Object.entries(d.modes).map(([m, v]) => '<div class="hub-mode"><b>' + escT(m) + "</b>" + Object.entries(v).slice(0, 6).map(([k, x]) => "<span>" + escT(STAT_LBL[k] || k) + " " + escT(fmtStat(x)) + "</span>").join("") + "</div>").join("") + "</div>" : "";
-  const list = (arr, title, f) => Array.isArray(arr) && arr.length ? '<div class="hub-sub">' + title + '</div><div class="hub-list">' + arr.map(f).join("") + "</div>" : "";
-  const extras = list(d.top_brawlers, "Top brawlers", (b) => "<span><b>" + escT(b.name) + "</b> " + escT(fmtStat(b.trophies)) + " \uD83C\uDFC6 \u00b7 P" + escT(fmtStat(b.power)) + "</span>")
-    + list(d.deck, "Current deck", (c) => "<span>" + (c.icon ? '<img src="' + encodeURI(c.icon) + '" alt="">' : "") + escT(c.name) + " \u00b7 " + escT(fmtStat(c.elixir)) + "\u26a1</span>")
-    + list(d.ranks, "Ranks", (rk) => "<span>" + escT((rk.queue || "").replace("RANKED_", "").replace("_", " ")) + ": <b>" + escT((rk.tier || "?") + " " + (rk.rank || "")) + "</b> " + escT(rk.lp != null ? rk.lp + " LP" : "") + " \u00b7 " + escT(fmtStat(rk.wins)) + "W/" + escT(fmtStat(rk.losses)) + "L</span>")
-    + list(d.trophy_titles && d.trophy_titles.slice(0, 12), "Trophy cabinet", (tt) => "<span>" + (tt.icon ? '<img src="' + encodeURI(tt.icon) + '" alt="">' : "") + escT(tt.name) + " \u00b7 " + escT(fmtStat(tt.progress)) + "%" + (tt.platinum ? " \uD83C\uDFC6" : "") + "</span>");
-  box.innerHTML = '<div class="hub-detail" style="--hc:' + def.c + '"><div class="hub-head"><button class="btn small" id="hub-back">\u2190 ' + t("statsBack") + "</button><h2>" + escT(def.name) + "</h2><span class=\"mono dim\">" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
-    '<div class="hub-tiles big">' + tiles + "</div>" + modes + extras + "</div>";
-  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-grid").hidden = false; });
+/* ---- Stats-tab: kaarten met art-banner en één kerncijfer ---- */
+function statCard(h, i, isPlat) {
+  const def = HUBS[h.game_key], d = h.data || {};
+  const card = document.createElement("div"); card.className = "scard" + (isPlat ? " plat" : ""); card.style.setProperty("--hc", def.c); card.style.setProperty("--i", i);
+  const art = document.createElement("div"); art.className = "sc-art"; artStyle(art, def);
+  const hs = heroStat(def, d);
+  const rest = def.pick.filter((k) => k !== (hs && hs.k)).slice(0, 3);
+  const body = document.createElement("div"); body.className = "sc-body";
+  body.innerHTML = '<div class="sc-head"><h3>' + escT(def.name) + "</h3><span>" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
+    (hs ? '<div class="sc-hero"><b>' + escT(fmtStat(hs.v)) + "</b><span>" + escT(hs.lbl || STAT_LBL[hs.k] || hs.k) + "</span></div>" : '<div class="sc-hero"><b>\u2013</b></div>') +
+    (rest.length ? '<div class="sc-row">' + rest.map((k) => "<div><b>" + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("") + "</div>" : "") +
+    (def.ranks && Array.isArray(d.ranks) && d.ranks.length ? '<div class="hub-ranks">' + d.ranks.slice(0, 2).map((rk) => "<span>" + escT(rankTxt(rk)) + "</span>").join("") + "</div>" : "") +
+    '<div class="sc-foot"><span>' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "\u2013") + "</span><em>" + t("statsAll") + " \u2192</em></div>";
+  card.appendChild(art); card.appendChild(body);
+  card.addEventListener("click", () => openHub(h.game_key));
+  return card;
+}
+async function loadStats() {
+  const grid = $("stats-grid"), plat = $("stats-plat");
+  $("stats-detail").hidden = true; $("stats-home").hidden = false;
+  if (!hubData.length) grid.innerHTML = skelRows(4, "skel-hub");
+  const ok = await fetchHubs(false);
+  if (!ok) { grid.innerHTML = emptyHtml(t("libFail"), "worried"); return; }
+  const games = hubData.filter((h) => HUBS[h.game_key].kind !== "platform");
+  const plats = hubData.filter((h) => HUBS[h.game_key].kind === "platform");
+  $("stats-sub").textContent = hubData.length + " " + (lang === "nl" ? "bronnen" : "sources");
+  grid.innerHTML = ""; plat.innerHTML = "";
+  if (!hubData.length) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); $("stats-plat-h").hidden = true; return; }
+  games.forEach((h, i) => grid.appendChild(statCard(h, i, false)));
+  $("stats-plat-h").hidden = !plats.length;
+  plats.forEach((h, i) => plat.appendChild(statCard(h, i + games.length, true)));
+}
+function openHub(key) {
+  const h = hubOf(key); if (!h) return;
+  const def = HUBS[key], d = h.data || {};
+  const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false;
+  box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sd"; wrap.style.setProperty("--hc", def.c);
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  banner.innerHTML = '<button class="btn small sd-back" id="hub-back">\u2190 ' + t("statsBack") + "</button>" +
+    '<div class="sd-in"><div><h2>' + escT(def.name) + '</h2><div class="sd-who">' + escT(d.name || d.riot_id || d.tag || "") + "</div></div>" +
+    '<div class="sd-upd">' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : "\u2013") + "</div></div>";
+  wrap.appendChild(banner);
+  /* kerncijfers: hero + pick, daarna de rest */
+  const heroKeys = [def.hero, ...def.pick].filter((k, i, a) => k && a.indexOf(k) === i && d[k] != null).slice(0, 4);
+  if (heroKeys.length) {
+    const hero = document.createElement("div"); hero.className = "sd-heroes";
+    heroKeys.forEach((k, i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span>"; hero.appendChild(el); });
+    wrap.appendChild(hero);
+  }
+  const restKeys = def.all.filter((k) => !heroKeys.includes(k));
+  if (restKeys.length) {
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = t("statsAll"); wrap.appendChild(sub);
+    const g = document.createElement("div"); g.className = "sd-grid";
+    restKeys.forEach((k, i) => { const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span>"; g.appendChild(el); });
+    wrap.appendChild(g);
+  }
+  if (d.modes && typeof d.modes === "object") {
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = "Per mode"; wrap.appendChild(sub);
+    const g = document.createElement("div"); g.className = "hub-modes";
+    g.innerHTML = Object.entries(d.modes).map(([m, v]) => '<div class="hub-mode"><b>' + escT(m) + "</b>" + Object.entries(v).slice(0, 6).map(([k, x]) => "<span>" + escT(STAT_LBL[k] || k) + " " + escT(fmtStat(x)) + "</span>").join("") + "</div>").join("");
+    wrap.appendChild(g);
+  }
+  const list = (arr, title, f) => {
+    if (!Array.isArray(arr) || !arr.length) return;
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = title; wrap.appendChild(sub);
+    const g = document.createElement("div"); g.className = "hub-list"; g.innerHTML = arr.map(f).join("");
+    g.querySelectorAll("span").forEach((el, i) => el.style.setProperty("--i", i));
+    wrap.appendChild(g);
+  };
+  list(d.ranks, "Ranks", (rk) => '<span class="rk"><b>' + escT(rankTxt(rk)) + "</b> " + escT(fmtStat(rk.wins)) + "W/" + escT(fmtStat(rk.losses)) + "L</span>");
+  list(d.top_brawlers, "Top brawlers", (b) => "<span><b>" + escT(b.name) + "</b> " + escT(fmtStat(b.trophies)) + " \u00b7 P" + escT(fmtStat(b.power)) + "</span>");
+  list(d.deck, "Current deck", (c) => "<span>" + (c.icon ? '<img src="' + encodeURI(c.icon) + '" alt="">' : "") + escT(c.name) + " \u00b7 " + escT(fmtStat(c.elixir)) + "</span>");
+  list(d.trophy_titles && d.trophy_titles.slice(0, 16), "Trophy cabinet", (tt) => "<span>" + (tt.icon ? '<img src="' + encodeURI(tt.icon) + '" alt="">' : "") + escT(tt.name) + " \u00b7 " + escT(fmtStat(tt.progress)) + "%" + (tt.platinum ? " \u00b7 Platinum" : "") + "</span>");
+  box.appendChild(wrap);
+  $("hub-back").addEventListener("click", () => { box.hidden = true; $("stats-home").hidden = false; });
+  box.scrollTop = 0; $("view-stats").scrollTop = 0;
 }
 
 /* ===== Zoeken (titelbalk): spelers op EGS + games in je bibliotheek, alles in de app ===== */
@@ -876,8 +1006,9 @@ async function openProfile(slug, isMe) {
   if (!d) { $("prof-note").textContent = isMe ? t("profPrivate") : t("profNotFound"); return; }
   $("prof-name").textContent = d.name || slug; $("prof-av").src = d.avatar || "../../assets/icon.png";
   $("prof-sub").textContent = "/p/" + slug + (d.since ? " \u00b7 " + t("profSince")(new Date(d.since).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { month: "long", year: "numeric" })) : "");
-  let ti = 0; const tile = (v, l) => '<div class="prof-tile" style="--i:' + (ti++) + '"><b>' + v + "</b><span>" + l + "</span></div>";
+  const tile = (v, l) => '<div class="prof-tile"><b>' + v + "</b><span>" + l + "</span></div>";
   $("prof-stats").innerHTML = tile(fmtNum(d.games || 0), t("profGames")) + tile(fmtNum(d.hours || 0), t("profHours")) + tile(d.ach_pct != null ? d.ach_pct + "%" : "\u2013", t("profAch")) + tile((d.platforms || []).length, t("profPlats"));
+  $("prof-stats").querySelectorAll(".prof-tile").forEach((el, i) => el.style.setProperty("--i", i));
   $("prof-top").innerHTML = (d.top_games || []).map((g, i) => '<div class="tg"><span class="tg-n">' + (i + 1) + "</span>" + (g.icon_url || g.cover_url ? '<img src="' + encodeURI(g.icon_url || g.cover_url) + '" alt="">' : "") + '<div class="tg-t"><b>' + escT(g.name) + "</b><span>" + escT(g.platform) + "</span></div><span class=\"tg-h\">" + fmtHours(g.playtime_minutes) + " " + t("stHours") + "</span></div>").join("") || '<p class="muted">\u2013</p>';
   $("prof-plat").innerHTML = (d.platforms_detail || []).map((p) => '<span class="chip"><b>' + escT(p.platform) + "</b> \u00b7 " + fmtNum(p.hours || 0) + " " + t("stHours") + "</span>").join("");
   if (d.activity && d.activity.length) { const a = d.activity[0]; $("prof-live").hidden = false; $("prof-live").textContent = "\u25cf " + escT(a.game) + " \u00b7 " + a.matches + " " + (lang === "nl" ? "potten vandaag" : "matches today"); }
@@ -959,7 +1090,6 @@ document.addEventListener("keydown", (e) => { if ($("lightbox").hidden) return; 
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if (!$("lightbox").hidden) { $("lightbox").hidden = true; } else if (!$("game-sheet").hidden) closeGameSheet(); } });
 $("lib-search").addEventListener("input", () => renderLibrary());
 $("lib-sort").addEventListener("change", () => renderLibrary());
-$("lib-plat").addEventListener("change", () => renderLibrary());
 $("lib-apps").addEventListener("change", () => renderLibrary());
 
 /* ===== LEADERBOARD ===== */

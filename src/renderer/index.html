@@ -18,7 +18,7 @@
 <div id="toast" class="toast"><img class="toast-icon" id="toast-icon" src="../../assets/icon.png" alt=""><div><div class="toast-title" id="toast-title"></div><div class="toast-msg" id="toast-msg"></div></div></div>
 <!-- ============ TITELBALK (eigen identiteit; sleepbaar) ============ -->
 <header id="titlebar">
-  <div class="tb-brand"><img src="../../assets/icon.png" alt=""><span>EVERY <b>GAME</b> STAT</span><em id="tb-ver"></em></div>
+  <div class="tb-brand"><span>EVERY <b>GAME</b> STAT</span><em id="tb-ver"></em></div>
   <div class="tb-now" id="tb-now"><div class="tb-now-art" id="tb-now-art"></div><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
   <div class="tb-mid"><span id="tb-upd" class="tb-chip gold" hidden></span></div>
   <div class="tb-actions">
@@ -67,6 +67,7 @@
   <button class="tab active" data-tab="home" title="Home"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg></span><span class="tab-lbl" data-i18n="tabHome"></span></button>
   <button class="tab" data-tab="social" title="Social"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.8 20c.6-3.4 3.1-5.2 6.2-5.2s5.6 1.8 6.2 5.2"/><circle cx="17" cy="9" r="2.4"/><path d="M15.4 14.6c2.6.2 4.6 1.7 5.2 4.4"/></svg></span><span class="tab-lbl" data-i18n="tabSocial"></span><span class="badge" id="soc-badge" hidden></span></button>
   <button class="tab" data-tab="library" title="Library"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.6"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.6"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.6"/></svg></span><span class="tab-lbl" data-i18n="tabLibrary"></span></button>
+  <button class="tab" data-tab="hubs" title="Game hubs"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h12a3 3 0 0 1 3 3l-.7 5.6a2 2 0 0 1-3.5 1L15 15H9l-1.8 2.6a2 2 0 0 1-3.5-1L3 11a3 3 0 0 1 3-3Z"/><path d="M8 11v2M7 12h2M16 11.5h.01M18 13h.01"/></svg></span><span class="tab-lbl" data-i18n="tabHubs"></span></button>
   <button class="tab" data-tab="stats" title="Stats"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M22 19H2"/></svg></span><span class="tab-lbl" data-i18n="tabStats"></span></button>
   <button class="tab" data-tab="board" title="Leaderboard"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v3.5a5 5 0 0 1-10 0Z"/><path d="M7 5H4.5a0 0 0 0 0 0 0c0 2.6 1.1 4.3 2.9 4.9M17 5h2.5c0 2.6-1.1 4.3-2.9 4.9"/><path d="M12 12.5V16"/><path d="M8.5 20h7M10 16h4v4"/></svg></span><span class="tab-lbl" data-i18n="tabBoard"></span></button>
   <div class="rail-spacer"></div>
@@ -185,7 +186,7 @@
   <div class="social-grid">
     <aside class="panel soc-left">
       <div class="soc-lefthead">
-        <div class="panel-head" style="margin:0" data-i18n="socHead"></div>
+        <div class="panel-head" data-i18n="socHead"></div>
         <button id="soc-refresh" class="icon-btn sm">⟳</button>
       </div>
       <input id="soc-search" class="text-input" data-i18n-ph="socSearchPh" spellcheck="false">
@@ -250,25 +251,37 @@
     <p class="muted" id="prof-note"></p>
   </div>
 </div>
+<div id="view-hubs" class="view" hidden>
+  <div class="lib-head"><div><div class="lib-title" data-i18n="hubsHead"></div><div class="lib-sub" data-i18n="hubsSub"></div></div></div>
+  <div id="hubs-grid" class="hubs-grid"></div>
+</div>
 <div id="view-stats" class="view" hidden>
-  <div class="lib-head"><div class="lib-title" data-i18n="statsHead"></div><span class="mono dim" id="stats-sub"></span></div>
-  <div id="stats-grid" class="stats-grid"></div>
+  <div id="stats-home">
+    <div class="lib-head"><div class="lib-title" data-i18n="statsHead"></div><span class="mono dim" id="stats-sub"></span></div>
+    <div id="stats-grid" class="stats-grid"></div>
+    <div class="lib-sec" id="stats-plat-h" hidden data-i18n="statsPlatforms"></div>
+    <div id="stats-plat" class="stats-grid plat"></div>
+  </div>
   <div id="stats-detail" class="stats-detail" hidden></div>
 </div>
 <div id="view-library" class="view" hidden>
   <div class="lib-head">
-    <div class="lib-title" data-i18n="libHead"></div>
+    <div><div class="lib-title" data-i18n="libHead"></div><div class="lib-sub" id="lib-count"></div></div>
     <input id="lib-search" class="text-input" data-i18n-ph="libSearchPh" spellcheck="false">
     <select id="lib-sort" class="text-input">
       <option value="minutes" data-i18n="libSortHours"></option>
-      <option value="name" data-i18n="libSortName"></option>
-      <option value="ach" data-i18n="libSortAch"></option>
       <option value="last" data-i18n="libSortLast"></option>
+      <option value="ach" data-i18n="libSortAch"></option>
+      <option value="name" data-i18n="libSortName"></option>
     </select>
-    <select id="lib-plat" class="text-input"><option value="" data-i18n="libAllPlatforms"></option></select>
-    <span class="mono dim" id="lib-count"></span>
+    <select id="lib-plat" class="text-input" hidden><option value=""></option></select>
+    <label class="lib-toggle"><input type="checkbox" id="lib-apps"> <span data-i18n="libShowApps"></span></label>
   </div>
-  <label class="lib-toggle"><input type="checkbox" id="lib-apps"> <span data-i18n="libShowApps"></span></label>
+  <div class="lib-chips" id="lib-chips"></div>
+  <div id="lib-hero" class="lib-hero" hidden></div>
+  <div class="lib-sec" id="lib-recent-h" hidden data-i18n="libRecent"></div>
+  <div id="lib-recent" class="lib-row" hidden></div>
+  <div class="lib-sec" id="lib-all-h" hidden data-i18n="libAll"></div>
   <div id="lib-grid" class="lib-grid"></div>
 </div>
 
@@ -325,12 +338,12 @@
     <div class="panel">
       <div class="btnrow">
         <button id="upd-check" class="btn ghost sm" data-i18n="updCheck"></button>
-        <span class="mono dim" id="upd-status" style="align-self:center;font-size:11px"></span>
+        <span class="mono dim" id="upd-status"></span>
       </div>
     </div>
     <div class="panel">
       <button id="btn-unlink" class="btn danger" data-i18n="setUnlink"></button>
-      <button id="btn-quit" class="btn" data-i18n="setQuit" style="margin-left:8px"></button>
+      <button id="btn-quit" class="btn" data-i18n="setQuit"></button>
       <small class="dim" data-i18n="setUnlinkHint"></small>
     </div>
     <div class="foot mono" data-i18n="footReadonly"></div>
