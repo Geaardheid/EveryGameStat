@@ -6,11 +6,20 @@
 <title>EGS Companion</title>
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="booting">
+<!-- ============ LOADER (dekt de eerste render, zoals op de site) ============ -->
+<div id="egs-loader" class="egs-loader on">
+  <div class="egs-loader-in">
+    <div class="egs-loader-logo"><span class="egs-loader-ring"></span><img src="../../assets/icon.png" alt=""></div>
+    <div class="egs-loader-title">EVERY <b>GAME</b> STAT</div>
+    <div class="egs-loader-sub" id="egs-loader-sub">Companion</div>
+  </div>
+</div>
+<div id="toast" class="toast"><img class="toast-icon" id="toast-icon" src="../../assets/icon.png" alt=""><div><div class="toast-title" id="toast-title"></div><div class="toast-msg" id="toast-msg"></div></div></div>
 <!-- ============ TITELBALK (eigen identiteit; sleepbaar) ============ -->
 <header id="titlebar">
   <div class="tb-brand"><img src="../../assets/icon.png" alt=""><span>EVERY <b>GAME</b> STAT</span><em id="tb-ver"></em></div>
-  <div class="tb-now" id="tb-now"><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
+  <div class="tb-now" id="tb-now"><div class="tb-now-art" id="tb-now-art"></div><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
   <div class="tb-mid"><span id="tb-upd" class="tb-chip gold" hidden></span></div>
   <div class="tb-actions">
     <button id="tb-search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>
@@ -34,7 +43,7 @@
 </header>
 
 <!-- ============ KOPPELSCHERM ============ -->
-<div id="view-link" class="view center-view">
+<div id="view-link" class="view center-view" hidden>
   <div class="link-card">
     <img src="../../assets/icon.png" class="logo" alt="">
     <h1>EGS <span>COMPANION</span></h1>
@@ -71,6 +80,14 @@
     <span id="upd-txt"></span>
     <button class="btn gold sm" id="upd-restart" hidden data-i18n="updRestart"></button>
   </div>
+  <div id="np-hero" class="np-hero" hidden>
+    <div class="np-art" id="np-art"></div>
+    <div class="np-body">
+      <span class="np-eyebrow"><span class="np-dot"></span><span id="np-eyebrow"></span></span>
+      <div class="np-game" id="np-game"></div>
+      <div class="np-sub mono" id="np-sub"></div>
+    </div>
+  </div>
   <div class="home-grid">
     <aside class="pcol">
       <div class="ad-box" id="ad-box">
@@ -83,21 +100,22 @@
           <img src="../../assets/icon.png" class="avatar" id="who-avatar" alt="">
           <div class="who">
             <div class="name" id="who-name">—</div>
+            <div class="since" id="who-since"></div>
             <button class="linklike small" id="who-card" data-i18n="myCard"></button>
           </div>
           <button id="btn-refresh" class="icon-btn" title="Refresh">⟳</button>
         </div>
-        <div class="statrow">
+        <div class="statrow" id="statrow">
           <div class="stat"><div class="stat-num mono" id="st-games">–</div><div class="stat-lbl" data-i18n="stGames"></div></div>
           <div class="stat"><div class="stat-num mono gold" id="st-hours">–</div><div class="stat-lbl" data-i18n="stHours"></div></div>
           <div class="stat"><div class="stat-num mono teal" id="st-ach">–</div><div class="stat-lbl" data-i18n="stAch"></div></div>
         </div>
         <div id="now-playing" class="nowplay" hidden><span class="np-dot"></span><span id="now-playing-txt"></span></div>
-        <div class="chips" id="plat-chips"></div>
+        <div class="chips" id="plat-chips"><span class="skel skel-chip"></span><span class="skel skel-chip"></span><span class="skel skel-chip"></span></div>
       </div>
-      <div class="panel" id="top-panel" hidden>
+      <div class="panel" id="top-panel">
         <div class="panel-head" data-i18n="topHead"></div>
-        <div id="top-games" class="topgames"></div>
+        <div id="top-games" class="topgames"><div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div></div>
       </div>
     </aside>
     <section class="mcol">
@@ -155,7 +173,7 @@
       </div>
       <div class="panel grow">
         <div class="panel-head"><span data-i18n="sessionHead"></span><span class="mono dim" id="session-line"></span></div>
-        <div id="matches" class="matches"><div class="empty" data-i18n="noMatches"></div></div>
+        <div id="matches" class="matches"><div class="skel skel-row"></div><div class="skel skel-row"></div><div class="skel skel-row"></div></div>
       </div>
       <div class="foot mono"><span id="queue-note"></span></div>
     </section>
@@ -178,11 +196,11 @@
         <div id="soc-outgoing"></div>
       </div>
       <div class="panel-head" data-i18n="socFriends"></div>
-      <div id="soc-friends" class="soc-scroll"><div class="empty" data-i18n="socNoFriends"></div></div>
+      <div id="soc-friends" class="soc-scroll"><div class="skel skel-row"></div><div class="skel skel-row"></div></div>
     </aside>
     <section class="panel chat-pane" id="chat-pane">
       <div id="chat-placeholder" class="chat-ph">
-        <span class="chat-ph-ico">💬</span>
+        <img class="chat-ph-mascot" src="https://wcsgosrevyyafnerrhge.supabase.co/storage/v1/object/public/art/mascot/headset.webp" alt="">
         <span data-i18n="chatPick"></span>
       </div>
       <div id="chat-ui" hidden>
@@ -251,7 +269,7 @@
     <span class="mono dim" id="lib-count"></span>
   </div>
   <label class="lib-toggle"><input type="checkbox" id="lib-apps"> <span data-i18n="libShowApps"></span></label>
-  <div id="lib-grid" class="lib-grid"><div class="empty" data-i18n="libLoading"></div></div>
+  <div id="lib-grid" class="lib-grid"></div>
 </div>
 
 <!-- ============ LEADERBOARD ============ -->
@@ -285,7 +303,7 @@
       </label>
       <label class="field">
         <span data-i18n="setMw4Exes"></span>
-        <input id="set-mw4exes" class="text-input" spellcheck="false" placeholder="cod.exe, cod26-cod.exe">
+        <input id="set-mw4exes" class="text-input" spellcheck="false" placeholder="game.exe, launcher-game.exe">
         <small class="dim" data-i18n="setMw4ExesHint"></small>
       </label>
       <label class="field row">
@@ -316,16 +334,6 @@
       <small class="dim" data-i18n="setUnlinkHint"></small>
     </div>
     <div class="foot mono" data-i18n="footReadonly"></div>
-  </div>
-<div class="settings-card cod-card" hidden><!-- Activision heeft userInfo/identities gesloten (sep 2026); code blijft voor als er ooit weer een deur opengaat -->
-    <div class="cod-h"><b>Call of Duty</b><span class="cod-tag" data-i18n="codTag"></span></div>
-    <p class="muted" data-i18n="codHelp"></p>
-    <div class="cod-row"><span id="cod-status" class="muted"></span></div>
-    <div class="cod-btns">
-      <button id="cod-login" class="btn gold" data-i18n="codLogin"></button>
-      <button id="cod-sync" class="btn" data-i18n="codSync" hidden></button>
-      <button id="cod-unlink" class="btn danger" data-i18n="codUnlink" hidden></button>
-    </div>
   </div>
 </div>
 

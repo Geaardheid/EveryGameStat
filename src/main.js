@@ -8,7 +8,6 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const config = require("./config");
-const cod = require("./cod");
 const api = require("./api");
 const RocketLeagueAdapter = require("./adapters/rocketleague");
 const ProcessWatchAdapter = require("./adapters/processwatch");
@@ -46,12 +45,15 @@ app.on("second-instance", () => { showWindow(); });
 
 function showWindow() {
   if (!win) createWindow();
-  win.show();
+  if (!win.isVisible()) { if (!win.isMaximized()) win.maximize(); win.show(); }
   win.focus();
 }
 
-function createWindow() {
+/* Venster pas tonen als de eerste render klaar is (show:false + ready-to-show) en
+   maximaliseren vóór het tonen: zo geen wit/leeg/klein venster dat drie keer flitst. */
+function createWindow(startHidden) {
   win = new BrowserWindow({
+    show: false,
     width: 1280,
     height: 820,
     minWidth: 980,
@@ -69,7 +71,11 @@ function createWindow() {
     }
   });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
-  win.maximize();
+  win.once("ready-to-show", () => {
+    if (startHidden) return;
+    win.maximize();
+    win.show();
+  });
   win.on("close", (e) => {
     if (!quitting) { e.preventDefault(); win.hide(); } /* sluiten = naar tray */
   });
@@ -119,11 +125,13 @@ async function presencePush(force) {
   if (!force && sig === presenceSent) return;
   try {
     const r = await api.social("presence_set", { game: cur, state, detail });
-    if (r && r.ok) { presenceSent = sig; sendToUI("presence", { game: cur, state, detail }); }
+    if (r && r.ok) { presenceSent = sig; sendToUI("presence", { game: cur, state, detail, art: (cur && presenceArt[cur]) || null }); }
   } catch (e) {}
 }
 function presenceUpdate(src, val) {
   presenceSrc[src] = val;
+  const cur = presenceCurrent();
+  sendToUI("presence-local", { game: cur, art: (cur && presenceArt[cur]) || null });
   presencePush(false);
   if (presenceCurrent() && !presenceBeat) presenceBeat = setInterval(() => presencePush(true), 120 * 1000);
   if (!presenceCurrent() && presenceBeat) { clearInterval(presenceBeat); presenceBeat = null; }
@@ -131,7 +139,7 @@ function presenceUpdate(src, val) {
 
 const ART = "https://wcsgosrevyyafnerrhge.supabase.co/storage/v1/object/public/art/";
 const steamCover = (appid) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg";
-const presenceArt = {}; /* gamenaam → afbeelding voor Discord/kaart */
+const presenceArt = { "Rocket League": steamCover(252950) }; /* gamenaam → afbeelding voor Discord/kaart/now-playing */
 /* Steam: elke Steam-game via RunningAppID (ook games die niet in de exe-lijst staan) */
 let steamSession = null, steamTimer = null;
 function startSteamWatch() {
@@ -350,6 +358,7 @@ ipcMain.handle("win", (_e, cmd) => {
   return win.isMaximized();
 });
 
+ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
 ipcMain.handle("recent", async () => {
   try { return await api.recent(15); } catch (e) { return { ok: false, error: "offline" }; }
 });
@@ -376,12 +385,6 @@ ipcMain.handle("open-video", (_e, id) => {
   videoWin.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
 });
 ipcMain.handle("public-profile", async (_e, slug) => { try { return await api.publicProfile(slug); } catch (e) { return null; } });
-ipcMain.handle("cod", async (_e, cmd) => {
-  if (cmd === "login") { cod.login(win); return { ok: true }; }
-  if (cmd === "sync") return await cod.sync();
-  if (cmd === "unlink") { await cod.unlink(); return { ok: true }; }
-  return await cod.status();
-});
 ipcMain.handle("hubs", async () => { try { return await api.hubs(); } catch (e) { return { ok: false, error: "offline" }; } });
 ipcMain.handle("web-session", async (_e, path) => {
   try { return await api.social("web_session", { path }); } catch (e) { return { ok: false, error: "offline" }; }
@@ -480,9 +483,8 @@ app.whenReady().then(() => {
   api.init(config);
   createTray();
   try { globalShortcut.register("F9", () => { if (config.get().token) captureScoreboard(); }); } catch (e) {}
-  const startHidden = process.argv.includes("--hidden") && config.get().token;
-  createWindow();
-  if (startHidden) win.hide();
+  const startHidden = process.argv.includes("--hidden") && !!config.get().token;
+  createWindow(startHidden);
   startAdapters();
   config.flushQueue(api); /* offline-wachtrij bij opstarten proberen */
 

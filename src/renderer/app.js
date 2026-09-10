@@ -56,7 +56,7 @@ const I18N = {
     procOn: (m) => "running \u2014 " + m + " min this session",
     procTotal: (h, n) => h + " h measured \u00b7 " + n + " session(s)",
     sessSaved: (g, m) => g + " \u00b7 " + m + " min \u2014 saved \u2713",
-    capBtn: "\ud83d\udcf7 F9",
+    capBtn: "F9",
     capBusy: "Reading scoreboard\u2026 (screenshot stays on your PC)",
     capDone: "Check the numbers \u2014 OCR guesses, you decide.",
     capError: "Capture failed. Is the game on Borderless? Try again with the scoreboard visible.",
@@ -68,6 +68,9 @@ const I18N = {
     capSaved: (k, d) => "MW4 Beta \u00b7 " + k + "/" + d + " \u2014 saved \u2713",
     capHint: "Press F9 while the scoreboard is on screen.",
     tabHome: "Home", tabSocial: "Social", tabSite: "Site", tabLibrary: "Library", tabBoard: "Ranks",
+    npPlaying: "Now playing", npSince: (m) => m + " min this session", npMatch: "in a match", memberSince: (d) => "Member since " + d,
+    toastLinked: "Linked \u00b7 welcome to the Companion", toastSession: (g, m) => g + " \u00b7 " + m + " min saved to your card", toastMatch: (r) => "Rocket League \u00b7 " + r + " synced", toastAch: "Achievement unlocked", toastDone: "Saved",
+    emptyLib: "Nothing here yet. Link a platform on the site.", emptyBoard: "No public cards yet.",
     libHead: "Your library",
     libSearchPh: "Search games\u2026",
     libSortHours: "Most played", libSortName: "Name", libSortAch: "Achievements", libSortLast: "Recently played",
@@ -82,8 +85,7 @@ const I18N = {
     menuProfile: "My profile", menuCard: "Open my card on the web", menuSettings: "Settings",
     profTop: "Top games", profPlat: "Linked platforms", profGames: "games", profHours: "hours", profAch: "achievements", profPlats: "platforms",
     profSince: (d) => "Member since " + d, profPrivate: "This player's card is private.", profNotFound: "No player with this name.", profAddFriend: "Add friend", profMessage: "Message", profOwn: "This is you.", profSearchPh: "Find a player\u2026",
-    codTag: "unofficial", codHelp: "Activision has no public API. The Companion logs in with YOUR Activision account in a window of its own and reads your own profile from your PC \u2014 nothing is shared with EGS except the numbers. Formally against Activision's terms; used by every CoD tracker for years, opt-in.",
-    codLogin: "Log in with Activision", codSync: "Refresh now", codUnlink: "Unlink", codNone: "Not linked.", codLinked: (u) => "Linked as " + u, codSyncing: "Fetching your profile\u2026", codOk: (n) => n + " stat sets sent to EGS.", codErr: (m) => "Failed: " + m, tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
+    tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
     boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
@@ -108,8 +110,8 @@ const I18N = {
     socNowFriends: "You're now friends \u2713",
     chatPh: "Type a message\u2026",
     chatSend: "Send",
-    chatEmpty: "Say hi \ud83d\udc4b",
-    setMw4Exes: "Extra Call of Duty process names", detName: "Game detection \u00b7 every game", detHint: "Steam games are recognised automatically; Battle.net, Xbox app, Epic and Riot via a built-in list. Playtime per session lands on your card.",
+    chatEmpty: "Say hi",
+    setMw4Exes: "Extra process names to track", detName: "Game detection \u00b7 every game", detHint: "Steam games are recognised automatically; Battle.net, Xbox app, Epic and Riot via a built-in list. Playtime per session lands on your card.",
     setMw4ExesHint: "Comma-separated .exe names. Only change if the game isn't detected (check Task Manager \u2192 Details).",
     rlHelpText: "One-time Rocket League setup:\n\nCreate or edit this file:\n  Documents\\My Games\\Rocket League\\\n  TAGame\\Config\\TAStatsAPI.ini\n\nPut exactly this in it:\n  [TAGame.MatchStatsExporter_TA]\n  Port=49123\n  PacketSendRate=30\n\nThen restart Rocket League."
   },
@@ -169,7 +171,7 @@ const I18N = {
     procOn: (m) => "draait \u2014 " + m + " min deze sessie",
     procTotal: (h, n) => h + " u gemeten \u00b7 " + n + " sessie(s)",
     sessSaved: (g, m) => g + " \u00b7 " + m + " min \u2014 opgeslagen \u2713",
-    capBtn: "\ud83d\udcf7 F9",
+    capBtn: "F9",
     capBusy: "Scorebord lezen\u2026 (screenshot blijft op je pc)",
     capDone: "Check de cijfers \u2014 OCR gokt, jij beslist.",
     capError: "Vastleggen mislukt. Staat de game op Borderless? Probeer opnieuw met het scorebord in beeld.",
@@ -181,6 +183,9 @@ const I18N = {
     capSaved: (k, d) => "MW4 Beta \u00b7 " + k + "/" + d + " \u2014 opgeslagen \u2713",
     capHint: "Druk op F9 terwijl het scorebord in beeld staat.",
     tabHome: "Home", tabSocial: "Social", tabSite: "Site", tabLibrary: "Bibliotheek", tabBoard: "Ranks",
+    npPlaying: "Speelt nu", npSince: (m) => m + " min deze sessie", npMatch: "pot bezig", memberSince: (d) => "Lid sinds " + d,
+    toastLinked: "Gekoppeld \u00b7 welkom in de Companion", toastSession: (g, m) => g + " \u00b7 " + m + " min op je kaart gezet", toastMatch: (r) => "Rocket League \u00b7 " + r + " gesynct", toastAch: "Achievement unlocked", toastDone: "Opgeslagen",
+    emptyLib: "Nog niets hier. Koppel een platform op de site.", emptyBoard: "Nog geen publieke kaarten.",
     libHead: "Jouw bibliotheek",
     libSearchPh: "Zoek games\u2026",
     libSortHours: "Meest gespeeld", libSortName: "Naam", libSortAch: "Achievements", libSortLast: "Laatst gespeeld",
@@ -195,8 +200,7 @@ const I18N = {
     menuProfile: "Mijn profiel", menuCard: "Mijn kaart op het web", menuSettings: "Instellingen",
     profTop: "Topgames", profPlat: "Gekoppelde platforms", profGames: "games", profHours: "uur", profAch: "achievements", profPlats: "platforms",
     profSince: (d) => "Lid sinds " + d, profPrivate: "De kaart van deze speler is priv\u00e9.", profNotFound: "Geen speler met deze naam.", profAddFriend: "Vriend toevoegen", profMessage: "Bericht", profOwn: "Dit ben jij.", profSearchPh: "Zoek een speler\u2026",
-    codTag: "onofficieel", codHelp: "Activision heeft geen publieke API. De Companion logt in een eigen venster in met JOUW Activision-account en leest je eigen profiel vanaf je pc \u2014 alleen de cijfers gaan naar EGS. Formeel tegen Activisions voorwaarden; elke CoD-tracker doet dit al jaren, opt-in.",
-    codLogin: "Inloggen bij Activision", codSync: "Nu verversen", codUnlink: "Ontkoppelen", codNone: "Niet gekoppeld.", codLinked: (u) => "Gekoppeld als " + u, codSyncing: "Profiel ophalen\u2026", codOk: (n) => n + " statsets naar EGS gestuurd.", codErr: (m) => "Mislukt: " + m, tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
+    tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
     boardHead: "Leaderboard",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
@@ -221,8 +225,8 @@ const I18N = {
     socNowFriends: "Jullie zijn nu vrienden \u2713",
     chatPh: "Typ een bericht\u2026",
     chatSend: "Versturen",
-    chatEmpty: "Zeg hoi \ud83d\udc4b",
-    setMw4Exes: "Extra Call of Duty-procesnamen", detName: "Game-detectie \u00b7 elke game", detHint: "Steam-games worden automatisch herkend; Battle.net, Xbox-app, Epic en Riot via een ingebouwde lijst. Speeltijd per sessie komt op je kaart.",
+    chatEmpty: "Zeg hoi",
+    setMw4Exes: "Extra procesnamen om te volgen", detName: "Game-detectie \u00b7 elke game", detHint: "Steam-games worden automatisch herkend; Battle.net, Xbox-app, Epic en Riot via een ingebouwde lijst. Speeltijd per sessie komt op je kaart.",
     setMw4ExesHint: "Komma-gescheiden .exe-namen. Alleen aanpassen als de game niet gedetecteerd wordt (check Taakbeheer \u2192 Details).",
     rlHelpText: "Eenmalige Rocket League-setup:\n\nMaak of bewerk dit bestand:\n  Documenten\\My Games\\Rocket League\\\n  TAGame\\Config\\TAStatsAPI.ini\n\nZet er precies dit in:\n  [TAGame.MatchStatsExporter_TA]\n  Port=49123\n  PacketSendRate=30\n\nHerstart daarna Rocket League."
   }
@@ -241,6 +245,25 @@ function applyI18n() {
 }
 
 const $ = (id) => document.getElementById(id);
+const ART_BUCKET = "https://wcsgosrevyyafnerrhge.supabase.co/storage/v1/object/public/art/";
+const MASCOT = (n) => ART_BUCKET + "mascot/" + n + ".webp";
+const emptyHtml = (txt, pose) => '<div class="empty"><img class="mascot" src="' + MASCOT(pose || "shrug") + '" alt=""><span>' + txt + "</span></div>";
+const skelRows = (n, cls) => Array.from({ length: n }, () => '<div class="skel ' + (cls || "skel-row") + '"></div>').join("");
+/* achievement-toast, zoals op de site */
+let toastTimer = null;
+function toast(msg, title, pose) {
+  const el = $("toast"); if (!el) return;
+  $("toast-title").textContent = title || t("toastAch");
+  $("toast-msg").textContent = msg;
+  $("toast-icon").src = MASCOT(pose || "cheer");
+  el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 3800);
+}
+function loaderOff() {
+  const l = $("egs-loader"); if (!l) return;
+  document.body.classList.remove("booting");
+  requestAnimationFrame(() => setTimeout(() => l.classList.remove("on"), 120));
+}
 let state = null;
 const session = []; /* potten van deze app-sessie */
 
@@ -272,10 +295,12 @@ async function boot() {
   $("ver").textContent = "v" + state.version + " \u00b7 alpha";
   const tv = $("tb-ver"); if (tv) tv.textContent = "v" + state.version + " \u00b7 alpha";
   updateQueueNote(state.queued);
-  if (!state.linked) { show("view-link"); return; }
+  if (!state.linked) { show("view-link"); loaderOff(); return; }
   fillMain();
   show("view-main");
   loadRecent();
+  loaderOff();
+  try { const p = await window.egs.presenceNow(); if (p) applyPresence(p); } catch (e) {}
 }
 
 function fillMain() {
@@ -294,6 +319,7 @@ let profileData = null;
 async function loadProfile() {
   const btn = $("btn-refresh");
   btn.classList.add("busy");
+  if (!profileData) ["st-games", "st-hours", "st-ach"].forEach((id) => { $(id).innerHTML = '<span class="skel skel-num"></span>'; });
   try {
     const p = await window.egs.profile();
     if (p && p.ok) {
@@ -309,6 +335,7 @@ function renderProfile() {
   if (p.name) $("who-name").textContent = p.name;
   if (p.slug) state.slug = p.slug;
   if (p.avatar) { $("who-avatar").src = p.avatar; const ta = $("tb-avatar"); if (ta) ta.src = p.avatar; }
+  const since = $("who-since"); if (since) since.textContent = p.since ? t("memberSince")(new Date(p.since).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { month: "long", year: "numeric" })) : "";
   $("st-games").textContent = fmtNum(p.totals.games);
   $("st-hours").textContent = fmtHours(p.totals.minutes);
   $("st-ach").textContent = fmtNum(p.totals.ach_earned);
@@ -317,12 +344,13 @@ function renderProfile() {
   ).join("");
   const tg = p.top_games || [];
   $("top-panel").hidden = !tg.length;
-  $("top-games").innerHTML = tg.map((g) =>
-    '<div class="tg">' +
-    (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : "<span></span>") +
+  $("top-games").innerHTML = tg.map((g, i) =>
+    '<div class="tg" style="--i:' + i + '">' + '<span class="tg-n">' + (i + 1) + "</span>" +
+    (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : '<span class="tg-ph"></span>') +
     '<span><div class="tg-name">' + String(g.name || "").replace(/[<>&]/g, "") + '</div><div class="tg-plat">' + String(g.platform || "").replace(/[<>&]/g, "") + "</div></span>" +
     '<span class="tg-hours">' + fmtHours(g.minutes) + " " + t("stHours") + "</span></div>"
   ).join("");
+  $("top-games").classList.add("stag");
   if (p.cached) { $("queue-note").textContent = t("cachedNote"); }
 }
 $("btn-refresh").addEventListener("click", loadProfile);
@@ -378,6 +406,7 @@ async function doLink() {
       fillMain();
       show("view-main");
       loadRecent();
+      toast(t("toastLinked"), t("toastAch"), "cheer");
     } else {
       const map = { code_invalid: "errCodeInvalid", code_used: "errCodeUsed", code_expired: "errCodeExpired" };
       $("link-err").textContent = t(map[r.error] || "errOffline");
@@ -440,6 +469,7 @@ window.egs.onProcSession((sess) => {
     '<span class="m-meta">' + fmtTime(sess.ended_at) + "</span>";
   box.prepend(div);
   loadSessionTotals();
+  toast(t("toastSession")(String(sess.game), mins), t("toastDone"), "controller");
 });
 /* ---- screenshot-tracker ---- */
 $("mw4-cap").addEventListener("click", () => window.egs.captureScoreboard());
@@ -518,7 +548,7 @@ async function loadSocial() {
   /* vrienden */
   const fBox = $("soc-friends"); fBox.innerHTML = "";
   const friends = r.friends || [];
-  if (!friends.length) fBox.innerHTML = '<div class="empty">' + t("socNoFriends") + "</div>";
+  if (!friends.length) fBox.innerHTML = emptyHtml(t("socNoFriends"), "wave");
   friends.forEach((f) => {
     const unread = Number(f.unread) || 0;
     const row = socRow(f, unread ? '<span class="badge">' + unread + "</span>" : "", () => openChat(f));
@@ -599,13 +629,31 @@ $("ad-report").addEventListener("click", () => window.egs.openExternal("https://
 $("ad-remove").addEventListener("click", () => window.egs.openExternal("https://everygamestat.com/#premium"));
 renderAd();
 window.egs.onSocialUnread((d) => updateBadge(d.total || 0));
-window.egs.onPresence((d) => {
-  try { const dot = document.querySelector("#ad-mw4 .dot"); if (dot && !Object.keys(detRunning).length) { dot.dataset.state = d && d.game ? "in_match" : "off"; if (d && d.game) $("mw4-state").textContent = d.game; else renderMw4Base(); } } catch (e) {}
+let presArt = null;
+function applyPresence(d) {
+  d = d || {};
+  try { const dot = document.querySelector("#ad-mw4 .dot"); if (dot && !Object.keys(detRunning).length) { dot.dataset.state = d.game ? "in_match" : "off"; if (d.game) $("mw4-state").textContent = d.game; else renderMw4Base(); } } catch (e) {}
+  if (d.art !== undefined) presArt = d.art;
   tbNow(d);
   const box = $("now-playing");
   if (d.game) { box.hidden = false; $("now-playing-txt").textContent = t("nowPlaying")(d.game); }
   else box.hidden = true;
-});
+  /* Medal-stijl: art vervaagd achter "speelt nu" (titelbalk + hero op Home) */
+  const artUrl = d.game && presArt ? 'url("' + presArt + '")' : "";
+  const tbArt = $("tb-now-art"); if (tbArt) tbArt.style.backgroundImage = artUrl;
+  const hero = $("np-hero");
+  if (hero) {
+    hero.hidden = !d.game;
+    if (d.game) {
+      $("np-art").style.backgroundImage = artUrl;
+      $("np-eyebrow").textContent = t("npPlaying") + (d.state === "in_match" ? " \u00b7 " + (d.detail || t("npMatch")) : "");
+      $("np-game").textContent = d.game;
+      $("np-sub").textContent = tbNowSince ? t("npSince")(Math.max(1, Math.floor((Date.now() - tbNowSince) / 60000))) : "";
+    }
+  }
+}
+window.egs.onPresence(applyPresence);
+window.egs.onPresenceLocal((d) => { if (d) { if (d.art !== undefined) presArt = d.art; if (!tbNowLast || (tbNowLast.game || null) !== (d.game || null)) applyPresence({ game: d.game, art: d.art }); } });
 window.egs.onOpenSocial(() => show("view-social"));
 
 /* ===== CHAT ===== */
@@ -671,8 +719,9 @@ let libData = null;
 async function loadLibrary() {
   if (loadLibrary.busy) return; loadLibrary.busy = true; setTimeout(() => { loadLibrary.busy = false; }, 5000);
   if (!libData) {
+    $("lib-grid").innerHTML = Array.from({ length: 14 }, () => '<div class="skel-card"><div class="skel skel-cover"></div><div class="skel-body"><div class="skel skel-line w80"></div><div class="skel skel-line w40"></div></div></div>').join("");
     const r = await window.egs.social("library");
-    if (!r || !r.ok) { $("lib-grid").innerHTML = '<div class="empty">' + t("errOffline") + "</div>"; return; }
+    if (!r || !r.ok) { $("lib-grid").innerHTML = emptyHtml(t("errOffline"), "worried"); return; }
     libData = r.games || [];
     const plats = [...new Set(libData.map((g) => g.platform).filter(Boolean))].sort();
     const sel = $("lib-plat");
@@ -695,9 +744,10 @@ function renderLibrary() {
   const grid = $("lib-grid");
   grid.innerHTML = "";
   const frag = document.createDocumentFragment();
-  rows.slice(0, 400).forEach((g) => {
+  rows.slice(0, 400).forEach((g, i) => {
     const card = document.createElement("div");
     card.className = "gcard";
+    card.style.setProperty("--i", Math.min(i, 30));
     let coverEl;
     if (g.cover) {
       coverEl = document.createElement("img");
@@ -720,12 +770,13 @@ function renderLibrary() {
     const ach = g.ach_t ? '<span class="gc-ach">' + (g.ach_e ?? 0) + "/" + g.ach_t + "</span>" : "<span></span>";
     body.innerHTML = '<div class="gc-name" title="' + escT(g.name) + '">' + escT(g.name) + "</div>" +
       '<div class="gc-meta"><span><b>' + fmtHours(g.minutes) + "</b> " + t("stHours") + "</span>" + ach + "</div>";
-    card.appendChild(coverEl);
+    const wrap = document.createElement("div"); wrap.className = "gc-wrap"; wrap.appendChild(coverEl);
+    card.appendChild(wrap);
     card.appendChild(body);
     card.addEventListener("click", () => openGameSheet(g));
     frag.appendChild(card);
   });
-  if (!rows.length) grid.innerHTML = '<div class="empty">\u2014</div>';
+  if (!rows.length) grid.innerHTML = emptyHtml(libData.length ? "\u2013" : t("emptyLib"), "shrug");
   else grid.appendChild(frag);
 }
 /* Site-pagina's openen in de browser (het ingebouwde venster is eruit: rendert
@@ -743,27 +794,23 @@ const HUBS = {
   lol:      { name: "League of Legends", c: "#C8963C", pick: ["level"], all: ["level"], ranks: true },
   tft:      { name: "Teamfight Tactics", c: "#7BA7D9", pick: [], all: [], ranks: true },
   xbox:     { name: "Xbox",           c: "#107C10", pick: ["gamerscore_earned","games","hours","games_with_time"], all: ["gamerscore_earned","gamerscore_total","gamerscore_pct","games","hours","games_with_time","games_without_time","coverage_pct"] },
-  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] },
-  cod:      { name: "Call of Duty",   c: "#C9C29A", pick: ["kd","wins","kills","level","spm","time_played_min"], all: ["level","prestige","kd","kills","deaths","wins","losses","matches","spm","accuracy","headshots","best_killstreak","time_played_min","top10","top5","downs","revives"] }
+  psn:      { name: "PlayStation",    c: "#2E6DB4", pick: ["trophy_level","trophies_earned","platinum","gold","silver","bronze"], all: ["trophy_level","trophy_progress","trophy_tier","trophies_earned","trophies_total","platinum","gold","silver","bronze","platinum_games","completed_games","games","minutes"] }
 };
 const STAT_LBL = { spm: "Score/min", accuracy: "Accuracy %", best_killstreak: "Best killstreak", time_played_min: "Minutes played", prestige: "Prestige", top5: "Top 5", downs: "Downs", trophies: "Trophies", best: "Best", highest: "Best", level: "Level", wins: "Wins", losses: "Losses", battles: "Battles", three_crown: "3-crown wins", cards: "Cards", arena: "Arena", clan: "Clan", club: "Club", war_wins: "War day wins", donations: "Donations", star_points: "Star points", streak: "Streak", fav_card: "Favourite card", wins3v3: "3v3 wins", solo: "Solo wins", duo: "Duo wins", brawlers: "Brawlers", th: "Town Hall", war_stars: "War stars", attacks: "Attack wins", defenses: "Defense wins", builder_trophies: "Builder trophies", capital: "Capital gold", role: "Role", kd: "K/D", winrate: "Win %", kills: "Kills", matches: "Matches", avg_damage: "Avg damage", top10: "Top 10", top10_rate: "Top 10 %", damage: "Damage", headshots: "Headshots", headshot_pct: "Headshot %", longest_kill: "Longest kill (m)", most_kills: "Most kills", assists: "Assists", revives: "Revives", dbnos: "Knocks", road_kills: "Road kills", vehicle_destroys: "Vehicles destroyed", deaths: "Deaths", top25: "Top 25", kpm: "Kills/match", score: "Score", minutes: "Minutes", outlived: "Outlived", escapes: "Escapes", total_kills: "Kills", bloodpoints: "Bloodpoints", prestige: "Prestige", gens: "Generators", heals: "Heals", hatch_escapes: "Hatch escapes", sacrifices: "Sacrifices", unhooks: "Unhooks", skillchecks: "Skill checks", survivor_pips: "Survivor pips", killer_pips: "Killer pips", max_level: "Max level", hits_near_hook: "Hits near hook", gamerscore_earned: "Gamerscore", gamerscore_total: "Gamerscore total", gamerscore_pct: "Gamerscore %", games: "Games", hours: "Hours", games_with_time: "With playtime", games_without_time: "Without playtime", coverage_pct: "Coverage %", trophy_level: "Trophy level", trophy_progress: "Level progress %", trophy_tier: "Tier", trophies_earned: "Trophies", trophies_total: "Trophies total", platinum: "Platinum", gold: "Gold", silver: "Silver", bronze: "Bronze", platinum_games: "Platinum games", completed_games: "100% games" };
 const fmtStat = (v) => v == null || v === "" ? "\u2013" : (typeof v === "number" ? v.toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : String(v));
 let hubData = [];
 async function loadStats() {
   const grid = $("stats-grid"); $("stats-detail").hidden = true; grid.hidden = false;
-  grid.innerHTML = '<p class="muted">' + t("libLoading") + "</p>";
+  grid.innerHTML = skelRows(4, "skel-hub");
   const r = await window.egs.hubs();
-  if (!r || !r.ok) { grid.innerHTML = '<p class="muted">' + t("libFail") + "</p>"; return; }
-  hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]).map((h) => {
-    if (h.game_key === "cod" && h.data && Array.isArray(h.data.titles)) { const mp = h.data.titles.find((x) => x.mode === "mp") || h.data.titles[0]; return { ...h, data: { ...(mp ? mp.stats : {}), name: h.data.name, titles: h.data.titles } }; }
-    return h;
-  });
+  if (!r || !r.ok) { grid.innerHTML = emptyHtml(t("libFail"), "worried"); return; }
+  hubData = (r.hubs || []).filter((h) => HUBS[h.game_key]);
   $("stats-sub").textContent = hubData.length + " games";
-  if (!hubData.length) { grid.innerHTML = '<p class="muted">' + t("statsEmpty") + "</p>"; return; }
+  if (!hubData.length) { grid.innerHTML = emptyHtml(t("statsEmpty"), "plug"); return; }
   grid.innerHTML = "";
   hubData.forEach((h, i) => {
     const def = HUBS[h.game_key], d = h.data || {};
-    const card = document.createElement("div"); card.className = "hub-card"; card.style.setProperty("--hc", def.c);
+    const card = document.createElement("div"); card.className = "hub-card"; card.style.setProperty("--hc", def.c); card.style.setProperty("--i", i);
     const tiles = def.pick.map((k) => '<div class="hub-tile"><b>' + escT(fmtStat(d[k])) + "</b><span>" + escT(STAT_LBL[k] || k) + "</span></div>").join("");
     const ranks = def.ranks && Array.isArray(d.ranks) && d.ranks.length ? '<div class="hub-ranks">' + d.ranks.map((rk) => '<span>' + escT((rk.queue || "").replace("RANKED_", "").replace("_", " ")) + ": <b>" + escT((rk.tier || "?") + " " + (rk.rank || "")) + "</b> " + escT(rk.lp != null ? rk.lp + " LP" : "") + "</span>").join("") + "</div>" : "";
     card.innerHTML = '<div class="hub-head"><h3>' + escT(def.name) + "</h3><span class=\"mono dim\">" + escT(d.name || d.riot_id || d.tag || "") + "</span></div>" +
@@ -829,7 +876,7 @@ async function openProfile(slug, isMe) {
   if (!d) { $("prof-note").textContent = isMe ? t("profPrivate") : t("profNotFound"); return; }
   $("prof-name").textContent = d.name || slug; $("prof-av").src = d.avatar || "../../assets/icon.png";
   $("prof-sub").textContent = "/p/" + slug + (d.since ? " \u00b7 " + t("profSince")(new Date(d.since).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { month: "long", year: "numeric" })) : "");
-  const tile = (v, l) => '<div class="prof-tile"><b>' + v + "</b><span>" + l + "</span></div>";
+  let ti = 0; const tile = (v, l) => '<div class="prof-tile" style="--i:' + (ti++) + '"><b>' + v + "</b><span>" + l + "</span></div>";
   $("prof-stats").innerHTML = tile(fmtNum(d.games || 0), t("profGames")) + tile(fmtNum(d.hours || 0), t("profHours")) + tile(d.ach_pct != null ? d.ach_pct + "%" : "\u2013", t("profAch")) + tile((d.platforms || []).length, t("profPlats"));
   $("prof-top").innerHTML = (d.top_games || []).map((g, i) => '<div class="tg"><span class="tg-n">' + (i + 1) + "</span>" + (g.icon_url || g.cover_url ? '<img src="' + encodeURI(g.icon_url || g.cover_url) + '" alt="">' : "") + '<div class="tg-t"><b>' + escT(g.name) + "</b><span>" + escT(g.platform) + "</span></div><span class=\"tg-h\">" + fmtHours(g.playtime_minutes) + " " + t("stHours") + "</span></div>").join("") || '<p class="muted">\u2013</p>';
   $("prof-plat").innerHTML = (d.platforms_detail || []).map((p) => '<span class="chip"><b>' + escT(p.platform) + "</b> \u00b7 " + fmtNum(p.hours || 0) + " " + t("stHours") + "</span>").join("");
@@ -850,7 +897,7 @@ function tbNow(d) {
   const sess = (g && sessTotals && sessTotals.n) ? " \u00b7 " + sessTotals.w + "W/" + sessTotals.l + "L" : "";
   $("tb-now-game").textContent = g ? g + (d.state === "in_match" ? " \u00b7 " + (d.detail || t("tbInMatch")) : "") + sess : "";
   $("tb-now").classList.toggle("on", !!g);
-  clearInterval(tbNowTimer); if (g) tbNowTimer = setInterval(() => tbNow(tbNowLast), 30000);
+  clearInterval(tbNowTimer); if (g) tbNowTimer = setInterval(() => { tbNow(tbNowLast); const sub = $("np-sub"); if (sub && tbNowSince) sub.textContent = t("npSince")(Math.max(1, Math.floor((Date.now() - tbNowSince) / 60000))); }, 30000);
 }
 function tbElapsed() { const m = Math.floor((Date.now() - tbNowSince) / 60000); return m < 60 ? m + " min" : Math.floor(m / 60) + "u " + (m % 60) + "m"; }
 let sessTotals = null;
@@ -860,23 +907,6 @@ setTimeout(() => { try { if (state && state.linked && !libData) loadLibrary(); }
 /* ===== Titelbalk + afsluiten (hersteld; was in 0.2.2 per ongeluk mee verwijderd) ===== */
 document.querySelectorAll("#titlebar [data-win]").forEach((b) => b.addEventListener("click", () => window.egs.win(b.dataset.win)));
 $("btn-quit").addEventListener("click", () => window.egs.win("quit"));
-/* ===== Call of Duty (Activision-login in de app) ===== */
-function codRender(s) {
-  const st = $("cod-status"); if (!st) return;
-  const linked = s.state === "linked" || s.state === "ok" || s.state === "syncing" || !!s.linked;
-  $("cod-login").hidden = linked; $("cod-sync").hidden = !linked; $("cod-unlink").hidden = !linked;
-  if (s.state === "syncing") st.textContent = t("codSyncing");
-  else if (s.state === "ok") st.textContent = t("codLinked")(s.user || "?") + " \u00b7 " + t("codOk")(s.titles || 0);
-  else if (s.state === "error") st.textContent = t("codErr")(s.message || "?");
-  else if (linked) st.textContent = t("codLinked")(s.user || "?");
-  else st.textContent = t("codNone");
-}
-$("cod-login").addEventListener("click", () => window.egs.cod("login"));
-$("cod-sync").addEventListener("click", async () => { codRender({ state: "syncing" }); const r = await window.egs.cod("sync"); if (!r.ok) codRender({ state: "error", message: r.error }); });
-$("cod-unlink").addEventListener("click", async () => { await window.egs.cod("unlink"); codRender({ state: "unlinked" }); });
-window.egs.onCod(codRender);
-window.egs.cod("status").then((s) => codRender(s || {}));
-
 /* ===== GAME-SHEET: IGDB-info per game (omschrijving, trailer, screenshots, links) ===== */
 const SHEET_LINKS = [["steam", "Steam"], ["official", "Website"], ["youtube", "YouTube"], ["twitter", "X"], ["instagram", "Instagram"], ["discord", "Discord"], ["twitch", "Twitch"], ["reddit", "Reddit"], ["epic", "Epic"], ["gog", "GOG"]];
 function ytThumb(id) { return "https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"; }
@@ -936,8 +966,10 @@ $("lib-apps").addEventListener("change", () => renderLibrary());
 let boardData = null, boardMetric = "hours";
 async function loadBoard() {
   if (!boardData) {
+    $("board-podium").innerHTML = skelRows(3, "skel-pod");
+    $("board-rows").innerHTML = skelRows(8);
     const r = await window.egs.social("leaderboard");
-    if (!r || !r.ok) return;
+    if (!r || !r.ok) { $("board-podium").innerHTML = ""; $("board-rows").innerHTML = emptyHtml(t("errOffline"), "worried"); return; }
     boardData = r;
   }
   renderBoard();
@@ -963,9 +995,11 @@ function renderBoard() {
   });
   const list = $("board-rows");
   list.innerHTML = "";
+  if (!rows.length) { list.innerHTML = emptyHtml(t("emptyBoard"), "trophy"); return; }
   rows.slice(3, 50).forEach((r, i) => {
     const d = document.createElement("div");
     d.className = "brow" + (boardData.me_slug && r.slug === boardData.me_slug ? " me" : "");
+    d.style.setProperty("--i", i);
     d.innerHTML = '<span class="br-rank">#' + (i + 4) + "</span>" +
       '<img class="br-av" src="' + (r.avatar ? encodeURI(r.avatar) : "../../assets/icon.png") + '" alt="">' +
       '<span class="br-name">' + escT(r.name || r.slug || "?") + "</span>" +
@@ -1051,24 +1085,24 @@ function matchRow(m) {
 function renderSession() {
   const box = $("matches");
   box.innerHTML = "";
-  if (!session.length) { box.innerHTML = '<div class="empty">' + t("noMatches") + "</div>"; return; }
+  if (!session.length) { box.innerHTML = emptyHtml(t("noMatches"), "controller"); return; }
   session.slice().reverse().forEach((m) => box.appendChild(matchRow(m)));
   const w = session.filter((x) => x.result === "win").length;
   const l = session.filter((x) => x.result === "loss").length;
   $("session-line").textContent = t("sessionLine")(session.length, w, l);
   sessTotals = { n: session.length, w, l }; if (tbNowLast && tbNowLast.game) tbNow(tbNowLast);
 }
-window.egs.onMatch((d) => { session.push(d.match); renderSession(); });
+window.egs.onMatch((d) => { session.push(d.match); renderSession(); const m = d.match || {}; toast(t("toastMatch")((m.result || "?").toUpperCase() + " \u00b7 " + (m.goals ?? "\u2013") + "G " + (m.assists ?? "\u2013") + "A " + (m.saves ?? "\u2013") + "S"), t("toastDone"), m.result === "win" ? "cheer" : "controller"); });
 
 async function loadRecent() {
   /* laatste gesyncte potten tonen zolang de sessie leeg is */
   if (session.length) return;
   const r = await window.egs.recent();
+  const box = $("matches");
   if (r && r.ok && r.matches && r.matches.length) {
-    const box = $("matches");
     box.innerHTML = "";
-    r.matches.forEach((m) => box.appendChild(matchRow(m)));
-  }
+    r.matches.forEach((m, i) => { const row = matchRow(m); row.style.animationDelay = Math.min(i, 12) * 35 + "ms"; box.appendChild(row); });
+  } else if (!session.length) box.innerHTML = emptyHtml(t("noMatches"), "controller");
 }
 
 /* ---- instellingen ---- */
