@@ -254,6 +254,8 @@ function applyI18n() {
     const v = t(el.dataset.i18n);
     if (typeof v === "string") el.textContent = v;
   });
+  /* tooltips van de rail volgen de taal (label is verborgen, tooltip toont hem) */
+  document.querySelectorAll("#tabbar .tab").forEach((b) => { const l = b.querySelector(".tab-lbl"); if (l && l.textContent) b.title = l.textContent; });
   document.querySelectorAll("[data-i18n-ph]").forEach((el) => {
     const v = t(el.dataset.i18nPh);
     if (typeof v === "string") el.placeholder = v;
