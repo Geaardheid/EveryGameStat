@@ -25,12 +25,14 @@
 !include nsDialogs.nsh
 !include WinMessages.nsh
 
+!ifndef BUILD_UNINSTALLER
 Var EgsDlg
 Var EgsImg
 Var EgsImgH
 Var EgsFontTitle
 Var EgsFontBody
 Var EgsRunCheck
+!endif
 
 !macro egsFonts
   ${If} $EgsFontTitle == ""
