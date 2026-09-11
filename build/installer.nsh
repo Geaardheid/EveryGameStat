@@ -39,7 +39,8 @@ Var EgsRunCheck
   ${EndIf}
 !macroend
 
-; ---- welkom ----
+; ---- welkom (alleen in de installer; de uninstaller laadt dit bestand ook en zou anders over ongebruikte functies klagen) ----
+!ifndef BUILD_UNINSTALLER
 !macro customWelcomePage
   Page custom egsWelcomeCreate egsWelcomeLeave
 !macroend
@@ -114,6 +115,8 @@ Function egsFinishLeave
     ExecShell "open" "$INSTDIR\${PRODUCT_FILENAME}.exe"
   ${EndIf}
 FunctionEnd
+
+!endif
 
 ; ---- init / opruimen ----
 !macro customInit
