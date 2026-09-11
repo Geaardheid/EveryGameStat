@@ -1,7 +1,7 @@
 {
   "name": "egs-companion",
   "productName": "EGS Companion",
-  "version": "0.6.6",
+  "version": "0.7.0",
   "description": "EveryGameStat desktop companion \u2014 brings local, per-session game stats to your EGS card. Read-only: local logs and local APIs only, never game memory.",
   "author": "EveryGameStat",
   "license": "MIT",
@@ -50,9 +50,9 @@
       "icon": "build/icon.ico"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": false,
+      "allowToChangeInstallationDirectory": true,
       "deleteAppDataOnUninstall": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
@@ -60,7 +60,11 @@
       "runAfterFinish": true,
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico"
+      "installerHeaderIcon": "build/icon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/installerSidebar.bmp",
+      "installerHeader": "build/installerHeader.bmp",
+      "include": "build/installer.nsh"
     },
     "publish": {
       "provider": "github",
