@@ -23,9 +23,10 @@ jobs:
       - run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # audit.json erbij; mag de release nooit laten falen
       - name: Attach audit.json to the release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: audit.json
+        if: startsWith(github.ref, 'refs/tags/')
+        run: gh release upload "${GITHUB_REF_NAME}" audit.json --clobber || echo "audit upload skipped"
+        shell: bash
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
