@@ -17,6 +17,15 @@ jobs:
         with:
           node-version: 20
       - run: npm ci || npm install
+      # Dependency-audit per release, als JSON bij de release; het admin-panel leest dit uit
+      - run: npm audit --json > audit.json || echo "audit had findings"
+        shell: bash
       - run: npx electron-builder --win --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Attach audit.json to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: audit.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
