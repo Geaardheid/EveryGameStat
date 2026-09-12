@@ -81,9 +81,15 @@ function createWindow(startHidden) {
       preload: path.join(__dirname, "preload.js"),
       backgroundThrottling: false,
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      /* DevTools alleen buiten de gebouwde app (of met --devtools): F12 en Ctrl+Shift+I doen niets bij gebruikers */
+      devTools: !app.isPackaged || process.argv.includes("--devtools")
     }
   });
+  win.webContents.on("before-input-event", (e, input) => {
+    if (app.isPackaged && !process.argv.includes("--devtools") && (input.key === "F12" || (input.control && input.shift && /^[IJC]$/i.test(input.key)))) e.preventDefault();
+  });
+  win.webContents.on("devtools-opened", () => { if (app.isPackaged && !process.argv.includes("--devtools")) win.webContents.closeDevTools(); });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
   /* Eerste vertoning zonder witte flits: onzichtbaar maximaliseren en tonen, één
      frame laten tekenen, dan pas opacity omhoog (zelfde truc als showWindow). */
