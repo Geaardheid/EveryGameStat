@@ -246,6 +246,17 @@ function startAdapters() {
               }
             } catch (e) {}
           }
+          if (label === "Call of Duty") {
+            /* Xbox-app zonder titelmodules: het laatst geschreven titelbestand in Documents\Call of Duty\players */
+            try {
+              const files = gamedb.codRecentFiles();
+              const recent = files.filter((f) => Date.now() - f.mtime < 6 * 3600 * 1000);
+              const tagged = recent.find((f) => /cod2\d|bo7|bo6|mw4|mw3|blackops|modernwarfare/i.test(require("path").basename(f.file)));
+              const t = tagged ? gamedb.codTitleFrom(null, null, null, require("path").basename(tagged.file)) : null;
+              if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); }
+              else codDiag = "bestanden: " + files.slice(0, 5).map((f) => require("path").basename(f.file) + "@" + new Date(f.mtime).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })).join(" ; ").slice(0, 220);
+            } catch (e) {}
+          }
           if (label === "Call of Duty" && codDiag) sendToUI("proc-status", { id, ...s, via: (s.via || "") + " · " + codDiag });
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);

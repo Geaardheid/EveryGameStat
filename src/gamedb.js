@@ -95,6 +95,26 @@ function processModules(exeName) {
     });
   });
 }
+/* CoD schrijft per titel eigen instellingen-/profielbestanden in Documents\Call of Duty\players
+   (titelcode cod2x in de bestandsnaam). Het bestand dat het laatst is geschreven hoort bij de titel
+   die nu draait. Alleen lezen van bestandsnamen en tijden — nooit inhoud, nooit geheugen. */
+function codRecentFiles() {
+  const fs = require("fs"); const os = require("os"); const path = require("path");
+  const home = os.homedir();
+  const roots = [path.join(home, "Documents", "Call of Duty"), path.join(home, "OneDrive", "Documents", "Call of Duty"), path.join(home, "OneDrive", "Documenten", "Call of Duty"),
+    path.join(process.env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "Call of Duty"), path.join(process.env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "Activision")];
+  const out = [];
+  const walk = (dir, depth) => {
+    let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of ents) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { if (depth < 3) walk(full, depth + 1); continue; }
+      try { const st = fs.statSync(full); out.push({ file: full, mtime: st.mtimeMs }); } catch (e2) {}
+    }
+  };
+  for (const r of roots) walk(r, 0);
+  return out.sort((a, b) => b.mtime - a.mtime);
+}
 /* Per seizoen een eigen exe in de unified client; de venstertitel zegt alleen "Call of Duty". */
 const COD_EXE_TITLES = { "cod26-cod.exe": "Call of Duty: Modern Warfare IV", "cod25-cod.exe": "Call of Duty: Black Ops 7", "cod24-cod.exe": "Call of Duty: Black Ops 6", "cod23-cod.exe": "Call of Duty: Modern Warfare III", "cod22-cod.exe": "Call of Duty: Modern Warfare II" };
 const COD_CODES = { cod26: "Call of Duty: Modern Warfare IV", cod25: "Call of Duty: Black Ops 7", cod24: "Call of Duty: Black Ops 6", cod23: "Call of Duty: Modern Warfare III", cod22: "Call of Duty: Modern Warfare II" };
@@ -117,4 +137,4 @@ function codTitleFrom(windowTitle, appid, exe, cmdline) {
   for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
   return null;
 }
-module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codTitleFrom };
+module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codRecentFiles, codTitleFrom };
