@@ -237,6 +237,7 @@ function startAdapters() {
   if (!adapters.rocketleague) {
     const a = new RocketLeagueAdapter({
       playerName: () => config.get().rl_name || config.get().display_name || "",
+      onLearnName: (name) => { if (name && config.get().rl_name !== name) config.set({ rl_name: name }); },
       onStatus: (s) => {
         sendToUI("adapter-status", { id: "rocketleague", ...s });
         if (s.state) {

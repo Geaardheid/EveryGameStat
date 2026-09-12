@@ -1,5 +1,18 @@
 /* ============================================================
-   Adapter: Rocket League (officiële lokale Stats API) — v2
+   Adapter: Rocket League (officiële lokale Stats API) — v3
+   ------------------------------------------------------------
+   v3 (12 sep 2026), na 21 echte potten die allemaal "unknown" werden:
+   - jij wordt herkend zónder instellingen: eerst Game.Target (de speler
+     die de camera volgt — buiten goal-replays ben jij dat, meerderheid
+     over de hele pot telt), anders je actieve Steam-account (register)
+     tegen PrimaryId "Steam|7656…", pas daarna op naam (rl_name, EGS-naam)
+   - eenmaal herkend wordt je RL-naam via onLearnName bewaard
+   - uitslag uit MatchEnded.WinnerTeamNum, terugval op de stand
+   - de API heeft geen playlist-veld: modus afgeleid uit spelersaantal
+     (1v1 … 4v4); freeplay/training (geen tegenstander) telt niet als pot
+   - MatchInitialized na MatchCreated begint geen nieuwe pot; PodiumStart/
+     MatchDestroyed na MatchEnded geven geen dubbele rij
+   ------------------------------------------------------------
    ------------------------------------------------------------
    v2, gebouwd op ECHTE raw data van een gespeelde pot:
    - veldnamen casing-tolerant (Players/players, Teams/teams, ...)
@@ -12,6 +25,23 @@
    ============================================================ */
 const net = require("net");
 const crypto = require("crypto");
+const { execFileSync } = require("child_process");
+
+/* actieve Steam-account uit het register → steamid64 (alleen Windows, best effort) */
+let steamIdCache = { at: 0, id: null };
+function activeSteamId64() {
+  if (process.platform !== "win32") return null;
+  if (Date.now() - steamIdCache.at < 60000) return steamIdCache.id;
+  let id = null;
+  try {
+    const out = execFileSync("reg", ["query", "HKCU\\Software\\Valve\\Steam\\ActiveProcess", "/v", "ActiveUser"], { encoding: "utf8", windowsHide: true, timeout: 3000 });
+    const m = /ActiveUser\s+REG_DWORD\s+0x([0-9a-f]+)/i.exec(out);
+    const acc = m ? parseInt(m[1], 16) : 0;
+    if (acc > 0) id = (76561197960265728n + BigInt(acc)).toString();
+  } catch (e) {}
+  steamIdCache = { at: Date.now(), id };
+  return id;
+}
 
 const RL_HOST = "127.0.0.1";
 const RL_PORT = 49123;
@@ -112,31 +142,49 @@ class RocketLeagueAdapter {
       clientId: crypto.randomUUID(),
       guid: null,
       startedAt: new Date().toISOString(),
-      playlist: null, me: null, myTeam: null,
-      teamGoals: [0, 0], lastPlayers: null
+      playlist: null, me: null, myTeam: null, myId: null,
+      teamGoals: [0, 0], lastPlayers: null,
+      targetVotes: {}, inReplay: false, maxPlayers: 0, winner: null
     };
   }
 
-  findMe(players) {
+  /* jouw speler: 1) bekend id (Target-meerderheid), 2) Steam-id, 3) naam */
+  findMe(players, m) {
     const list = playerList(players);
+    if (!list.length) return null;
+    const idOf = (p) => String(pick(p, "Id", "id", "PlayerId", "player_id", "ID") || "");
+    if (m && m.myId) { const hit = list.find((p) => idOf(p) === m.myId); if (hit) return hit; }
+    if (m && Object.keys(m.targetVotes).length) {
+      const best = Object.entries(m.targetVotes).sort((a, b) => b[1] - a[1])[0];
+      if (best && best[1] >= 3) { const hit = list.find((p) => idOf(p) === best[0]); if (hit) { m.myId = best[0]; return hit; } }
+    }
+    const sid = activeSteamId64();
+    if (sid) {
+      const hit = list.find((p) => String(pick(p, "PrimaryId", "PrimaryID", "primaryId", "primary_id", "PlatformId") || "").includes(sid));
+      if (hit) { if (m) m.myId = idOf(hit); return hit; }
+    }
     const want = normName(this.opts.playerName());
-    if (!want || !list.length) return null;
-    return list.find((p) => {
-      const n = normName(pick(p, "Name", "PlayerName", "player_name"));
-      return n && (n === want || n.includes(want) || want.includes(n));
-    }) || null;
+    if (!want) return null;
+    const hit = list.find((p) => { const n = normName(pick(p, "Name", "PlayerName", "player_name", "name")); return n && (n === want || n.includes(want) || want.includes(n)); }) || null;
+    if (hit && m) m.myId = idOf(hit);
+    return hit;
   }
 
   captureState(data) {
     const m = this.match;
     const game = pick(data, "Game", "game") || {};
     const players = pick(data, "Players", "players");
-    if (players) m.lastPlayers = players;
-    const me = this.findMe(players);
+    if (players) { m.lastPlayers = players; m.maxPlayers = Math.max(m.maxPlayers, playerList(players).length); }
+    /* Game.Target = de speler die de camera volgt; buiten replays ben jij dat */
+    const target = pick(game, "Target", "target");
+    if (target && !m.inReplay) { const t = String(target); m.targetVotes[t] = (m.targetVotes[t] || 0) + 1; }
+    const me = this.findMe(players, m);
     if (me) {
       m.me = me;
       const tn = num(pick(me, "TeamNum", "Team", "team", "teamnum"));
       if (tn === 0 || tn === 1) m.myTeam = tn;
+      const nm = pick(me, "Name", "PlayerName", "player_name", "name");
+      if (nm && this.opts.onLearnName && normName(nm) !== normName(this.opts.playerName())) { try { this.opts.onLearnName(String(nm).replace(/^[\[\(][^\]\)]{0,12}[\]\)]\s*/, "")); } catch (e) {} }
     }
     const pl = pick(game, "PlaylistName", "Playlist", "playlist", "playlist_name");
     if (pl) m.playlist = String(pl);
@@ -159,16 +207,19 @@ class RocketLeagueAdapter {
     let data = pick(env, "Data", "data") ?? {};
     if (typeof data === "string") { try { data = JSON.parse(data); } catch (_) {} }
 
-    if (/matchcreated|match_created|matchstarted|initialized/i.test(event)) {
+    if (/matchcreated|match_created|matchstarted/i.test(event)) {
       this.match = this.newMatch();
       this.status("in_match");
       this.captureState(data);
       return;
     }
+    if (/matchdestroyed|match_destroyed|podium/i.test(event) && !this.match) return; /* na MatchEnded: al afgerond */
     if (!this.match) { this.match = this.newMatch(); this.status("in_match"); }
     const m = this.match;
+    if (/goalreplaystart/i.test(event)) { m.inReplay = true; return; }
+    if (/goalreplayend/i.test(event)) { m.inReplay = false; return; }
 
-    if (/goal/i.test(event) && !/replay/i.test(event)) {
+    if (/goalscored/i.test(event)) {
       const scorer = pick(data, "Scorer", "scorer") || data;
       const teamNum = num(pick(scorer, "TeamNum", "Team", "teamnum", "team"));
       if (teamNum === 0 || teamNum === 1) {
@@ -178,11 +229,14 @@ class RocketLeagueAdapter {
       this.captureState(data);
       return;
     }
-    if (/matchended|match_ended|matchdestroyed|match_destroyed|podium/i.test(event)) {
+    if (/matchended|match_ended/i.test(event)) {
       this.captureState(data);
+      const w = num(pick(data, "WinnerTeamNum", "winnerTeamNum", "winner_team_num", "WinnerTeam"));
+      if (w === 0 || w === 1) m.winner = w;
       this.finishMatch(data);
       return;
     }
+    if (/matchdestroyed|match_destroyed|podium/i.test(event)) { this.captureState(data); this.finishMatch(data); return; }
     /* alles met spelers/game-info benutten (updatestate, gamestate, tick, ...) */
     if (pick(data, "Players", "players") || pick(data, "Game", "game")) this.captureState(data);
   }
@@ -197,16 +251,22 @@ class RocketLeagueAdapter {
     if (now - this.lastEnd.at < END_COOLDOWN_MS && (!guid || guid === this.lastEnd.guid)) return;
     this.lastEnd = { guid, at: now };
 
-    const me = m.me || this.findMe(pick(endData || {}, "Players", "players")) || this.findMe(m.lastPlayers) || {};
+    const me = m.me || this.findMe(pick(endData || {}, "Players", "players"), m) || this.findMe(m.lastPlayers, m) || {};
+    /* freeplay/training: één speler, geen tegenstander → geen pot */
+    const listAll = playerList(m.lastPlayers);
+    const teamsSeen = new Set(listAll.map((p) => num(pick(p, "TeamNum", "Team", "team", "teamnum"))).filter((t) => t === 0 || t === 1));
+    if (m.maxPlayers <= 1 || teamsSeen.size < 2) return;
     let result = "unknown";
     if (m.myTeam === 0 || m.myTeam === 1) {
-      const [a, b] = m.teamGoals;
-      if (a !== b) result = ((m.myTeam === 0) === (a > b)) ? "win" : "loss";
+      if (m.winner === 0 || m.winner === 1) result = m.winner === m.myTeam ? "win" : "loss";
+      else { const [a, b] = m.teamGoals; if (a !== b) result = ((m.myTeam === 0) === (a > b)) ? "win" : "loss"; }
     }
+    const perTeam = Math.max(1, Math.round(m.maxPlayers / 2));
+    const mode = m.playlist || (perTeam >= 1 && perTeam <= 4 ? perTeam + "v" + perTeam : null);
     const row = {
       client_match_id: guid || m.clientId,
       played_at: new Date().toISOString(),
-      playlist: m.playlist,
+      playlist: mode,
       result,
       goals: num(pick(me, "Goals", "goals")),
       assists: num(pick(me, "Assists", "assists")),
@@ -215,8 +275,9 @@ class RocketLeagueAdapter {
       score: num(pick(me, "Score", "MatchScore", "score")),
       mmr: num(pick(me, "MMR", "mmr")),
       raw: {
-        teamGoals: m.teamGoals, myTeam: m.myTeam, playlist: m.playlist, guid: guid || null,
-        me_keys: Object.keys(me || {}).slice(0, 20),
+        teamGoals: m.teamGoals, myTeam: m.myTeam, winner: m.winner, players: m.maxPlayers, playlist: mode, guid: guid || null,
+        me_keys: Object.keys(me || {}).slice(0, 20), me_id: m.myId, target_votes: Object.keys(m.targetVotes).length,
+        player_keys: listAll[0] ? Object.keys(listAll[0]).slice(0, 20) : [],
         diag_events: this.seenEvents
       }
     };
