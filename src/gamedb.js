@@ -83,6 +83,18 @@ function processCommandLines(exeNames) {
     });
   });
 }
+/* Geladen modules van een proces (paden buiten \Windows\). Via de Xbox-app start altijd het
+   COREBase-pakket (HQ); welke titel draait blijkt uit de DLL's uit het titel-pakket (op de gamedrive). */
+function processModules(exeName) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32" || !exeName) return resolve([]);
+    const name = exeName.replace(/\.exe$/i, "").replace(/'/g, "");
+    const ps = `$p = Get-Process -Name '${name}' -ErrorAction SilentlyContinue | Select-Object -First 1; if ($p) { try { $p.Modules | ForEach-Object { $_.FileName } | Where-Object { $_ -notmatch '\\\\Windows\\\\' } | Select-Object -First 400 } catch { 'ERR:' + $_.Exception.Message } }`;
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 10000 }, (err, out) => {
+      resolve(!err && out ? out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : []);
+    });
+  });
+}
 /* Per seizoen een eigen exe in de unified client; de venstertitel zegt alleen "Call of Duty". */
 const COD_EXE_TITLES = { "cod26-cod.exe": "Call of Duty: Modern Warfare IV", "cod25-cod.exe": "Call of Duty: Black Ops 7", "cod24-cod.exe": "Call of Duty: Black Ops 6", "cod23-cod.exe": "Call of Duty: Modern Warfare III", "cod22-cod.exe": "Call of Duty: Modern Warfare II" };
 const COD_CODES = { cod26: "Call of Duty: Modern Warfare IV", cod25: "Call of Duty: Black Ops 7", cod24: "Call of Duty: Black Ops 6", cod23: "Call of Duty: Modern Warfare III", cod22: "Call of Duty: Modern Warfare II" };
@@ -105,4 +117,4 @@ function codTitleFrom(windowTitle, appid, exe, cmdline) {
   for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
   return null;
 }
-module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, codTitleFrom };
+module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codTitleFrom };

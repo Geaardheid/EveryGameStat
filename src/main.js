@@ -232,8 +232,20 @@ function startAdapters() {
             const t = gamedb.codTitleFrom(wt, null, s.via, cl);
             if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); }
           } catch (e) {}
-          if (label === "Call of Duty") { const xt = await xboxPresenceTitle(); if (xt) { label = xt; adapters.procwatch && adapters.procwatch.setLabel(id, xt); } }
-          /* diagnose in de detectieregel op Home: pad/argumenten van het proces, zodat een nieuwe titel snel te mappen is */
+          if (label === "Call of Duty") {
+            /* Xbox-app: titel uit de geladen modules (DLL's uit het titel-pakket op de gamedrive) */
+            try {
+              const mods = await gamedb.processModules("cod.exe");
+              const joined = mods.join(" ").toLowerCase();
+              const t = gamedb.codTitleFrom(null, null, null, joined);
+              if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); }
+              else {
+                /* diagnose: modules buiten het COREBase-pakket, zodat een nieuwe titel snel te mappen is */
+                const interesting = mods.filter((m) => !/COREBase|\\Windows\\/i.test(m)).slice(0, 6);
+                codDiag = (interesting.length ? interesting.join(" ; ") : "geen titelmodules zichtbaar (" + mods.length + " modules)").slice(0, 220);
+              }
+            } catch (e) {}
+          }
           if (label === "Call of Duty" && codDiag) sendToUI("proc-status", { id, ...s, via: (s.via || "") + " · " + codDiag });
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
