@@ -69,15 +69,40 @@ function windowTitles(exeNames) {
     });
   });
 }
+/* Commandoregel + pad van processen (WMI, geen admin nodig). Via de Xbox-app draait CoD als één
+   cod.exe; de titel zit dan hopelijk in de argumenten of het installatiepad. */
+function processCommandLines(exeNames) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32" || !exeNames.length) return resolve({});
+    const filter = exeNames.map((e) => "name='" + e.replace(/'/g, "") + "'").join(" or ");
+    const ps = `Get-CimInstance Win32_Process -Filter "${filter}" | ForEach-Object { $_.Name + '|' + $_.ExecutablePath + '|' + $_.CommandLine }`;
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 8000 }, (err, out) => {
+      const map = {};
+      if (!err && out) for (const line of out.split(/\r?\n/)) { const i = line.indexOf("|"); if (i > 0) map[line.slice(0, i).toLowerCase()] = line.slice(i + 1); }
+      resolve(map);
+    });
+  });
+}
 /* Per seizoen een eigen exe in de unified client; de venstertitel zegt alleen "Call of Duty". */
 const COD_EXE_TITLES = { "cod26-cod.exe": "Call of Duty: Modern Warfare IV", "cod25-cod.exe": "Call of Duty: Black Ops 7", "cod24-cod.exe": "Call of Duty: Black Ops 6", "cod23-cod.exe": "Call of Duty: Modern Warfare III", "cod22-cod.exe": "Call of Duty: Modern Warfare II" };
-function codTitleFrom(windowTitle, appid, exe) {
+const COD_CODES = { cod26: "Call of Duty: Modern Warfare IV", cod25: "Call of Duty: Black Ops 7", cod24: "Call of Duty: Black Ops 6", cod23: "Call of Duty: Modern Warfare III", cod22: "Call of Duty: Modern Warfare II" };
+function codTitleFrom(windowTitle, appid, exe, cmdline) {
   const via = String(exe || "").toLowerCase();
   for (const [k, label] of Object.entries(COD_EXE_TITLES)) if (via.includes(k)) return label;
   const m = /cod(\d\d)-cod\.exe/.exec(via); /* onbekend seizoen: jaartal tonen i.p.v. alleen "Call of Duty" */
   if (m) return "Call of Duty (20" + m[1] + ")";
+  /* Xbox-app/Steam: titelcode (cod25) of naam in argumenten of pad */
+  const c = String(cmdline || "").toLowerCase();
+  if (c) {
+    const cm = /\bcod(2\d)\b/.exec(c); if (cm && COD_CODES["cod" + cm[1]]) return COD_CODES["cod" + cm[1]];
+    if (/bo7|blackops7|black_ops_7/.test(c)) return "Call of Duty: Black Ops 7";
+    if (/bo6|blackops6/.test(c)) return "Call of Duty: Black Ops 6";
+    if (/mw4|mwiv|modernwarfare4/.test(c)) return "Call of Duty: Modern Warfare IV";
+    if (/mw3|mwiii/.test(c)) return "Call of Duty: Modern Warfare III";
+    for (const [k, label] of COD_TITLES) if (c.includes(k)) return label;
+  }
   const t = String(windowTitle || "").toLowerCase();
   for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
   return null;
 }
-module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, codTitleFrom };
+module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, codTitleFrom };

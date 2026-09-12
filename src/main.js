@@ -224,8 +224,17 @@ function startAdapters() {
         if (s.running) runningLabels.add(g.label); else runningLabels.delete(g.label);
         if (s.running && g.family === "cod") {
           /* welke CoD? 1) titel-exe (Battle.net/Steam), 2) venstertitel, 3) Xbox-netwerk (Xbox-app: één cod.exe, titel alleen op het netwerk bekend) */
-          try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt, null, s.via); if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); } } catch (e) {}
+          let codDiag = "";
+          try {
+            const [titles, cmds] = await Promise.all([gamedb.windowTitles(g.exes), gamedb.processCommandLines(g.exes)]);
+            const wt = Object.values(titles)[0]; const cl = Object.values(cmds).join(" ");
+            codDiag = cl.replace(/\s+/g, " ").slice(0, 160);
+            const t = gamedb.codTitleFrom(wt, null, s.via, cl);
+            if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); }
+          } catch (e) {}
           if (label === "Call of Duty") { const xt = await xboxPresenceTitle(); if (xt) { label = xt; adapters.procwatch && adapters.procwatch.setLabel(id, xt); } }
+          /* diagnose in de detectieregel op Home: pad/argumenten van het proces, zodat een nieuwe titel snel te mappen is */
+          if (label === "Call of Duty" && codDiag) sendToUI("proc-status", { id, ...s, via: (s.via || "") + " · " + codDiag });
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
         presenceUpdate("proc", s.running ? label : (presenceSrc.proc && presenceSrc.proc.startsWith(g.label.split(":")[0]) ? null : presenceSrc.proc));
