@@ -689,3 +689,23 @@ body.tabbed .view, .view {
 .sw i { position: absolute; inset: 0; border-radius: 11px; background: rgba(255,255,255,.12); transition: background .18s; }
 .sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s; }
 .sw input:checked + i { background: var(--gold); } .sw input:checked + i::after { transform: translateX(18px); background: #1B1607; }
+/* ---- instellingen als pagina ---- */
+#view-settings .settings-card { width: auto; max-width: 980px; margin: 0 auto; }
+.set-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.set-grid > .panel { animation: egsPop .45s var(--ease) both; }
+.set-grid > .panel:nth-child(2) { animation-delay: .05s; } .set-grid > .panel:nth-child(3) { animation-delay: .1s; } .set-grid > .panel:nth-child(4) { animation-delay: .15s; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+.set-row:last-child { border-bottom: 0; }
+.set-txt b { display: block; font-size: 14px; font-weight: 600; } .set-txt small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+@media (max-width: 1100px) { .set-grid { grid-template-columns: 1fr; } }
+/* ---- hoek linksboven netter: art vervaagt vanaf het logo en naar de balk toe, blad-hoek met randlicht ---- */
+.tb-now-art { -webkit-mask-image: linear-gradient(90deg, transparent 0, rgba(0,0,0,.85) 14%, rgba(0,0,0,.9) 50%, rgba(0,0,0,.25)), linear-gradient(180deg, #000 70%, transparent); -webkit-mask-composite: source-in; mask-composite: intersect; }
+.tb-now::after { background: linear-gradient(90deg, rgba(19,19,22,.55), rgba(19,19,22,.45) 55%, var(--frame)), linear-gradient(180deg, transparent 55%, var(--frame)); }
+.view { box-shadow: inset 1px 1px 0 rgba(255,255,255,.045); }
+/* ---- animaties: cijfers tellen op, rail-intro, actieve tab ---- */
+.tab { transition: color .15s, background .18s, transform .18s var(--ease); }
+.tab:active { transform: scale(.94); }
+body.tabbed #tabbar .tab { animation: egsPop .4s var(--ease) both; }
+body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #tabbar .tab:nth-child(3) { animation-delay: .08s; } body.tabbed #tabbar .tab:nth-child(4) { animation-delay: .12s; } body.tabbed #tabbar .tab:nth-child(5) { animation-delay: .16s; } body.tabbed #tabbar .tab:nth-child(6) { animation-delay: .2s; }
+.pcard-panel { transition: transform .35s var(--ease), box-shadow .35s; }
+.pcard-panel:hover { transform: translateY(-2px); box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 70px var(--glow); }

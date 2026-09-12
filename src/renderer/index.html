@@ -322,49 +322,52 @@
 </div>
 
 <!-- ============ INSTELLINGEN ============ -->
-<div id="view-settings" class="view center-view" hidden>
+<div id="view-settings" class="view" hidden>
   <div class="settings-card">
     <div class="settings-head">
       <button id="btn-back" class="icon-btn">←</button>
       <div class="name" data-i18n="settingsHead"></div>
     </div>
-    <div class="panel">
-      <label class="field">
-        <span data-i18n="setRlName"></span>
-        <input id="set-rlname" class="text-input" spellcheck="false">
-        <small class="dim" data-i18n="setRlNameHint"></small>
-      </label>
-      <label class="field">
-        <span data-i18n="setMw4Exes"></span>
-        <input id="set-mw4exes" class="text-input" spellcheck="false" placeholder="game.exe, launcher-game.exe">
-        <small class="dim" data-i18n="setMw4ExesHint"></small>
-      </label>
-      <label class="field row">
-        <input type="checkbox" id="set-autostart">
-        <span data-i18n="setAutostart"></span>
-      </label>
-      <label class="field row">
-        <input type="checkbox" id="set-discord">
-        <span data-i18n="setDiscord"></span>
-      </label>
-      <label class="field">
-        <span data-i18n="setLang"></span>
-        <select id="set-lang" class="text-input">
-          <option value="nl">Nederlands</option>
-          <option value="en">English</option>
-        </select>
-      </label>
-    </div>
-    <div class="panel">
-      <div class="btnrow">
-        <button id="upd-check" class="btn ghost sm" data-i18n="updCheck"></button>
-        <span class="mono dim" id="upd-status"></span>
+    <div class="set-grid">
+      <div class="panel">
+        <div class="panel-head" data-i18n="setSecTracking"></div>
+        <div class="set-row"><div class="set-txt"><b data-i18n="qpTrack"></b><small data-i18n="setTrackHint"></small></div><label class="sw"><input type="checkbox" id="set-track"><i></i></label></div>
+        <div class="set-row"><div class="set-txt"><b data-i18n="setDiscordShort"></b><small data-i18n="setDiscord"></small></div><label class="sw"><input type="checkbox" id="set-discord"><i></i></label></div>
+        <div class="set-row"><div class="set-txt"><b data-i18n="setAutostartShort"></b><small data-i18n="setAutostart"></small></div><label class="sw"><input type="checkbox" id="set-autostart"><i></i></label></div>
       </div>
-    </div>
-    <div class="panel">
+      <div class="panel">
+        <div class="panel-head" data-i18n="setSecGames"></div>
+        <label class="field">
+          <span data-i18n="setRlName"></span>
+          <input id="set-rlname" class="text-input" spellcheck="false">
+          <small class="dim" data-i18n="setRlNameHint"></small>
+        </label>
+        <label class="field">
+          <span data-i18n="setMw4Exes"></span>
+          <input id="set-mw4exes" class="text-input" spellcheck="false" placeholder="game.exe, launcher-game.exe">
+          <small class="dim" data-i18n="setMw4ExesHint"></small>
+        </label>
+      </div>
+      <div class="panel">
+        <div class="panel-head" data-i18n="setSecApp"></div>
+        <label class="field">
+          <span data-i18n="setLang"></span>
+          <select id="set-lang" class="text-input">
+            <option value="nl">Nederlands</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <div class="btnrow">
+          <button id="upd-check" class="btn ghost sm" data-i18n="updCheck"></button>
+          <span class="mono dim" id="upd-status"></span>
+        </div>
+      </div>
+      <div class="panel">
+      <div class="panel-head" data-i18n="setSecAccount"></div>
       <button id="btn-unlink" class="btn danger" data-i18n="setUnlink"></button>
       <button id="btn-quit" class="btn" data-i18n="setQuit"></button>
       <small class="dim" data-i18n="setUnlinkHint"></small>
+      </div>
     </div>
     <div class="foot mono" data-i18n="footReadonly"></div>
   </div>

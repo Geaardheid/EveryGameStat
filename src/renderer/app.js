@@ -78,6 +78,7 @@ const I18N = {
     hubSubMc: "Hours per server \u00b7 latest.log",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
+    setSecTracking: "Tracking", setSecGames: "Games", setSecApp: "App", setSecAccount: "Account", setTrackHint: "Detects games, records sessions and matches, updates your card and Discord.", setDiscordShort: "Discord Rich Presence", setAutostartShort: "Start with Windows",
     qpTrack: "Track with EGS", qpDiscord: "Discord presence", qpRefresh: "Refresh now", qpSettings: "Settings", qpIdle: "Nothing detected", qpPaused: "Tracking paused", qpDetecting: "Watching for games",
     streakHead: "Play streak", streakDays: (n) => n === 1 ? "day in a row" : "days in a row", streakToday: "played today", streakOpen: "not played yet today", streakBest: (n) => "best " + n, streakWeek: (h) => h + " h this week", streakNone: "Play with the Companion open to start a streak.",
     gsStats: "Your statistics", gsRatios: "Ratios", gsOther: "Other statistics", gsAch: "Achievements", gsAchPrivate: "Your Steam game details are private \u2014 set them to public in Steam privacy settings to see achievements.", gsNoStats: "This game doesn't publish statistics on Steam.", gsLocked: "locked", gsRare: "of players",
@@ -204,6 +205,7 @@ const I18N = {
     hubSubMc: "Uren per server \u00b7 latest.log",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
+    setSecTracking: "Tracking", setSecGames: "Games", setSecApp: "App", setSecAccount: "Account", setTrackHint: "Detecteert games, meet sessies en potten, werkt je kaart en Discord bij.", setDiscordShort: "Discord Rich Presence", setAutostartShort: "Starten met Windows",
     qpTrack: "Tracken met EGS", qpDiscord: "Discord-presence", qpRefresh: "Nu verversen", qpSettings: "Instellingen", qpIdle: "Niets gedetecteerd", qpPaused: "Tracking gepauzeerd", qpDetecting: "Let op games",
     streakHead: "Speelreeks", streakDays: (n) => n === 1 ? "dag op rij" : "dagen op rij", streakToday: "vandaag gespeeld", streakOpen: "vandaag nog niet gespeeld", streakBest: (n) => "record " + n, streakWeek: (h) => h + " uur deze week", streakNone: "Speel met de Companion open en je reeks begint.",
     gsStats: "Jouw statistieken", gsRatios: "Ratio's", gsOther: "Overige statistieken", gsAch: "Achievements", gsAchPrivate: "Je Steam-gamegegevens staan op priv\u00e9 \u2014 zet ze op openbaar in je Steam-privacy om achievements te zien.", gsNoStats: "Deze game publiceert geen statistieken op Steam.", gsLocked: "vergrendeld", gsRare: "van de spelers",
@@ -355,6 +357,15 @@ async function loadProfile() {
   } catch (e) {}
   btn.classList.remove("busy");
 }
+/* getallen tellen op (kaartcijfers), respecteert reduced-motion */
+function countTo(el, target, fmt) {
+  if (!el) return; const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const to = Number(target) || 0; const from = Number(el.dataset.v || 0); el.dataset.v = String(to);
+  if (reduce || from === to || !Number.isFinite(to)) { el.textContent = fmt(to); return; }
+  const t0 = performance.now(), dur = 700;
+  const step = (now) => { const k = Math.min(1, (now - t0) / dur); const e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
 function renderProfile() {
   const p = profileData;
   if (!p) return;
@@ -362,9 +373,9 @@ function renderProfile() {
   if (p.slug) state.slug = p.slug;
   if (p.avatar) { $("who-avatar").src = p.avatar; const ta = $("tb-avatar"); if (ta) ta.src = p.avatar; }
   const since = $("who-since"); if (since) since.textContent = p.since ? t("memberSince")(new Date(p.since).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { month: "long", year: "numeric" })) : "";
-  $("st-games").textContent = fmtNum(p.totals.games);
-  $("st-hours").textContent = fmtHours(p.totals.minutes);
-  $("st-ach").textContent = fmtNum(p.totals.ach_earned);
+  countTo($("st-games"), p.totals.games, fmtNum);
+  countTo($("st-hours"), p.totals.minutes, fmtHours);
+  countTo($("st-ach"), p.totals.ach_earned, fmtNum);
   $("plat-chips").innerHTML = (p.platforms || []).map((x) =>
     '<span class="chip"><b>' + String(x.platform).replace(/[<>&]/g, "") + "</b> \u00b7 " + fmtHours(x.minutes) + " " + t("stHours") + "</span>"
   ).join("");
@@ -1590,6 +1601,7 @@ $("btn-settings").addEventListener("click", () => {
   $("set-rlname").value = state.rl_name || "";
   $("set-autostart").checked = !!state.autostart;
   $("set-discord").checked = state.discord_rpc !== false;
+  $("set-track").checked = state.tracking_paused !== true;
   $("set-lang").value = lang;
   show("view-settings");
 });
@@ -1600,7 +1612,8 @@ $("btn-back").addEventListener("click", async () => {
   show("view-main");
 });
 $("set-autostart").addEventListener("change", (e) => window.egs.setSetting({ autostart: e.target.checked }));
-$("set-discord").addEventListener("change", (e) => window.egs.setSetting({ discord_rpc: e.target.checked }));
+$("set-discord").addEventListener("change", (e) => { window.egs.setSetting({ discord_rpc: e.target.checked }); state.discord_rpc = e.target.checked; });
+$("set-track").addEventListener("change", async (e) => { const paused = !e.target.checked; await window.egs.setSetting({ tracking_paused: paused }); state.tracking_paused = paused; if (paused) applyPresence({ game: null, art: null }); });
 $("set-lang").addEventListener("change", (e) => {
   lang = e.target.value;
   window.egs.setSetting({ lang });
