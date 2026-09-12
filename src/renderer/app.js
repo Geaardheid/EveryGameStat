@@ -281,10 +281,12 @@ function toast(msg, title, pose) {
   el.classList.add("show");
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), 3800);
 }
+/* loader minimaal 900 ms in beeld: het merkmoment, ook als de data er in 1 ms is */
+const LOADER_MIN_MS = 900, loaderShownAt = Date.now();
 function loaderOff() {
   const l = $("egs-loader"); if (!l) return;
-  document.body.classList.remove("booting");
-  requestAnimationFrame(() => setTimeout(() => l.classList.remove("on"), 120));
+  const wait = Math.max(0, LOADER_MIN_MS - (Date.now() - loaderShownAt));
+  setTimeout(() => { document.body.classList.remove("booting"); requestAnimationFrame(() => setTimeout(() => l.classList.remove("on"), 120)); }, wait);
 }
 let state = null;
 const session = []; /* potten van deze app-sessie */

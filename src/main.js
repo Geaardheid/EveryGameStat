@@ -85,10 +85,16 @@ function createWindow(startHidden) {
     }
   });
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
+  /* Eerste vertoning zonder witte flits: onzichtbaar maximaliseren en tonen, één
+     frame laten tekenen, dan pas opacity omhoog (zelfde truc als showWindow). */
   win.once("ready-to-show", () => {
     if (startHidden) return;
+    win.setOpacity(0);
     win.maximize();
     win.show();
+    const reveal = () => { try { win.setOpacity(1); } catch (e) {} };
+    win.webContents.executeJavaScript("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))").then(reveal, reveal);
+    setTimeout(reveal, 500);
   });
   win.on("close", (e) => {
     if (!quitting) { e.preventDefault(); win.hide(); } /* sluiten = naar tray */
