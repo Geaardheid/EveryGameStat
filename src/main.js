@@ -62,6 +62,17 @@ function showWindow() {
   win.focus();
 }
 
+/* Opstart-splash zoals Discord: klein randloos venster met het logo, weg zodra de app klaar is */
+let splash = null;
+function showSplash() {
+  try {
+    splash = new BrowserWindow({ width: 380, height: 380, frame: false, transparent: true, resizable: false, movable: true, alwaysOnTop: true, skipTaskbar: true, show: false, icon: path.join(__dirname, "..", "assets", "icon.png"), webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true } });
+    splash.loadFile(path.join(__dirname, "renderer", "splash.html"));
+    splash.once("ready-to-show", () => { try { splash.show(); } catch (e) {} });
+    splash.on("closed", () => { splash = null; });
+  } catch (e) { splash = null; }
+}
+function closeSplash() { if (splash) { try { splash.close(); } catch (e) {} splash = null; } }
 /* Venster pas tonen als de eerste render klaar is (show:false + ready-to-show) en
    maximaliseren vóór het tonen: zo geen wit/leeg/klein venster dat drie keer flitst. */
 function createWindow(startHidden) {
@@ -94,15 +105,19 @@ function createWindow(startHidden) {
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
   /* Eerste vertoning zonder witte flits: onzichtbaar maximaliseren en tonen, één
      frame laten tekenen, dan pas opacity omhoog (zelfde truc als showWindow). */
-  win.once("ready-to-show", () => {
-    if (startHidden) return;
+  /* eerste vertoning: wachten op "ui-ready" van de renderer (data geladen), dan splash weg en venster in */
+  let shown = false;
+  const firstShow = () => {
+    if (shown || startHidden) return; shown = true;
     win.setOpacity(0);
     win.maximize();
     win.show();
-    const reveal = () => { try { win.setOpacity(1); } catch (e) {} };
+    const reveal = () => { try { win.setOpacity(1); } catch (e) {} closeSplash(); };
     win.webContents.executeJavaScript("new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))").then(reveal, reveal);
     setTimeout(reveal, 500);
-  });
+  };
+  ipcMain.once("ui-ready", firstShow);
+  win.once("ready-to-show", () => { setTimeout(firstShow, 6000); }); /* vangnet: nooit langer dan 6 s splash */
   win.on("close", (e) => {
     if (!quitting) { e.preventDefault(); win.hide(); } /* sluiten = naar tray */
   });
@@ -356,6 +371,7 @@ ipcMain.handle("get-state", () => {
     lang: cfg.lang || "nl",
     mw4_exes: (cfg.tracked_exes && cfg.tracked_exes.mw4) || [],
     discord_rpc: cfg.discord_rpc !== false,
+    tracking_paused: cfg.tracking_paused === true,
     version: APP_VERSION,
     queued: (cfg.queue || []).length
   };
@@ -475,9 +491,18 @@ ipcMain.handle("set-setting", (_e, kv) => {
     app.setLoginItemSettings({ openAtLogin: !!kv.autostart, args: ["--hidden"] });
     delete kv.autostart;
   }
+  const wasPaused = config.get().tracking_paused === true;
   config.set(kv);
+  /* tracking pauzeren/hervatten: adapters stoppen (geen sessies, geen presence) of weer starten */
+  if (kv.tracking_paused !== undefined && !!kv.tracking_paused !== wasPaused) {
+    if (kv.tracking_paused) { stopAdapters(); if (steamTimer) { clearInterval(steamTimer); steamTimer = null; } steamSession = null; presenceSrc.steam = null; presenceSrc.proc = null; presenceSrc.rl = false; runningLabels.clear(); mcStatus = { running: false, server: null, world: null }; presencePush(true); sendToUI("presence-local", { game: null, art: null }); sendToUI("mc-status", mcStatus); }
+    else startAdapters();
+  }
+  if (kv.discord_rpc !== undefined) presencePush(true);
   return { ok: true };
 });
+ipcMain.on("ui-ready", () => {});
+ipcMain.handle("refresh-now", async () => { try { config.flushQueue(api); } catch (e) {} presencePush(true); return { ok: true }; });
 
 /* Trailer in een eigen app-venster: https-oorsprong, dus YouTube staat het toe
    (behalve als de uitgever embedden uitzet — dan toont YouTube dat zelf). */
@@ -618,8 +643,9 @@ app.whenReady().then(() => {
   createTray();
   try { globalShortcut.register("F9", () => { if (config.get().token) captureScoreboard(); }); } catch (e) {}
   const startHidden = process.argv.includes("--hidden") && !!config.get().token;
+  if (!startHidden) showSplash();
   createWindow(startHidden);
-  startAdapters();
+  if (config.get().tracking_paused !== true) startAdapters();
   config.flushQueue(api); /* offline-wachtrij bij opstarten proberen */
 
   /* auto-updates via GitHub Releases: stil downloaden, zichtbaar in de UI (faalt geruisloos zonder release) */

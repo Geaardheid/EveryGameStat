@@ -19,7 +19,16 @@
 <!-- ============ TITELBALK (eigen identiteit; sleepbaar) ============ -->
 <header id="titlebar">
   <div class="tb-brand"><img src="../../assets/icon.png" alt="EveryGameStat"></div>
-  <div class="tb-now" id="tb-now"><div class="tb-now-art" id="tb-now-art"></div><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
+  <div class="tb-now" id="tb-now" role="button" tabindex="0"><div class="tb-now-art" id="tb-now-art"></div><span class="tb-now-lbl" id="tb-now-lbl"></span><b id="tb-now-game"></b></div>
+  <div id="qp" class="tb-pop qp" hidden>
+    <div class="qp-head"><span class="qp-title" data-i18n="qpTrack"></span><label class="sw"><input type="checkbox" id="qp-track"><i></i></label></div>
+    <div class="qp-game" id="qp-game"><div class="qp-art" id="qp-art"></div><div class="qp-gt"><b id="qp-gname"></b><small class="mono" id="qp-gsub"></small></div></div>
+    <div class="qp-rows">
+      <div class="qp-row"><span data-i18n="qpDiscord"></span><label class="sw"><input type="checkbox" id="qp-discord"><i></i></label></div>
+      <button class="qp-row qp-btn" id="qp-refresh"><span data-i18n="qpRefresh"></span><span class="qp-arrow">&#8635;</span></button>
+      <button class="qp-row qp-btn" id="qp-settings"><span data-i18n="qpSettings"></span><span class="qp-arrow">&#8594;</span></button>
+    </div>
+  </div>
   <div class="tb-mid"><span id="tb-upd" class="tb-chip gold" hidden></span></div>
   <div class="tb-actions">
     <button id="tb-search" title="Search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></button>

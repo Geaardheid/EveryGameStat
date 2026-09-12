@@ -668,3 +668,24 @@ body.tabbed .view, .view {
 .hx.on .st { fill: #1B1607; }
 .sd.today .hx.off path:first-child { stroke: var(--gold); stroke-dasharray: 3 2; animation: pulse 1.6s infinite; }
 .streak-foot { font-size: 10.5px; color: var(--muted); }
+/* ---- snel paneel (titelbalk) ---- */
+.tb-now { cursor: pointer; }
+.tb-now:hover { background: rgba(255,255,255,.04); }
+.qp { left: var(--rail); right: auto; top: calc(var(--tb) + 6px); width: 340px; padding: 12px; }
+.qp-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 6px 12px; }
+.qp-title { font: 600 11px var(--font-lbl); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+.qp-game { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(242,176,61,.35); }
+.qp-game.off { border-color: rgba(255,255,255,.08); opacity: .8; }
+.qp-art { width: 64px; height: 64px; border-radius: 10px; background: #0E0D10 center/cover; flex: none; border: 1px solid rgba(255,255,255,.08); }
+.qp-gt { min-width: 0; } .qp-gt b { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .qp-gt small { font-size: 10.5px; color: var(--muted); }
+.qp-rows { display: flex; flex-direction: column; gap: 2px; margin-top: 8px; }
+.qp-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px; border-radius: 9px; font-size: 13.5px; color: var(--text); background: transparent; border: 0; width: 100%; text-align: left; font-family: var(--font-body); }
+.qp-btn { cursor: pointer; } .qp-btn:hover { background: rgba(255,255,255,.05); }
+.qp-arrow { color: var(--muted); font-size: 15px; }
+.qp-btn.busy .qp-arrow { display: inline-block; animation: spin 1s linear infinite; }
+/* schakelaar */
+.sw { position: relative; width: 40px; height: 22px; display: inline-block; cursor: pointer; }
+.sw input { opacity: 0; width: 0; height: 0; position: absolute; }
+.sw i { position: absolute; inset: 0; border-radius: 11px; background: rgba(255,255,255,.12); transition: background .18s; }
+.sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s; }
+.sw input:checked + i { background: var(--gold); } .sw input:checked + i::after { transform: translateX(18px); background: #1B1607; }

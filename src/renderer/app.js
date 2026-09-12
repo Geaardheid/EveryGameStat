@@ -78,6 +78,7 @@ const I18N = {
     hubSubMc: "Hours per server \u00b7 latest.log",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
+    qpTrack: "Track with EGS", qpDiscord: "Discord presence", qpRefresh: "Refresh now", qpSettings: "Settings", qpIdle: "Nothing detected", qpPaused: "Tracking paused", qpDetecting: "Watching for games",
     streakHead: "Play streak", streakDays: (n) => n === 1 ? "day in a row" : "days in a row", streakToday: "played today", streakOpen: "not played yet today", streakBest: (n) => "best " + n, streakWeek: (h) => h + " h this week", streakNone: "Play with the Companion open to start a streak.",
     gsStats: "Your statistics", gsRatios: "Ratios", gsOther: "Other statistics", gsAch: "Achievements", gsAchPrivate: "Your Steam game details are private \u2014 set them to public in Steam privacy settings to see achievements.", gsNoStats: "This game doesn't publish statistics on Steam.", gsLocked: "locked", gsRare: "of players",
     hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
@@ -203,6 +204,7 @@ const I18N = {
     hubSubMc: "Uren per server \u00b7 latest.log",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
+    qpTrack: "Tracken met EGS", qpDiscord: "Discord-presence", qpRefresh: "Nu verversen", qpSettings: "Instellingen", qpIdle: "Niets gedetecteerd", qpPaused: "Tracking gepauzeerd", qpDetecting: "Let op games",
     streakHead: "Speelreeks", streakDays: (n) => n === 1 ? "dag op rij" : "dagen op rij", streakToday: "vandaag gespeeld", streakOpen: "vandaag nog niet gespeeld", streakBest: (n) => "record " + n, streakWeek: (h) => h + " uur deze week", streakNone: "Speel met de Companion open en je reeks begint.",
     gsStats: "Jouw statistieken", gsRatios: "Ratio's", gsOther: "Overige statistieken", gsAch: "Achievements", gsAchPrivate: "Je Steam-gamegegevens staan op priv\u00e9 \u2014 zet ze op openbaar in je Steam-privacy om achievements te zien.", gsNoStats: "Deze game publiceert geen statistieken op Steam.", gsLocked: "vergrendeld", gsRare: "van de spelers",
     hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
@@ -286,7 +288,7 @@ const LOADER_MIN_MS = 900, loaderShownAt = Date.now();
 function loaderOff() {
   const l = $("egs-loader"); if (!l) return;
   const wait = Math.max(0, LOADER_MIN_MS - (Date.now() - loaderShownAt));
-  setTimeout(() => { document.body.classList.remove("booting"); requestAnimationFrame(() => setTimeout(() => l.classList.remove("on"), 120)); }, wait);
+  setTimeout(() => { document.body.classList.remove("booting"); requestAnimationFrame(() => setTimeout(() => { l.classList.remove("on"); try { window.egs.uiReady(); } catch (e) {} }, 120)); }, wait);
 }
 let state = null;
 const session = []; /* potten van deze app-sessie */
@@ -665,6 +667,7 @@ function applyPresence(d) {
   /* Medal-stijl: art vervaagd achter "speelt nu" (titelbalk + hero op Home) */
   const artUrl = d.game && presArt ? 'url("' + presArt + '")' : "";
   const tbArt = $("tb-now-art"); if (tbArt) tbArt.style.backgroundImage = artUrl;
+  renderQp();
   const hero = $("np-hero");
   if (hero) {
     hero.hidden = !d.game;
@@ -1216,6 +1219,24 @@ function openHub(key) {
 
 /* ===== Zoeken (titelbalk): spelers op EGS + games in je bibliotheek, alles in de app ===== */
 let qTimer = null;
+/* snel paneel onder "speelt nu": tracking aan/uit, huidige game met cover, Discord, verversen, instellingen */
+function renderQp() {
+  const p = $("qp"); if (p.hidden) return;
+  const paused = state && state.tracking_paused === true;
+  $("qp-track").checked = !paused;
+  $("qp-discord").checked = !(state && state.discord_rpc === false);
+  const g = tbNowLast && tbNowLast.game;
+  $("qp-game").classList.toggle("off", !g || paused);
+  $("qp-art").style.backgroundImage = g && presArt ? 'url("' + presArt + '")' : "";
+  $("qp-gname").textContent = paused ? t("qpPaused") : (g || t("qpIdle"));
+  $("qp-gsub").textContent = paused ? "" : (g ? (tbNowSince ? tbElapsed() : "") + (tbNowLast.detail ? " \u00b7 " + tbNowLast.detail : "") : t("qpDetecting"));
+}
+$("tb-now").addEventListener("click", (e) => { e.stopPropagation(); const p = $("qp"); p.hidden = !p.hidden; $("tb-notif").hidden = true; $("tb-me-pop").hidden = true; $("tb-q-pop").hidden = true; renderQp(); });
+document.addEventListener("click", (e) => { if (!e.target.closest("#qp") && !e.target.closest("#tb-now")) $("qp").hidden = true; });
+$("qp-track").addEventListener("change", async (e) => { const paused = !e.target.checked; await window.egs.setSetting({ tracking_paused: paused }); state.tracking_paused = paused; if (paused) applyPresence({ game: null, art: null }); renderQp(); });
+$("qp-discord").addEventListener("change", async (e) => { await window.egs.setSetting({ discord_rpc: e.target.checked }); state.discord_rpc = e.target.checked; const sd = $("set-discord"); if (sd) sd.checked = e.target.checked; });
+$("qp-refresh").addEventListener("click", async () => { const b = $("qp-refresh"); b.classList.add("busy"); try { await window.egs.refreshNow(); await loadProfile(); await loadSessionTotals(); } catch (e2) {} b.classList.remove("busy"); renderQp(); });
+$("qp-settings").addEventListener("click", () => { $("qp").hidden = true; show("view-settings"); });
 $("tb-search").addEventListener("click", (e) => { e.stopPropagation(); const p = $("tb-q-pop"); p.hidden = !p.hidden; $("tb-notif").hidden = true; $("tb-me-pop").hidden = true; if (!p.hidden) { $("tb-q").focus(); tbQuery(); } });
 document.addEventListener("click", (e) => { if (!e.target.closest("#tb-q-pop") && !e.target.closest("#tb-search")) $("tb-q-pop").hidden = true; });
 $("tb-q").addEventListener("input", () => { clearTimeout(qTimer); qTimer = setTimeout(tbQuery, 250); });

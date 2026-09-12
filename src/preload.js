@@ -25,6 +25,8 @@ contextBridge.exposeInMainWorld("egs", {
   webSession: (path) => ipcRenderer.invoke("web-session", path),
   hubs: () => ipcRenderer.invoke("hubs"),
   presenceNow: () => ipcRenderer.invoke("presence-now"),
+  uiReady: () => ipcRenderer.send("ui-ready"),
+  refreshNow: () => ipcRenderer.invoke("refresh-now"),
   mcStatus: () => ipcRenderer.invoke("mc-status"),
   onMcStatus: (cb) => ipcRenderer.on("mc-status", (_e, d) => cb(d)),
   onPresenceLocal: (cb) => ipcRenderer.on("presence-local", (_e, d) => cb(d)),
