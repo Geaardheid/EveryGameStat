@@ -80,6 +80,7 @@ function createWindow(startHidden) {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       backgroundThrottling: false,
+      devTools: !app.isPackaged || process.argv.includes("--devtools"), /* F12 uit in de gepubliceerde app */
       contextIsolation: true,
       nodeIntegration: false,
       /* DevTools alleen buiten de gebouwde app (of met --devtools): F12 en Ctrl+Shift+I doen niets bij gebruikers */

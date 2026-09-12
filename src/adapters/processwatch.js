@@ -73,9 +73,9 @@ class ProcessWatchAdapter {
        telt, anders zou elke Java-app als game gelden. PowerShell alleen als zo'n exe draait. */
     let titles = null;
     for (const g of games) {
-      const hit = (g.exes || []).find((e) => procs.has(String(e).toLowerCase().trim()));
-      let running = !!hit;
-      g._via = hit || null;
+      const hits = (g.exes || []).filter((e) => procs.has(String(e).toLowerCase().trim()));
+      let running = hits.length > 0;
+      g._via = hits.length ? hits.join("+") : null; /* alle treffers: bij CoD draait de HQ-exe naast de titel-exe */
       /* games waarvan de exe na afsluiten blijft hangen (CoD-bootstrapper): alleen tellen
          als het proces ook echt een venster met titel heeft */
       if (running && g.needsWindow && this.opts.windowTitles) {
