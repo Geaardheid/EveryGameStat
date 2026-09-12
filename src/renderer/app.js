@@ -78,6 +78,7 @@ const I18N = {
     hubSubMc: "Hours per server \u00b7 latest.log",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
+    streakHead: "Play streak", streakDays: (n) => n === 1 ? "day in a row" : "days in a row", streakToday: "played today", streakOpen: "not played yet today", streakBest: (n) => "best " + n, streakWeek: (h) => h + " h this week", streakNone: "Play with the Companion open to start a streak.",
     gsStats: "Your statistics", gsRatios: "Ratios", gsOther: "Other statistics", gsAch: "Achievements", gsAchPrivate: "Your Steam game details are private \u2014 set them to public in Steam privacy settings to see achievements.", gsNoStats: "This game doesn't publish statistics on Steam.", gsLocked: "locked", gsRare: "of players",
     hubSubRl: "Live match tracking", hubSubDbd: "Steam stats \u00b7 log adapter soon", hubSubApi: "Official API", hubSubSteam: "Steam stats", hubSubPlat: "Platform totals",
     libHead: "Your library",
@@ -202,6 +203,7 @@ const I18N = {
     hubSubMc: "Uren per server \u00b7 latest.log",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
+    streakHead: "Speelreeks", streakDays: (n) => n === 1 ? "dag op rij" : "dagen op rij", streakToday: "vandaag gespeeld", streakOpen: "vandaag nog niet gespeeld", streakBest: (n) => "record " + n, streakWeek: (h) => h + " uur deze week", streakNone: "Speel met de Companion open en je reeks begint.",
     gsStats: "Jouw statistieken", gsRatios: "Ratio's", gsOther: "Overige statistieken", gsAch: "Achievements", gsAchPrivate: "Je Steam-gamegegevens staan op priv\u00e9 \u2014 zet ze op openbaar in je Steam-privacy om achievements te zien.", gsNoStats: "Deze game publiceert geen statistieken op Steam.", gsLocked: "vergrendeld", gsRare: "van de spelers",
     hubSubRl: "Live pot-tracking", hubSubDbd: "Steam-stats \u00b7 log-adapter binnenkort", hubSubApi: "Offici\u00eble API", hubSubSteam: "Steam-stats", hubSubPlat: "Platformtotalen",
     libHead: "Jouw bibliotheek",
@@ -671,6 +673,37 @@ function applyPresence(d) {
       $("np-sub").textContent = tbNowSince ? t("npSince")(Math.max(1, Math.floor((Date.now() - tbNowSince) / 60000))) : "";
     }
   }
+}
+/* Speelreeks: dagen op rij met minstens één gemeten sessie. Eigen vorm: hexagons met de EGS-ster, geen vlammetje. */
+const HEX = (cls) => '<svg class="hx ' + cls + '" viewBox="0 0 24 24"><path d="M12 2.2 20.5 7v10L12 21.8 3.5 17V7z"/><path class="st" d="M12 8.2l1.1 2.4 2.6.3-1.9 1.8.5 2.6L12 14l-2.3 1.3.5-2.6-1.9-1.8 2.6-.3z"/></svg>';
+function renderStreak(days) {
+  const panel = $("streak-panel"); if (!panel) return;
+  const set = new Set((days || []).filter((d) => (d.minutes || 0) > 0).map((d) => d.day));
+  if (!set.size) { panel.hidden = false; $("streak-n").textContent = "0"; $("streak-lbl").textContent = t("streakDays")(0); $("streak-week").innerHTML = ""; $("streak-foot").textContent = t("streakNone"); $("streak-sub").textContent = ""; return; }
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const today = new Date(); const todayK = iso(today);
+  const yest = new Date(today); yest.setUTCDate(yest.getUTCDate() - 1);
+  /* huidige reeks: telt terug vanaf vandaag, of vanaf gisteren als vandaag nog open is */
+  let cur = 0; const start = set.has(todayK) ? new Date(today) : (set.has(iso(yest)) ? yest : null);
+  if (start) { const d = new Date(start); while (set.has(iso(d))) { cur++; d.setUTCDate(d.getUTCDate() - 1); } }
+  /* record */
+  let best = 0, run = 0, prev = null;
+  [...set].sort().forEach((k) => { const dt = new Date(k + "T00:00:00Z"); run = prev && (dt - prev) === 86400000 ? run + 1 : 1; best = Math.max(best, run); prev = dt; });
+  /* weekstrip ma–zo */
+  const dow = (today.getUTCDay() + 6) % 7; const mon = new Date(today); mon.setUTCDate(mon.getUTCDate() - dow);
+  const names = lang === "nl" ? ["ma", "di", "wo", "do", "vr", "za", "zo"] : ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  let weekMin = 0, html = "";
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(mon); d.setUTCDate(mon.getUTCDate() + i); const k = iso(d);
+    const played = set.has(k); const isToday = k === todayK; const future = d > today;
+    weekMin += (days.find((x) => x.day === k) || {}).minutes || 0;
+    html += '<div class="sd' + (isToday ? " today" : "") + (future ? " future" : "") + '">' + HEX(played ? "on" : "off") + "<span>" + names[i] + "</span></div>";
+  }
+  panel.hidden = false;
+  $("streak-n").textContent = String(cur); $("streak-lbl").textContent = t("streakDays")(cur);
+  $("streak-sub").textContent = set.has(todayK) ? t("streakToday") : t("streakOpen");
+  $("streak-week").innerHTML = html;
+  $("streak-foot").textContent = t("streakBest")(best) + " \u00b7 " + t("streakWeek")(Math.round(weekMin / 6) / 10);
 }
 let mcStatusLast = null;
 function renderMc(st) {
@@ -1441,6 +1474,7 @@ async function loadSessionTotals() {
     if (r && r.ok) {
       mcSummary = r.minecraft || { servers: [], worlds: [] }; mcSummary.total = (r.games || []).find((x) => x.game === "Minecraft") || { sessions: 0, minutes: 0 };
       renderMc(mcStatusLast);
+      renderStreak(r.days || []);
       const g = (r.games || []).find((x) => x.game === "MW4 Beta");
       mw4Total = g || { sessions: 0, minutes: 0 };
       const dot = document.querySelector("#ad-mw4 .dot");

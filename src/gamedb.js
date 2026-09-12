@@ -6,7 +6,7 @@
 const { execFile } = require("child_process");
 
 const EXES = [
-  { exes: ["cod.exe", "cod26-cod.exe", "cod25-cod.exe", "cod24-cod.exe", "cod23-cod.exe", "cod22-cod.exe"], label: "Call of Duty", family: "cod" },
+  { exes: ["cod26-cod.exe", "cod25-cod.exe", "cod24-cod.exe", "cod23-cod.exe", "cod22-cod.exe", "cod.exe"], label: "Call of Duty", family: "cod" } /* titel-exe vóór de HQ-exe: de eerste treffer bepaalt de titel */,
   { exes: ["fortniteclient-win64-shipping.exe"], label: "Fortnite", appid: null, art: "icon-fortnite.png" },
   { exes: ["rocketleague.exe"], label: "Rocket League", appid: 252950 },
   { exes: ["deadbydaylight-win64-shipping.exe", "dbd-win64-shipping.exe"], label: "Dead by Daylight", appid: 381210 },

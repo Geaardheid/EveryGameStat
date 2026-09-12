@@ -650,3 +650,21 @@ body.tabbed .view, .view {
 .gs-a-t { min-width: 0; }
 .gs-a-t b { display: block; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .gs-a-t small { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+/* ---- speelreeks (eigen vorm: hexagons met ster) ---- */
+.panel.streak { gap: 10px; }
+.streak-top { display: flex; align-items: center; gap: 18px; }
+.streak-num { display: flex; flex-direction: column; flex: none; min-width: 84px; }
+.streak-num b { font-family: var(--font-num); font-size: 40px; font-weight: 600; line-height: 1; color: var(--gold); letter-spacing: -.02em; }
+.streak-num span { font: 500 9.5px var(--font-lbl); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-top: 4px; }
+.streak-week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; flex: 1; }
+.streak-week .sd { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.streak-week .sd span { font: 500 9px var(--font-lbl); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.streak-week .sd.today span { color: var(--gold); }
+.streak-week .sd.future { opacity: .35; }
+.hx { width: 28px; height: 28px; }
+.hx path:first-child { fill: rgba(255,255,255,.04); stroke: var(--line); stroke-width: 1.2; }
+.hx .st { fill: transparent; }
+.hx.on path:first-child { fill: var(--gold); stroke: var(--gold-hi); filter: drop-shadow(0 0 6px rgba(242,176,61,.45)); }
+.hx.on .st { fill: #1B1607; }
+.sd.today .hx.off path:first-child { stroke: var(--gold); stroke-dasharray: 3 2; animation: pulse 1.6s infinite; }
+.streak-foot { font-size: 10.5px; color: var(--muted); }
