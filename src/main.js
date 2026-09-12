@@ -151,7 +151,7 @@ async function presencePush(force) {
   else if (cur === "Minecraft" && (mcStatus.server || mcStatus.world)) { state = "in_match"; detail = mcStatus.server || mcStatus.world; line = mcStatus.server ? "on " + mcStatus.server : mcStatus.world; }
   if (config.get().discord_rpc !== false) discord.setActivity(cur, line, presenceArt[cur] || null);
   else discord.setActivity(null);
-  const sig = cur + "|" + state + "|" + detail;
+  const sig = cur + "|" + state + "|" + detail + "|" + ((cur && presenceArt[cur]) || "");
   if (!force && sig === presenceSent) return;
   try {
     const r = await api.social("presence_set", { game: cur, state, detail });
@@ -169,6 +169,15 @@ async function xboxPresenceTitle() {
     xboxPresCache.title = t && /call of duty/i.test(t) && t.toLowerCase() !== "call of duty" ? t : null;
   } catch (e) { xboxPresCache.title = null; }
   return xboxPresCache.title;
+}
+const coverCache = new Map();
+async function coverByName(name) {
+  if (!name) return null;
+  if (coverCache.has(name)) return coverCache.get(name);
+  let url = null;
+  try { const r = await api.gameInfo(null, name); url = r && r.ok && r.found && r.meta && /^https:/.test(String(r.meta.cover || "")) ? String(r.meta.cover) : null; } catch (e) {}
+  coverCache.set(name, url);
+  return url;
 }
 function presenceUpdate(src, val) {
   presenceSrc[src] = val;
@@ -260,6 +269,8 @@ function startAdapters() {
           if (label === "Call of Duty" && codDiag) sendToUI("proc-status", { id, ...s, via: (s.via || "") + " · " + codDiag });
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
+        /* geen eigen art (bijv. CoD-titel via Xbox-app, eigen procesnamen): cover via IGDB op naam, één keer per titel */
+        if (s.running && !presenceArt[label]) { const c = await coverByName(label); if (c) { presenceArt[label] = c; presencePush(true); } }
         presenceUpdate("proc", s.running ? label : (presenceSrc.proc && presenceSrc.proc.startsWith(g.label.split(":")[0]) ? null : presenceSrc.proc));
       },
       onSession: async (session) => {
