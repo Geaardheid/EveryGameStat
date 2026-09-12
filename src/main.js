@@ -158,6 +158,18 @@ async function presencePush(force) {
     if (r && r.ok) { presenceSent = sig; sendToUI("presence", { game: cur, state, detail, art: (cur && presenceArt[cur]) || null }); }
   } catch (e) {}
 }
+/* Xbox-presence als titelbron (Game Pass PC): hooguit elke 90 s vragen, alleen als de exe de titel niet verraadt */
+let xboxPresCache = { at: 0, title: null };
+async function xboxPresenceTitle() {
+  if (Date.now() - xboxPresCache.at < 90000) return xboxPresCache.title;
+  xboxPresCache.at = Date.now();
+  try {
+    const r = await api.social("xbox_presence");
+    const t = r && r.ok && r.title ? String(r.title).replace(/[\u00ae\u2122]/g, "").replace(/\s+/g, " ").trim() : null;
+    xboxPresCache.title = t && /call of duty/i.test(t) && t.toLowerCase() !== "call of duty" ? t : null;
+  } catch (e) { xboxPresCache.title = null; }
+  return xboxPresCache.title;
+}
 function presenceUpdate(src, val) {
   presenceSrc[src] = val;
   const cur = presenceCurrent();
@@ -211,8 +223,9 @@ function startAdapters() {
         let label = g.label;
         if (s.running) runningLabels.add(g.label); else runningLabels.delete(g.label);
         if (s.running && g.family === "cod") {
-          /* welke CoD? venstertitel (Battle.net) of Steam-appid */
+          /* welke CoD? 1) titel-exe (Battle.net/Steam), 2) venstertitel, 3) Xbox-netwerk (Xbox-app: één cod.exe, titel alleen op het netwerk bekend) */
           try { const titles = await gamedb.windowTitles(g.exes); const wt = Object.values(titles)[0]; const t = gamedb.codTitleFrom(wt, null, s.via); if (t) { label = t; adapters.procwatch && adapters.procwatch.setLabel(id, t); } } catch (e) {}
+          if (label === "Call of Duty") { const xt = await xboxPresenceTitle(); if (xt) { label = xt; adapters.procwatch && adapters.procwatch.setLabel(id, xt); } }
         }
         if (s.running) presenceArt[label] = g.appid ? steamCover(g.appid) : (g.art ? ART + g.art : null);
         presenceUpdate("proc", s.running ? label : (presenceSrc.proc && presenceSrc.proc.startsWith(g.label.split(":")[0]) ? null : presenceSrc.proc));
