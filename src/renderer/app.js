@@ -76,6 +76,7 @@ const I18N = {
     mcTag: "per server", mcOff: "not running \u00b7 hours per server via latest.log", mcOn: "running \u00b7 in the menu", mcOnServer: (x) => "on " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer worlds", mcTotal: "Total measured", mcHours: "hours", mcSessions: "sessions", mcLast: "last", mcDeaths: "deaths", mcAdv: "advancements", mcEmpty: "Play Minecraft (Java) with the Companion open and your servers appear here. Bedrock has no log, so only total hours via Xbox.",
     hubSubMc: "Hours per server \u00b7 latest.log",
+    crDeck: "Current deck", crLevel: "lvl", crElixir: "avg elixir", crBattles: "Recent battles", crForm: "Last 10", crWinrate: "win rate", crWins: "wins", crLosses: "losses", crCrowns: "crowns", crTrophies: "Trophies", crBest: "Personal best", crToBest: (n) => n + " to your best", crAtBest: "At your personal best", crOppDeck: "Opponent deck", crLadder: "Ladder", crPlaytime: "estimated playtime", crClan: "Clan", crArena: "Arena", crEvo: "Evolution", crNoBattles: "No recent battles in the API yet.",
     rlDelUnknown: "Clear matches without a result", rlDelOne: "Delete this match", rlDelConfirm: (n) => "Delete " + n + " match(es) without a result? Your other matches stay.", rlDeleted: (n) => n + " deleted", rlDelFail: "Couldn't delete",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
@@ -204,6 +205,7 @@ const I18N = {
     mcTag: "per server", mcOff: "draait niet \u00b7 uren per server via latest.log", mcOn: "draait \u00b7 in het menu", mcOnServer: (x) => "op " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer-werelden", mcTotal: "Totaal gemeten", mcHours: "uur", mcSessions: "sessies", mcLast: "laatst", mcDeaths: "doden", mcAdv: "advancements", mcEmpty: "Speel Minecraft (Java) met de Companion open en je servers verschijnen hier. Bedrock heeft geen log, dus alleen totaaluren via Xbox.",
     hubSubMc: "Uren per server \u00b7 latest.log",
+    crDeck: "Huidig deck", crLevel: "lvl", crElixir: "gem. elixer", crBattles: "Laatste gevechten", crForm: "Laatste 10", crWinrate: "winrate", crWins: "gewonnen", crLosses: "verloren", crCrowns: "kronen", crTrophies: "Trofeeën", crBest: "Persoonlijk record", crToBest: (n) => n + " tot je record", crAtBest: "Op je persoonlijk record", crOppDeck: "Deck van de tegenstander", crLadder: "Ladder", crPlaytime: "geschatte speeltijd", crClan: "Clan", crArena: "Arena", crEvo: "Evolutie", crNoBattles: "Nog geen recente gevechten in de API.",
     rlDelUnknown: "Potten zonder uitslag wissen", rlDelOne: "Deze pot verwijderen", rlDelConfirm: (n) => n + " pot(ten) zonder uitslag verwijderen? Je andere potten blijven staan.", rlDeleted: (n) => n + " verwijderd", rlDelFail: "Verwijderen mislukt",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
@@ -1200,7 +1202,109 @@ async function openMcHub() {
   $("hub-back").addEventListener("click", hubBack);
   $("view-stats").scrollTop = 0;
 }
+/* ===== Clash Royale: eigen hub met deck, vorm en gevechten (zelfde data als de site) ===== */
+function crBanner(def, d, h) {
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  const bits = [d.arena ? t("crArena") + ": " + d.arena : null, String(d.clan || "").replace(/^Clan:\s*/i, "") ? t("crClan") + ": " + String(d.clan).replace(/^Clan:\s*/i, "") : null, d.tag || null].filter(Boolean);
+  banner.innerHTML = '<button class="btn small sd-back" id="hub-back">\u2190 ' + t("statsBack") + "</button>" +
+    '<div class="sd-in"><div><h2>' + escT(def.name) + '</h2><div class="sd-who">' + escT(d.name || "") + (bits.length ? " \u00b7 " + escT(bits.join(" \u00b7 ")) : "") + "</div></div>" +
+    '<div class="sd-upd">' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : "\u2013") + "</div></div>";
+  return banner;
+}
+function openRoyaleHub(h) {
+  const def = HUBS.royale, d = h.data || {};
+  const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false; box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sd cr"; wrap.style.setProperty("--hc", def.c);
+  wrap.appendChild(crBanner(def, d, h));
+
+  /* kerncijfers */
+  const w = Number(d.wins) || 0, l = Number(d.losses) || 0;
+  const wr = w + l ? Math.round((w / (w + l)) * 100) : null;
+  const hero = document.createElement("div"); hero.className = "sd-heroes";
+  [[fmtNum(d.trophies), t("crTrophies")], [wr != null ? wr + "%" : "\u2013", t("crWinrate") + " \u00b7 " + fmtNum(w) + "W / " + fmtNum(l) + "L"], [fmtNum(d.three_crown), "3-" + t("crCrowns")], [fmtNum(d.battles), "battles"]]
+    .forEach(([v, lb], i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(String(v)) + "</b><span>" + escT(lb) + "</span>"; hero.appendChild(el); });
+  wrap.appendChild(hero);
+
+  /* balk naar persoonlijk record */
+  if (d.trophies != null && d.best != null) {
+    const pct = Math.max(2, Math.min(100, Math.round((Number(d.trophies) / Math.max(1, Number(d.best))) * 100)));
+    const gap = Number(d.best) - Number(d.trophies);
+    const bar = document.createElement("div"); bar.className = "cr-best";
+    bar.innerHTML = '<div class="cr-best-top"><span>' + escT(t("crBest")) + " " + fmtNum(d.best) + "</span><span>" + escT(gap > 0 ? t("crToBest")(fmtNum(gap)) : t("crAtBest")) + '</span></div><div class="cr-bar"><i></i></div>';
+    wrap.appendChild(bar);
+    requestAnimationFrame(() => { const i = bar.querySelector(".cr-bar i"); if (i) i.style.width = pct + "%"; });
+  }
+
+  /* huidig deck */
+  const deck = Array.isArray(d.deck) ? d.deck : [];
+  if (deck.length) {
+    const avg = deck.reduce((a, c) => a + (Number(c.elixir) || 0), 0) / deck.length;
+    const sub = document.createElement("div"); sub.className = "hub-sub cr-deckhead";
+    sub.innerHTML = "<span>" + escT(t("crDeck")) + '</span><span class="cr-avg"><b>' + (Math.round(avg * 10) / 10).toLocaleString(lang === "nl" ? "nl-NL" : "en-US") + "</b> " + escT(t("crElixir")) + "</span>";
+    wrap.appendChild(sub);
+    const g = document.createElement("div"); g.className = "cr-deck";
+    deck.forEach((c, i) => {
+      const el = document.createElement("div"); el.className = "cr-card" + (c.evo ? " evo" : ""); el.style.setProperty("--i", i);
+      el.innerHTML = (c.icon ? '<img src="' + encodeURI(c.icon) + '" alt="" loading="lazy">' : '<div class="cr-ph"></div>') +
+        '<span class="cr-elx">' + escT(String(c.elixir ?? "?")) + "</span>" +
+        '<div class="cr-ct"><b>' + escT(c.name || "?") + '</b><small>' + escT(t("crLevel")) + " " + escT(String(c.level ?? "?")) + (c.max ? "/" + escT(String(c.max)) : "") + (c.evo ? " \u00b7 " + escT(t("crEvo")) : "") + "</small></div>";
+      g.appendChild(el);
+    });
+    wrap.appendChild(g);
+  }
+
+  /* vorm + gevechten */
+  const rec = Array.isArray(d.recent) ? d.recent : [];
+  const sub2 = document.createElement("div"); sub2.className = "hub-sub cr-bathead"; sub2.innerHTML = "<span>" + escT(t("crBattles")) + "</span>";
+  if (rec.length) {
+    const form = document.createElement("span"); form.className = "cr-form";
+    form.innerHTML = rec.slice(0, 10).map((b) => '<i class="' + (b.res === "W" ? "w" : b.res === "L" ? "l" : "d") + '" title="' + escT(String(b.opp || "")) + '"></i>').join("");
+    sub2.appendChild(form);
+  }
+  wrap.appendChild(sub2);
+  if (!rec.length) { const e = document.createElement("div"); e.innerHTML = emptyHtml(t("crNoBattles"), "controller"); wrap.appendChild(e.firstChild); }
+  else {
+    const list = document.createElement("div"); list.className = "cr-bats";
+    rec.slice(0, 20).forEach((b, i) => {
+      const row = document.createElement("div"); row.className = "cr-bat " + (b.res === "W" ? "win" : b.res === "L" ? "loss" : ""); row.style.setProperty("--i", i);
+      const dt = b.t ? new Date(b.t) : null;
+      const when = dt ? dt.toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short" }) + " " + dt.toLocaleTimeString(lang === "nl" ? "nl-NL" : "en-US", { hour: "2-digit", minute: "2-digit" }) : "";
+      const tro = Number(b.trophy);
+      row.innerHTML = '<span class="cb-res">' + (b.res === "W" ? "WIN" : b.res === "L" ? "LOSS" : "\u2013") + "</span>" +
+        '<span class="cb-crowns"><b>' + escT(String(b.crowns ?? 0)) + "</b> \u2013 " + escT(String(b.opp_crowns ?? 0)) + "</span>" +
+        '<div class="cb-opp"><b>' + escT(b.opp || "?") + "</b><small>" + escT(b.mode || t("crLadder")) + " \u00b7 " + escT(when) + "</small></div>" +
+        (Number.isFinite(tro) && tro !== 0 ? '<span class="cb-tro ' + (tro > 0 ? "up" : "down") + '">' + (tro > 0 ? "+" : "") + escT(String(tro)) + "</span>" : '<span class="cb-tro"></span>');
+      const od = Array.isArray(b.opp_deck) ? b.opp_deck : [];
+      if (od.length) {
+        const deckEl = document.createElement("div"); deckEl.className = "cb-deck"; deckEl.title = t("crOppDeck");
+        deckEl.innerHTML = od.slice(0, 8).map((c) => '<img src="' + encodeURI(c.i || "") + '" alt="' + escT(c.n || "") + '" title="' + escT(c.n || "") + '" loading="lazy">').join("");
+        row.appendChild(deckEl);
+      }
+      list.appendChild(row);
+    });
+    wrap.appendChild(list);
+  }
+
+  /* overige cijfers */
+  const rest = [["level", "Level"], ["cards", "Cards"], ["star_points", "Star points"], ["donations", "Donations"], ["war_wins", "War day wins"], ["streak", "Streak"], ["fav_card", "Favourite card"], ["xp", "XP"]]
+    .filter(([k]) => d[k] != null && d[k] !== "");
+  if (d.est_minutes) rest.push(["est_minutes", t("crPlaytime")]);
+  if (rest.length) {
+    const sub3 = document.createElement("div"); sub3.className = "hub-sub"; sub3.textContent = t("statsAll"); wrap.appendChild(sub3);
+    const g = document.createElement("div"); g.className = "sd-grid";
+    rest.forEach(([k, lb], i) => {
+      const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i);
+      const v = k === "est_minutes" ? fmtHours(d[k]) + " " + t("stHours") : fmtStat(d[k]);
+      el.innerHTML = "<b>" + escT(String(v)) + "</b><span>" + escT(lb) + "</span>"; g.appendChild(el);
+    });
+    wrap.appendChild(g);
+  }
+  box.appendChild(wrap);
+  $("hub-back").addEventListener("click", hubBack);
+  box.scrollTop = 0; $("view-stats").scrollTop = 0;
+}
 function openHub(key) {
+  if (key === "royale") { const hh = hubOf(key); if (hh) return openRoyaleHub(hh); }
   const h = hubOf(key); if (!h) return;
   const def = HUBS[key], d = h.data || {};
   const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false;
