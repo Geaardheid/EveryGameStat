@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld("egs", {
   claimCode: (code) => ipcRenderer.invoke("claim-code", code),
   unlink: () => ipcRenderer.invoke("unlink"),
   recent: (limit) => ipcRenderer.invoke("recent", limit),
+  rlDelete: (payload) => ipcRenderer.invoke("rl-delete", payload),
   profile: () => ipcRenderer.invoke("profile"),
   restartUpdate: () => ipcRenderer.invoke("restart-update"),
   checkUpdates: () => ipcRenderer.invoke("check-updates"),

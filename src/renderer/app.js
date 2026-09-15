@@ -76,6 +76,7 @@ const I18N = {
     mcTag: "per server", mcOff: "not running \u00b7 hours per server via latest.log", mcOn: "running \u00b7 in the menu", mcOnServer: (x) => "on " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer worlds", mcTotal: "Total measured", mcHours: "hours", mcSessions: "sessions", mcLast: "last", mcDeaths: "deaths", mcAdv: "advancements", mcEmpty: "Play Minecraft (Java) with the Companion open and your servers appear here. Bedrock has no log, so only total hours via Xbox.",
     hubSubMc: "Hours per server \u00b7 latest.log",
+    rlDelUnknown: "Clear matches without a result", rlDelOne: "Delete this match", rlDelConfirm: (n) => "Delete " + n + " match(es) without a result? Your other matches stay.", rlDeleted: (n) => n + " deleted", rlDelFail: "Couldn't delete",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
     loadErr: "Couldn't load this. Check your connection.", retry: "Try again",
     setSecTracking: "Tracking", setSecGames: "Games", setSecApp: "App", setSecAccount: "Account", setTrackHint: "Detects games, records sessions and matches, updates your card and Discord.", setDiscordShort: "Discord Rich Presence", setAutostartShort: "Start with Windows",
@@ -203,6 +204,7 @@ const I18N = {
     mcTag: "per server", mcOff: "draait niet \u00b7 uren per server via latest.log", mcOn: "draait \u00b7 in het menu", mcOnServer: (x) => "op " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer-werelden", mcTotal: "Totaal gemeten", mcHours: "uur", mcSessions: "sessies", mcLast: "laatst", mcDeaths: "doden", mcAdv: "advancements", mcEmpty: "Speel Minecraft (Java) met de Companion open en je servers verschijnen hier. Bedrock heeft geen log, dus alleen totaaluren via Xbox.",
     hubSubMc: "Uren per server \u00b7 latest.log",
+    rlDelUnknown: "Potten zonder uitslag wissen", rlDelOne: "Deze pot verwijderen", rlDelConfirm: (n) => n + " pot(ten) zonder uitslag verwijderen? Je andere potten blijven staan.", rlDeleted: (n) => n + " verwijderd", rlDelFail: "Verwijderen mislukt",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
     loadErr: "Kon dit niet laden. Check je verbinding.", retry: "Opnieuw",
     setSecTracking: "Tracking", setSecGames: "Games", setSecApp: "App", setSecAccount: "Account", setTrackHint: "Detecteert games, meet sessies en potten, werkt je kaart en Discord bij.", setDiscordShort: "Discord Rich Presence", setAutostartShort: "Starten met Windows",
@@ -934,7 +936,17 @@ async function fetchRl() {
   return rlMatches;
 }
 function rlStats(list) {
-  const all = [...(list || []), ...session.filter((m) => !(list || []).some((x) => x.played_at === m.played_at))];
+  /* server- en live-potten samenvoegen: eerst op wedstrijd-id, anders op tijdstip binnen 5 s (dezelfde pot, andere bron) */
+  const all = [];
+  const byId = new Set();
+  const near = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) < 5000;
+  for (const m of [...(list || []), ...(session || [])]) {
+    if (!m) continue;
+    const id = m.client_match_id || null;
+    if (id) { if (byId.has(id)) continue; byId.add(id); }
+    else if (all.some((x) => near(x.played_at, m.played_at) && (x.result || "") === (m.result || ""))) continue;
+    all.push(m);
+  }
   const n = all.length, w = all.filter((m) => m.result === "win").length, l = all.filter((m) => m.result === "loss").length;
   const sum = (k) => all.reduce((a, m) => a + (Number(m[k]) || 0), 0);
   const today = all.filter((m) => new Date(m.played_at).toDateString() === new Date().toDateString()).length;
@@ -1118,9 +1130,16 @@ async function openRlHub() {
     [[fmtNum(rs.g), t("rlGoals")], [fmtNum(rs.a), t("rlAssists")], [fmtNum(rs.s), t("rlSaves")], [fmtNum(rs.sh), t("rlShots")], [per(rs.a), t("rlAssists") + " " + t("rlPerMatch")], [fmtNum(rs.today), t("rlMatches") + " " + t("rlToday")]]
       .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span>"; g.appendChild(el); });
     wrap.appendChild(g);
-    const sub2 = document.createElement("div"); sub2.className = "hub-sub"; sub2.textContent = t("rlLast"); wrap.appendChild(sub2);
+    const sub2 = document.createElement("div"); sub2.className = "hub-sub rl-lasthead"; sub2.innerHTML = "<span>" + escT(t("rlLast")) + "</span>";
+    const unknowns = rs.all.filter((m) => (m.result || "unknown") === "unknown");
+    if (unknowns.length) {
+      const del = document.createElement("button"); del.className = "btn small danger rl-delall"; del.textContent = t("rlDelUnknown") + " (" + unknowns.length + ")";
+      del.addEventListener("click", () => rlDeleteUnknown(unknowns.length));
+      sub2.appendChild(del);
+    }
+    wrap.appendChild(sub2);
     const list = document.createElement("div"); list.className = "matches";
-    rs.all.slice(0, 30).forEach((m, i) => { const row = matchRow(m); row.style.animationDelay = Math.min(i, 12) * 30 + "ms"; list.appendChild(row); });
+    rs.all.slice(0, 30).forEach((m, i) => { const row = matchRow(m, true); row.style.animationDelay = Math.min(i, 12) * 30 + "ms"; list.appendChild(row); });
     wrap.appendChild(list);
   }
   box.appendChild(wrap);
@@ -1561,7 +1580,7 @@ function fmtTime(iso) {
   try { return new Date(iso).toLocaleTimeString(lang === "nl" ? "nl-NL" : "en-US", { hour: "2-digit", minute: "2-digit" }); }
   catch (e) { return ""; }
 }
-function matchRow(m) {
+function matchRow(m, deletable) {
   const res = m.result || "unknown";
   const div = document.createElement("div");
   div.className = "match";
@@ -1570,7 +1589,29 @@ function matchRow(m) {
     '<span class="m-res ' + res + '">' + res.toUpperCase().slice(0, 4) + "</span>" +
     '<span class="m-stats"><b>' + g + "G</b> " + a + "A " + s + "S</span>" +
     '<span class="m-meta">' + (m.playlist ? String(m.playlist).replace(/[<>&]/g, "") + "<br>" : "") + fmtTime(m.played_at) + "</span>";
+  /* potten zonder uitslag kun je zelf wissen (alleen hier in de Companion) */
+  if (deletable && res === "unknown" && m.client_match_id) {
+    div.classList.add("has-del");
+    const b = document.createElement("button"); b.className = "m-del"; b.title = t("rlDelOne"); b.textContent = "\u00d7";
+    b.addEventListener("click", async (e) => {
+      e.stopPropagation(); b.disabled = true;
+      const r = await window.egs.rlDelete({ id: m.client_match_id });
+      if (r && r.ok) { div.remove(); rlMatches = null; session = session.filter((x) => x.client_match_id !== m.client_match_id); toast(t("rlDeleted")(r.deleted || 1), t("toastDone"), "controller"); fetchRl().then(() => { renderStats(true); }); }
+      else { b.disabled = false; toast(t("rlDelFail"), t("toastDone"), "worried"); }
+    });
+    div.appendChild(b);
+  }
   return div;
+}
+async function rlDeleteUnknown(n) {
+  if (!window.confirm(t("rlDelConfirm")(n))) return;
+  const r = await window.egs.rlDelete({ scope: "unknown" });
+  if (r && r.ok) {
+    session = session.filter((m) => (m.result || "unknown") !== "unknown");
+    rlMatches = null; await fetchRl();
+    toast(t("rlDeleted")(r.deleted || 0), t("toastDone"), "cheer");
+    renderSession(); openRlHub();
+  } else toast(t("rlDelFail"), t("toastDone"), "worried");
 }
 function renderSession() {
   const box = $("matches");

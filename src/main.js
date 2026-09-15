@@ -482,6 +482,9 @@ ipcMain.handle("win", (_e, cmd) => {
 
 ipcMain.handle("mc-status", () => mcStatus);
 ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
+ipcMain.handle("rl-delete", async (_e, payload) => {
+  try { return await api.social("rl_delete", payload || {}); } catch (e) { return { ok: false, error: "offline" }; }
+});
 ipcMain.handle("recent", async (_e, limit) => {
   try { return await api.recent(Math.min(Math.max(Number(limit) || 15, 1), 50)); } catch (e) { return { ok: false, error: "offline" }; }
 });

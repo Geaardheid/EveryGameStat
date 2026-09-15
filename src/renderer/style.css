@@ -709,3 +709,11 @@ body.tabbed #tabbar .tab { animation: egsPop .4s var(--ease) both; }
 body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #tabbar .tab:nth-child(3) { animation-delay: .08s; } body.tabbed #tabbar .tab:nth-child(4) { animation-delay: .12s; } body.tabbed #tabbar .tab:nth-child(5) { animation-delay: .16s; } body.tabbed #tabbar .tab:nth-child(6) { animation-delay: .2s; }
 .pcard-panel { transition: transform .35s var(--ease), box-shadow .35s; }
 .pcard-panel:hover { transform: translateY(-2px); box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 70px var(--glow); }
+/* ---- potten zonder uitslag wissen (alleen in de Companion) ---- */
+.rl-lasthead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rl-delall { font-size: 11.5px; padding: 6px 12px; }
+.match.has-del { position: relative; padding-right: 44px; }
+.m-del { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 8px; border: 1px solid var(--line); background: rgba(255,255,255,.03); color: var(--muted); font-size: 15px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity .15s, color .15s, border-color .15s; }
+.match.has-del:hover .m-del, .m-del:focus-visible { opacity: 1; }
+.m-del:hover { color: var(--red); border-color: var(--red); }
+.m-del:disabled { opacity: .4; cursor: default; }
