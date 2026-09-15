@@ -76,6 +76,10 @@ const I18N = {
     mcTag: "per server", mcOff: "not running \u00b7 hours per server via latest.log", mcOn: "running \u00b7 in the menu", mcOnServer: (x) => "on " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer worlds", mcTotal: "Total measured", mcHours: "hours", mcSessions: "sessions", mcLast: "last", mcDeaths: "deaths", mcAdv: "advancements", mcEmpty: "Play Minecraft (Java) with the Companion open and your servers appear here. Bedrock has no log, so only total hours via Xbox.",
     hubSubMc: "Hours per server \u00b7 latest.log",
+    rlPerPlaylist: "Per playlist", rlForm: "Last 10", rlRecords: "Records", rlStreak: "Current streak", rlBestStreak: "Best win streak", rlAcc: "Shot accuracy", rlBestGame: "Most goals in a match", rlAvgScore: "Average score", rlToday: "today", rlNoPl: "Matches without a playlist",
+    ghRanks: "The rank ladder", ghRanksNote: "Each rank has four divisions except the top one", ghDivs: "4 divisions each", ghNoDiv: "No divisions", ghPlaylists: "Ranked playlists", ghPlaylistsNote: "Each playlist has its own rank", ghYourStats: "Your stats", ghAbout: "About tracking", ghBack: "Back",
+    ghRlAbout: "The Companion reads Rocket League's official local Stats API. Every match lands on your card with goals, assists, saves, shots and the result. No MMR or rank from the API, because there is none.",
+    ghSeason: "Seasons and resets", ghSeasonP: "Competitive seasons run a few months. At the end everyone is placed back a little, so ranks stay comparable.",
     crDeck: "Current deck", crLevel: "lvl", crElixir: "avg elixir", crBattles: "Recent battles", crForm: "Last 10", crWinrate: "win rate", crWins: "wins", crLosses: "losses", crCrowns: "crowns", crTrophies: "Trophies", crBest: "Personal best", crToBest: (n) => n + " to your best", crAtBest: "At your personal best", crOppDeck: "Opponent deck", crLadder: "Ladder", crPlaytime: "estimated playtime", crClan: "Clan", crArena: "Arena", crEvo: "Evolution", crNoBattles: "No recent battles in the API yet.",
     rlDelUnknown: "Clear matches without a result", rlDelOne: "Delete this match", rlDelConfirm: (n) => "Delete " + n + " match(es) without a result? Your other matches stay.", rlDeleted: (n) => n + " deleted", rlDelFail: "Couldn't delete",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
@@ -205,6 +209,10 @@ const I18N = {
     mcTag: "per server", mcOff: "draait niet \u00b7 uren per server via latest.log", mcOn: "draait \u00b7 in het menu", mcOnServer: (x) => "op " + x, mcOnWorld: (x) => "singleplayer \u00b7 " + x,
     mcServers: "Servers", mcWorlds: "Singleplayer-werelden", mcTotal: "Totaal gemeten", mcHours: "uur", mcSessions: "sessies", mcLast: "laatst", mcDeaths: "doden", mcAdv: "advancements", mcEmpty: "Speel Minecraft (Java) met de Companion open en je servers verschijnen hier. Bedrock heeft geen log, dus alleen totaaluren via Xbox.",
     hubSubMc: "Uren per server \u00b7 latest.log",
+    rlPerPlaylist: "Per playlist", rlForm: "Laatste 10", rlRecords: "Records", rlStreak: "Huidige reeks", rlBestStreak: "Langste winreeks", rlAcc: "Schotnauwkeurigheid", rlBestGame: "Meeste goals in een pot", rlAvgScore: "Gemiddelde score", rlToday: "vandaag", rlNoPl: "Potten zonder playlist",
+    ghRanks: "De ranglijst", ghRanksNote: "Elke rank heeft vier divisies, behalve de hoogste", ghDivs: "4 divisies elk", ghNoDiv: "Geen divisies", ghPlaylists: "Ranked-playlists", ghPlaylistsNote: "Elke playlist heeft zijn eigen rank", ghYourStats: "Jouw stats", ghAbout: "Over de tracking", ghBack: "Terug",
+    ghRlAbout: "De Companion leest de offici\u00eble lokale Stats API van Rocket League. Elke pot komt op je kaart met goals, assists, saves, schoten en de uitslag. Geen MMR of rank uit de API, want die bestaat niet.",
+    ghSeason: "Seizoenen en resets", ghSeasonP: "Competitieve seizoenen duren een paar maanden. Aan het eind gaat iedereen iets terug, zodat ranks vergelijkbaar blijven.",
     crDeck: "Huidig deck", crLevel: "lvl", crElixir: "gem. elixer", crBattles: "Laatste gevechten", crForm: "Laatste 10", crWinrate: "winrate", crWins: "gewonnen", crLosses: "verloren", crCrowns: "kronen", crTrophies: "Trofeeën", crBest: "Persoonlijk record", crToBest: (n) => n + " tot je record", crAtBest: "Op je persoonlijk record", crOppDeck: "Deck van de tegenstander", crLadder: "Ladder", crPlaytime: "geschatte speeltijd", crClan: "Clan", crArena: "Arena", crEvo: "Evolutie", crNoBattles: "Nog geen recente gevechten in de API.",
     rlDelUnknown: "Potten zonder uitslag wissen", rlDelOne: "Deze pot verwijderen", rlDelConfirm: (n) => n + " pot(ten) zonder uitslag verwijderen? Je andere potten blijven staan.", rlDeleted: (n) => n + " verwijderd", rlDelFail: "Verwijderen mislukt",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
@@ -990,6 +998,48 @@ function artStyle(el, def) {
   else if (def.mark) { el.style.backgroundImage = 'url("' + def.mark + '")'; el.classList.add("mark"); }
 }
 /* ---- Game hubs-tab ---- */
+/* ranglijst en playlists, zelfde bron als de game-hub op de site */
+const RL_RANKS = [["Bronze", "#B87333", 3], ["Silver", "#B9BEC7", 3], ["Gold", "#E1B12C", 3], ["Platinum", "#6FD1E0", 3], ["Diamond", "#5B8CFF", 3], ["Champion", "#B067FF", 3], ["Grand Champion", "#FF4D6D", 3], ["Supersonic Legend", "#F2B03D", 1]];
+const RL_PLAYLISTS = [["Ranked Duel", "1v1"], ["Ranked Doubles", "2v2"], ["Ranked Standard", "3v3"], ["Hoops", "2v2"], ["Rumble", "3v3"], ["Dropshot", "3v3"], ["Snow Day", "3v3"], ["Tournaments", "3v3"]];
+function openGameHub(key) {
+  const def = HUBS[key]; if (!def) return;
+  const box = $("hubs-detail"); $("hubs-grid").hidden = true; $("hubs-detail").hidden = false; box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "gh-detail"; wrap.style.setProperty("--hc", def.c);
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  const rs = key === "rocketleague" ? rlStats(rlMatches) : null;
+  banner.innerHTML = '<button class="btn small sd-back" id="gh-back">\u2190 ' + t("ghBack") + "</button>" +
+    '<div class="sd-in"><div><h2>' + escT(def.name) + '</h2><div class="sd-who">' + escT(t(def.sub)) + (rs && rs.n ? " \u00b7 " + rs.n + " " + t("rlMatches") : "") + "</div></div>" +
+    '<div class="gh-cta"><button class="btn gold sm" id="gh-stats">' + escT(t("ghYourStats")) + " \u2192</button></div></div>";
+  wrap.appendChild(banner);
+  if (key === "rocketleague") {
+    const s1 = document.createElement("div"); s1.className = "hub-sub gh-sec"; s1.innerHTML = "<span>" + escT(t("ghRanks")) + '</span><small>' + escT(t("ghRanksNote")) + "</small>"; wrap.appendChild(s1);
+    const lad = document.createElement("div"); lad.className = "gh-ladder";
+    RL_RANKS.forEach(([n, c, tiers], i) => {
+      const el = document.createElement("div"); el.className = "gh-rank"; el.style.setProperty("--rc", c); el.style.setProperty("--i", i);
+      el.innerHTML = '<span class="gh-badge"><svg viewBox="0 0 24 24"><path d="M12 2.4 20.4 7v10L12 21.6 3.6 17V7z"/><path class="in" d="M12 7.6l1.3 2.8 3 .4-2.2 2.1.6 3-2.7-1.5-2.7 1.5.6-3-2.2-2.1 3-.4z"/></svg></span>' +
+        "<b>" + escT(n) + "</b><span>" + escT(tiers === 1 ? t("ghNoDiv") : "I \u00b7 II \u00b7 III \u00b7 " + t("ghDivs")) + "</span>";
+      lad.appendChild(el);
+    });
+    wrap.appendChild(lad);
+    const s2 = document.createElement("div"); s2.className = "hub-sub gh-sec"; s2.innerHTML = "<span>" + escT(t("ghPlaylists")) + '</span><small>' + escT(t("ghPlaylistsNote")) + "</small>"; wrap.appendChild(s2);
+    const pl = document.createElement("div"); pl.className = "gh-pls";
+    RL_PLAYLISTS.forEach(([n, m], i) => {
+      const played = rs ? rs.all.filter((x) => String(x.playlist || "") === m).length : 0;
+      const el = document.createElement("div"); el.className = "gh-pl" + (played ? " on" : ""); el.style.setProperty("--i", i);
+      el.innerHTML = "<b>" + escT(m) + "</b><span>" + escT(n) + "</span>" + (played ? '<small>' + played + " " + escT(t("rlMatches")) + "</small>" : "");
+      pl.appendChild(el);
+    });
+    wrap.appendChild(pl);
+    const s3 = document.createElement("div"); s3.className = "hub-sub"; s3.textContent = t("ghSeason"); wrap.appendChild(s3);
+    const p3 = document.createElement("p"); p3.className = "gh-p"; p3.textContent = t("ghSeasonP"); wrap.appendChild(p3);
+    const s4 = document.createElement("div"); s4.className = "hub-sub"; s4.textContent = t("ghAbout"); wrap.appendChild(s4);
+    const p4 = document.createElement("p"); p4.className = "gh-p"; p4.textContent = t("ghRlAbout"); wrap.appendChild(p4);
+  }
+  box.appendChild(wrap);
+  $("gh-back").addEventListener("click", () => { $("hubs-detail").hidden = true; $("hubs-grid").hidden = false; $("view-hubs").scrollTop = 0; });
+  $("gh-stats").addEventListener("click", () => { hubOrigin = "view-hubs"; show("view-stats"); if (key === "rocketleague") openRlHub(); else if (key === "minecraft") openMcHub(); else openHub(key); });
+  $("view-hubs").scrollTop = 0;
+}
 let hubsBusy = false;
 async function loadHubsPage() {
   const grid = $("hubs-grid");
@@ -1007,6 +1057,7 @@ async function loadHubsPage() {
 }
 function renderHubsPage(quiet) {
   const grid = $("hubs-grid");
+  $("hubs-detail").hidden = true; grid.hidden = false;
   grid.innerHTML = ""; grid.classList.toggle("noanim", !!quiet);
   HUB_PAGE_ORDER.forEach((key, i) => {
     const def = HUBS[key]; const h = hubOf(key); const d = (h && h.data) || {};
@@ -1035,8 +1086,8 @@ function renderHubsPage(quiet) {
     el.appendChild(body);
     el.addEventListener("click", () => {
       hubOrigin = "view-hubs";
+      if (def.kind === "live") { openGameHub(key); return; } /* eigen game-hub met ranglijst en playlists */
       if (def.kind === "local") { show("view-stats"); openMcHub(); return; }
-      if (def.kind === "live") { show("view-stats"); openRlHub(); return; }
       if (!h) { window.egs.openExternal("https://everygamestat.com/me"); return; }
       show("view-stats"); openHub(key);
     });
@@ -1127,9 +1178,46 @@ async function openRlHub() {
     [[rs.wr != null ? rs.wr + "%" : "\u2013", t("rlWinrate") + " \u00b7 " + rs.w + " " + t("rlWins") + " / " + rs.l + " " + t("rlLosses")], [fmtNum(rs.n), t("rlMatches")], [per(rs.g), t("rlGoals") + " " + t("rlPerMatch")], [per(rs.s), t("rlSaves") + " " + t("rlPerMatch")]]
       .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "sh"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span>"; hero.appendChild(el); });
     wrap.appendChild(hero);
+    /* vorm van de laatste 10 */
+    const fh = document.createElement("div"); fh.className = "hub-sub cr-bathead"; fh.innerHTML = "<span>" + escT(t("rlForm")) + "</span>";
+    const form = document.createElement("span"); form.className = "cr-form";
+    form.innerHTML = rs.all.slice(0, 10).map((m) => '<i class="' + (m.result === "win" ? "w" : m.result === "loss" ? "l" : "d") + '" title="' + escT(String(m.playlist || "")) + '"></i>').join("");
+    fh.appendChild(form); wrap.appendChild(fh);
+    /* records + nauwkeurigheid */
+    let cur = 0, curType = null, best = 0, run = 0;
+    rs.all.forEach((m, i) => {
+      if (m.result === "win") { run = run > 0 ? run + 1 : 1; } else if (m.result === "loss") { run = run < 0 ? run - 1 : -1; } else run = 0;
+      if (i === 0) { cur = Math.abs(run); curType = run > 0 ? "W" : run < 0 ? "L" : null; }
+      if (run > best) best = run;
+    });
+    const acc = rs.sh > 0 ? Math.round((rs.g / rs.sh) * 100) : null;
+    const maxG = rs.all.reduce((a, m) => Math.max(a, Number(m.goals) || 0), 0);
+    const avgScore = rs.all.filter((m) => m.score != null).length ? Math.round(rs.all.reduce((a, m) => a + (Number(m.score) || 0), 0) / rs.all.filter((m) => m.score != null).length) : null;
+    const recH = document.createElement("div"); recH.className = "hub-sub"; recH.textContent = t("rlRecords"); wrap.appendChild(recH);
+    const recG = document.createElement("div"); recG.className = "sd-grid";
+    [[curType ? cur + curType : "\u2013", t("rlStreak")], [best > 0 ? best + "W" : "\u2013", t("rlBestStreak")], [acc != null ? acc + "%" : "\u2013", t("rlAcc")], [maxG || "\u2013", t("rlBestGame")], [avgScore != null ? fmtNum(avgScore) : "\u2013", t("rlAvgScore")], [fmtNum(rs.today), t("rlMatches") + " " + t("rlToday")]]
+      .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(String(v)) + "</b><span>" + escT(l) + "</span>"; recG.appendChild(el); });
+    wrap.appendChild(recG);
+    /* per playlist */
+    const byPl = {};
+    rs.all.forEach((m) => { const k = m.playlist || "?"; const o = byPl[k] = byPl[k] || { pl: k, n: 0, w: 0, l: 0, g: 0, s: 0 }; o.n++; if (m.result === "win") o.w++; if (m.result === "loss") o.l++; o.g += Number(m.goals) || 0; o.s += Number(m.saves) || 0; });
+    const pls = Object.values(byPl).sort((a, b) => b.n - a.n);
+    if (pls.length) {
+      const ph = document.createElement("div"); ph.className = "hub-sub"; ph.textContent = t("rlPerPlaylist"); wrap.appendChild(ph);
+      const box2 = document.createElement("div"); box2.className = "rl-pls";
+      const maxN = Math.max(...pls.map((p) => p.n), 1);
+      pls.forEach((p, i) => {
+        const wr2 = p.w + p.l ? Math.round((p.w / (p.w + p.l)) * 100) : null;
+        const el = document.createElement("div"); el.className = "rl-pl"; el.style.setProperty("--i", i);
+        el.innerHTML = '<div class="rp-t"><b>' + escT(p.pl === "?" ? t("rlNoPl") : p.pl) + "</b><small>" + p.n + " " + escT(t("rlMatches")) + " \u00b7 " + p.w + "W / " + p.l + "L \u00b7 " + (Math.round((p.g / p.n) * 10) / 10) + " " + escT(t("rlGoals")) + " " + escT(t("rlPerMatch")) + '</small><div class="rp-bar"><i></i></div></div><span class="rp-wr">' + (wr2 != null ? wr2 + "%" : "\u2013") + "</span>";
+        box2.appendChild(el);
+        requestAnimationFrame(() => { const b = el.querySelector(".rp-bar i"); if (b) b.style.width = Math.round((p.n / maxN) * 100) + "%"; });
+      });
+      wrap.appendChild(box2);
+    }
     const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = t("statsAll"); wrap.appendChild(sub);
     const g = document.createElement("div"); g.className = "sd-grid";
-    [[fmtNum(rs.g), t("rlGoals")], [fmtNum(rs.a), t("rlAssists")], [fmtNum(rs.s), t("rlSaves")], [fmtNum(rs.sh), t("rlShots")], [per(rs.a), t("rlAssists") + " " + t("rlPerMatch")], [fmtNum(rs.today), t("rlMatches") + " " + t("rlToday")]]
+    [[fmtNum(rs.g), t("rlGoals")], [fmtNum(rs.a), t("rlAssists")], [fmtNum(rs.s), t("rlSaves")], [fmtNum(rs.sh), t("rlShots")], [per(rs.g), t("rlGoals") + " " + t("rlPerMatch")], [per(rs.a), t("rlAssists") + " " + t("rlPerMatch")]]
       .forEach(([v, l], i) => { const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(l) + "</span>"; g.appendChild(el); });
     wrap.appendChild(g);
     const sub2 = document.createElement("div"); sub2.className = "hub-sub rl-lasthead"; sub2.innerHTML = "<span>" + escT(t("rlLast")) + "</span>";

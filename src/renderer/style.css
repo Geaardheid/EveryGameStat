@@ -751,3 +751,30 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .cb-deck img { width: 30px; height: 36px; object-fit: contain; opacity: .85; transition: transform .15s, opacity .15s; }
 .cb-deck img:hover { transform: translateY(-3px) scale(1.08); opacity: 1; }
 @media (max-width: 700px) { .cr-bat { grid-template-columns: 48px 60px 1fr; } .cb-tro { grid-column: 3; text-align: left; } }
+/* ============ game-hub-detail (Hubs-tab) ============ */
+.hubs-detail { max-width: 1100px; margin: 0 auto; animation: egsUp .4s var(--ease) both; }
+.gh-detail .sd-banner { height: 220px; }
+.gh-cta { margin-left: auto; }
+.gh-sec { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.gh-sec small { font: 400 11.5px var(--font-body); letter-spacing: 0; text-transform: none; color: var(--muted); }
+.gh-ladder { display: grid; grid-template-columns: repeat(auto-fill, minmax(215px, 1fr)); gap: 8px; }
+.gh-rank { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); border-left: 3px solid var(--rc); border-radius: 10px; padding: 10px 14px; animation: egsPop .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.gh-badge { grid-row: span 2; width: 30px; height: 30px; display: grid; place-items: center; }
+.gh-badge svg { width: 30px; height: 30px; }
+.gh-badge path:first-child { fill: color-mix(in srgb, var(--rc) 22%, transparent); stroke: var(--rc); stroke-width: 1.2; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rc) 50%, transparent)); }
+.gh-badge .in { fill: var(--rc); }
+.gh-rank b { font-family: var(--font-display); font-weight: 600; font-size: 13.5px; }
+.gh-rank span:last-child { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); }
+.gh-pls { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.gh-pl { background: rgba(255,255,255,.035); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; padding: 12px 14px; animation: egsPop .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 35ms); }
+.gh-pl.on { border-color: color-mix(in srgb, var(--hc) 55%, transparent); background: color-mix(in srgb, var(--hc) 10%, rgba(255,255,255,.03)); }
+.gh-pl b { display: block; font-family: var(--font-num); font-size: 18px; font-weight: 600; color: var(--hc); }
+.gh-pl span { font-size: 12px; color: var(--muted); } .gh-pl small { display: block; font-family: var(--font-mono); font-size: 10px; color: var(--hc); margin-top: 4px; }
+.gh-p { font-size: 13.5px; line-height: 1.65; color: #d7d7de; max-width: 760px; }
+/* per playlist in de stats-hub */
+.rl-pls { display: flex; flex-direction: column; gap: 8px; }
+.rl-pl { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 12px 16px; animation: egsPop .4s var(--ease) both; animation-delay: calc(var(--i, 0) * 35ms); }
+.rp-t b { display: block; font-size: 14px; } .rp-t small { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.rp-bar { height: 4px; border-radius: 3px; background: rgba(255,255,255,.07); margin-top: 8px; overflow: hidden; }
+.rp-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--hc), color-mix(in srgb, var(--hc) 55%, #fff)); transition: width .8s var(--ease); }
+.rp-wr { font-family: var(--font-num); font-size: 20px; font-weight: 600; color: var(--hc); }
