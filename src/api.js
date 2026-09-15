@@ -19,6 +19,16 @@ async function call(body) {
 
 function token() { return config ? config.get().token : null; }
 
+/* andere edge functions van EGS (bijv. cr-battle), zelfde device-token */
+async function callFunction(name, body) {
+  const r = await fetch(SB_URL + "/functions/v1/" + String(name).replace(/[^a-z0-9-]/gi, ""), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SB_KEY },
+    body: JSON.stringify(Object.assign({ token: token() }, body || {}))
+  });
+  return await r.json().catch(() => ({ ok: false, error: "bad_response" }));
+}
+
 async function claim(code, appVersion) {
   return call({ action: "claim", code, device_name: require("os").hostname(), app_version: appVersion });
 }
@@ -66,4 +76,4 @@ async function ping() {
   return call({ action: "ping", token: token() });
 }
 
-module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs, publicProfile };
+module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs, publicProfile, callFunction };

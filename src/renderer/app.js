@@ -80,6 +80,8 @@ const I18N = {
     ghRanks: "The rank ladder", ghRanksNote: "Each rank has four divisions except the top one", ghDivs: "4 divisions each", ghNoDiv: "No divisions", ghPlaylists: "Ranked playlists", ghPlaylistsNote: "Each playlist has its own rank", ghYourStats: "Your stats", ghAbout: "About tracking", ghBack: "Back",
     ghRlAbout: "The Companion reads Rocket League's official local Stats API. Every match lands on your card with goals, assists, saves, shots and the result. No MMR or rank from the API, because there is none.",
     ghSeason: "Seasons and resets", ghSeasonP: "Competitive seasons run a few months. At the end everyone is placed back a little, so ranks stay comparable.",
+    mdWeak: "Weak link", mdWeakP: (c, n) => c + " at level " + n, mdWeakVs: (n) => n + " below your opponent's average", mdLevels: "Card levels", mdYou: "You", mdOpp: "Opponent", mdAvgLvl: "avg level", mdShared: "Cards you both played", mdTowerHp: "King tower", mdStartTr: "Trophies at start", mdLoading: "Loading match…", mdNoDetail: "No detail available for this match.", mdElixir: "avg elixir", mdTower: "Tower troop", mdEven: "Card levels were even",
+    mdHow: "How we read this match", mdRlHow: "The result comes from Rocket League's own match-end event, the mode from the number of players, and the stats from your own player row in the official Stats API. Nothing estimated.", mdVsAvg: "Compared with your average", mdAbove: "above", mdBelow: "below", mdSame: "same as", mdPerMatchAvg: "your average",
     crDeck: "Current deck", crLevel: "lvl", crElixir: "avg elixir", crBattles: "Recent battles", crForm: "Last 10", crWinrate: "win rate", crWins: "wins", crLosses: "losses", crCrowns: "crowns", crTrophies: "Trophies", crBest: "Personal best", crToBest: (n) => n + " to your best", crAtBest: "At your personal best", crOppDeck: "Opponent deck", crLadder: "Ladder", crPlaytime: "estimated playtime", crClan: "Clan", crArena: "Arena", crEvo: "Evolution", crNoBattles: "No recent battles in the API yet.",
     rlDelUnknown: "Clear matches without a result", rlDelOne: "Delete this match", rlDelConfirm: (n) => "Delete " + n + " match(es) without a result? Your other matches stay.", rlDeleted: (n) => n + " deleted", rlDelFail: "Couldn't delete",
     rlMatches: "matches", rlWinrate: "win rate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "shots", rlPerMatch: "per match", rlLast: "Last matches", rlEmpty: "No matches yet. Run the one-time Rocket League setup on Home, then play a match with the Companion open.", rlSetupGo: "Set up on Home", hubSetup: "Needs setup", rlToday: "today", rlWins: "wins", rlLosses: "losses",
@@ -213,6 +215,8 @@ const I18N = {
     ghRanks: "De ranglijst", ghRanksNote: "Elke rank heeft vier divisies, behalve de hoogste", ghDivs: "4 divisies elk", ghNoDiv: "Geen divisies", ghPlaylists: "Ranked-playlists", ghPlaylistsNote: "Elke playlist heeft zijn eigen rank", ghYourStats: "Jouw stats", ghAbout: "Over de tracking", ghBack: "Terug",
     ghRlAbout: "De Companion leest de offici\u00eble lokale Stats API van Rocket League. Elke pot komt op je kaart met goals, assists, saves, schoten en de uitslag. Geen MMR of rank uit de API, want die bestaat niet.",
     ghSeason: "Seizoenen en resets", ghSeasonP: "Competitieve seizoenen duren een paar maanden. Aan het eind gaat iedereen iets terug, zodat ranks vergelijkbaar blijven.",
+    mdWeak: "Zwakke schakel", mdWeakP: (c, n) => c + " op level " + n, mdWeakVs: (n) => n + " onder het gemiddelde van je tegenstander", mdLevels: "Kaartlevels", mdYou: "Jij", mdOpp: "Tegenstander", mdAvgLvl: "gem. level", mdShared: "Kaarten die jullie allebei speelden", mdTowerHp: "King tower", mdStartTr: "Trofee\u00ebn bij start", mdLoading: "Gevecht laden\u2026", mdNoDetail: "Geen detail beschikbaar voor dit gevecht.", mdElixir: "gem. elixer", mdTower: "Towertroep", mdEven: "De kaartlevels waren gelijk",
+    mdHow: "Hoe we deze pot lezen", mdRlHow: "De uitslag komt uit Rocket League's eigen match-end-event, de modus uit het aantal spelers, en de stats uit jouw eigen spelersregel in de offici\u00eble Stats API. Niets geschat.", mdVsAvg: "Vergeleken met je gemiddelde", mdAbove: "boven", mdBelow: "onder", mdSame: "gelijk aan", mdPerMatchAvg: "je gemiddelde",
     crDeck: "Huidig deck", crLevel: "lvl", crElixir: "gem. elixer", crBattles: "Laatste gevechten", crForm: "Laatste 10", crWinrate: "winrate", crWins: "gewonnen", crLosses: "verloren", crCrowns: "kronen", crTrophies: "Trofeeën", crBest: "Persoonlijk record", crToBest: (n) => n + " tot je record", crAtBest: "Op je persoonlijk record", crOppDeck: "Deck van de tegenstander", crLadder: "Ladder", crPlaytime: "geschatte speeltijd", crClan: "Clan", crArena: "Arena", crEvo: "Evolutie", crNoBattles: "Nog geen recente gevechten in de API.",
     rlDelUnknown: "Potten zonder uitslag wissen", rlDelOne: "Deze pot verwijderen", rlDelConfirm: (n) => n + " pot(ten) zonder uitslag verwijderen? Je andere potten blijven staan.", rlDeleted: (n) => n + " verwijderd", rlDelFail: "Verwijderen mislukt",
     rlMatches: "potten", rlWinrate: "winrate", rlGoals: "goals", rlAssists: "assists", rlSaves: "saves", rlShots: "schoten", rlPerMatch: "per pot", rlLast: "Laatste potten", rlEmpty: "Nog geen potten. Doe de eenmalige Rocket League-setup op Home en speel een pot met de Companion open.", rlSetupGo: "Instellen op Home", hubSetup: "Setup nodig", rlToday: "vandaag", rlWins: "gewonnen", rlLosses: "verloren",
@@ -395,7 +399,7 @@ function renderProfile() {
   $("top-panel").hidden = !tg.length;
   $("top-games").innerHTML = tg.map((g, i) =>
     '<div class="tg">' + '<span class="tg-n">' + (i + 1) + "</span>" +
-    (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : '<span class="tg-ph"></span>') +
+    (g.cover ? '<img src="' + encodeURI(fixUrl(g.cover)) + '" alt="">' : '<span class="tg-ph"></span>') +
     '<span><div class="tg-name">' + String(g.name || "").replace(/[<>&]/g, "") + '</div><div class="tg-plat">' + String(g.platform || "").replace(/[<>&]/g, "") + "</div></span>" +
     '<span class="tg-hours">' + fmtHours(g.minutes) + " " + t("stHours") + "</span></div>"
   ).join("");
@@ -822,6 +826,9 @@ async function loadLibrary() {
 }
 let libPlat = "";
 const steamHero = (appid) => "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_hero.jpg";
+/* covers van Supercell-games staan als root-relatief pad in de database (werkt op de site) */
+const SITE = "https://everygamestat.com";
+const fixUrl = (u) => { const x = String(u || ""); return x.startsWith("/") ? SITE + x : x; };
 function gameCard(g, i) {
   const card = document.createElement("div");
   card.className = "gcard";
@@ -831,10 +838,10 @@ function gameCard(g, i) {
   const portrait = appid ? "https://cdn.cloudflare.steamstatic.com/steam/apps/" + appid + "/library_600x900.jpg" : null;
   const wrap = document.createElement("div"); wrap.className = "gc-wrap";
   if (g.cover || portrait) {
-    coverEl = document.createElement("img"); coverEl.className = "gc-cover"; coverEl.loading = "lazy"; coverEl.src = portrait || g.cover;
+    coverEl = document.createElement("img"); coverEl.className = "gc-cover"; coverEl.loading = "lazy"; coverEl.src = portrait || fixUrl(g.cover);
     let triedFallback = !portrait || !g.cover;
     coverEl.addEventListener("error", () => {
-      if (!triedFallback) { triedFallback = true; coverEl.src = g.cover; return; }
+      if (!triedFallback) { triedFallback = true; coverEl.src = fixUrl(g.cover); return; }
       const ph = document.createElement("div"); ph.className = "gc-cover ph"; ph.textContent = (g.name || "?")[0].toUpperCase(); coverEl.replaceWith(ph);
     });
     /* liggende art (Steam-header, Xbox-banner): niet opblazen, maar passend tonen op een geblurde kopie */
@@ -868,10 +875,10 @@ function renderLibHero(g) {
   const appid = g.platform === "Steam" && /^\d+$/.test(String(g.external_id || "")) ? String(g.external_id) : null;
   hero.innerHTML = "";
   const art = document.createElement("div"); art.className = "lh-art";
-  if (appid) { art.style.backgroundImage = 'url("' + steamHero(appid) + '")'; const test = new Image(); test.onerror = () => { art.classList.add("blur"); art.style.backgroundImage = g.cover ? 'url("' + g.cover + '")' : ""; }; test.src = steamHero(appid); }
-  else if (g.cover) { art.classList.add("blur"); art.style.backgroundImage = 'url("' + g.cover + '")'; }
+  if (appid) { art.style.backgroundImage = 'url("' + steamHero(appid) + '")'; const test = new Image(); test.onerror = () => { art.classList.add("blur"); art.style.backgroundImage = g.cover ? 'url("' + fixUrl(g.cover) + '")' : ""; }; test.src = steamHero(appid); }
+  else if (g.cover) { art.classList.add("blur"); art.style.backgroundImage = 'url("' + fixUrl(g.cover) + '")'; }
   const body = document.createElement("div"); body.className = "lh-body";
-  body.innerHTML = (g.cover ? '<img class="lh-cover" src="' + encodeURI(g.cover) + '" alt="">' : "") +
+  body.innerHTML = (g.cover ? '<img class="lh-cover" src="' + encodeURI(fixUrl(g.cover)) + '" alt="">' : "") +
     '<div class="lh-txt"><span class="eyebrow">' + t("libMost") + "</span><div class=\"lh-name\">" + escT(g.name) + "</div>" +
     '<div class="lh-meta"><span><b>' + fmtHours(g.minutes) + "</b>" + t("stHours") + "</span>" + (g.ach_t ? "<span><b>" + (g.ach_e ?? 0) + "/" + g.ach_t + "</b>" + t("stAch") + "</span>" : "") + "<span><b>" + escT(g.platform) + "</b></span>" +
     (g.last ? "<span>" + escT(new Date(g.last).toLocaleDateString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", year: "numeric" })) + "</span>" : "") + "</div></div>";
@@ -939,7 +946,7 @@ async function ensureLib() {
 function libCover(name) {
   const n = String(name || "").toLowerCase();
   const hit = (libData || []).filter((g) => g.cover && String(g.name || "").toLowerCase().startsWith(n)).sort((a, b) => b.minutes - a.minutes)[0];
-  return hit ? hit.cover : null;
+  return hit ? fixUrl(hit.cover) : null;
 }
 async function fetchRl() {
   try { const r = await window.egs.recent(50); if (r && r.ok) rlMatches = r.matches || []; } catch (e) {}
@@ -1362,6 +1369,8 @@ function openRoyaleHub(h) {
         '<span class="cb-crowns"><b>' + escT(String(b.crowns ?? 0)) + "</b> \u2013 " + escT(String(b.opp_crowns ?? 0)) + "</span>" +
         '<div class="cb-opp"><b>' + escT(b.opp || "?") + "</b><small>" + escT(b.mode || t("crLadder")) + " \u00b7 " + escT(when) + "</small></div>" +
         (Number.isFinite(tro) && tro !== 0 ? '<span class="cb-tro ' + (tro > 0 ? "up" : "down") + '">' + (tro > 0 ? "+" : "") + escT(String(tro)) + "</span>" : '<span class="cb-tro"></span>');
+      row.classList.add("clickable");
+      row.addEventListener("click", () => openCrBattle(b));
       const od = Array.isArray(b.opp_deck) ? b.opp_deck : [];
       if (od.length) {
         const deckEl = document.createElement("div"); deckEl.className = "cb-deck"; deckEl.title = t("crOppDeck");
@@ -1471,7 +1480,7 @@ async function tbQuery() {
   if (!q) { box.innerHTML = '<div class="tb-notif-empty">' + t("profSearchPh") + "</div>"; return; }
   box.innerHTML =
     (people.length ? '<div class="tbq-h">' + (lang === "nl" ? "Spelers" : "Players") + "</div>" + people.slice(0, 5).map((p, i) => '<button class="tb-notif-i tbq-row" data-p="' + i + '"><img src="' + (p.avatar ? encodeURI(p.avatar) : "../../assets/icon.png") + '" alt=""><span>' + escT(p.name || "?") + "</span><small>/p/" + escT(p.slug || "") + "</small></button>").join("") : "") +
-    (games.length ? '<div class="tbq-h">' + (lang === "nl" ? "Jouw games" : "Your games") + "</div>" + games.map((g, i) => '<button class="tb-notif-i tbq-row" data-g="' + i + '">' + (g.cover ? '<img src="' + encodeURI(g.cover) + '" alt="">' : "<i></i>") + "<span>" + escT(g.name) + "</span><small>" + escT(g.platform) + "</small></button>").join("") : "") +
+    (games.length ? '<div class="tbq-h">' + (lang === "nl" ? "Jouw games" : "Your games") + "</div>" + games.map((g, i) => '<button class="tb-notif-i tbq-row" data-g="' + i + '">' + (g.cover ? '<img src="' + encodeURI(fixUrl(g.cover)) + '" alt="">' : "<i></i>") + "<span>" + escT(g.name) + "</span><small>" + escT(g.platform) + "</small></button>").join("") : "") +
     (!people.length && !games.length ? '<div class="tb-notif-empty">\u2013</div>' : "");
   box.querySelectorAll("[data-p]").forEach((el) => el.addEventListener("click", () => { $("tb-q-pop").hidden = true; openProfileFromSlug(people[+el.dataset.p].slug); }));
   box.querySelectorAll("[data-g]").forEach((el) => el.addEventListener("click", () => { $("tb-q-pop").hidden = true; openGameSheet(games[+el.dataset.g]); }));
@@ -1541,7 +1550,7 @@ async function openGameSheet(g) {
   const r = await window.egs.gameInfo(appid, g.name);
   if (sheet.hidden) return;
   const m = r && r.ok && r.found ? r.meta : null;
-  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); const c = body.querySelector(".gs-cover.ph"); if (c && g.cover) { const im = document.createElement("img"); im.className = "gs-cover"; im.src = g.cover; c.replaceWith(im); } if (appid) loadSteamBlock(body, appid); return; }
+  if (!m) { body.querySelector("p.muted:last-child").textContent = r && r.error === "key_missing" ? t("gsNoKey") : t("gsNotFound"); const c = body.querySelector(".gs-cover.ph"); if (c && g.cover) { const im = document.createElement("img"); im.className = "gs-cover"; im.src = fixUrl(g.cover); c.replaceWith(im); } if (appid) loadSteamBlock(body, appid); return; }
   const links = SHEET_LINKS.filter(([k]) => m.links && m.links[k]);
   const owned = g.platform === "Steam";
   const steamUrl = (m.links && m.links.steam) || (m.steam_appid ? "https://store.steampowered.com/app/" + m.steam_appid : null);
@@ -1640,6 +1649,76 @@ async function loadSteamBlock(body, appid) {
       '<div class="gs-a-t"><b>' + escT(a.name) + "</b><small>" + (a.global_pct != null ? a.global_pct.toFixed(1) + "% " + escT(t("gsRare")) : escT(a.achieved ? "" : t("gsLocked"))) + "</small></div></div>").join("") + "</div>";
   } else if (!stats.length) html += '<div class="gs-sec">' + t("gsStats") + '</div><p class="muted">' + escT(t("gsNoStats")) + "</p>";
   host.innerHTML = html;
+}
+/* ===== detail per pot/gevecht ===== */
+function openMatchSheet(html) { $("match-sheet").hidden = false; $("msheet-body").innerHTML = html; }
+function closeMatchSheet() { $("match-sheet").hidden = true; $("msheet-body").innerHTML = ""; }
+$("msheet-close").addEventListener("click", closeMatchSheet);
+$("msheet-scrim").addEventListener("click", closeMatchSheet);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("match-sheet").hidden) closeMatchSheet(); });
+
+let crBattles = null;
+async function fetchCrBattles(force) {
+  if (crBattles && !force) return crBattles;
+  try { const r = await window.egs.crBattles(); if (r && r.ok) crBattles = r.battles || []; } catch (e) {}
+  return crBattles;
+}
+const crCardHtml = (c, cls) => '<div class="md-card' + (c.ev ? " evo" : "") + (cls ? " " + cls : "") + '">' + (c.i ? '<img src="' + encodeURI(c.i) + '" alt="" loading="lazy">' : "") +
+  (c.e != null ? '<span class="cr-elx">' + escT(String(c.e)) + "</span>" : "") +
+  '<b>' + escT(c.n) + "</b>" + (c.lvl != null ? "<small>" + escT(t("crLevel")) + " " + c.lvl + "</small>" : "") + "</div>";
+async function openCrBattle(b0) {
+  openMatchSheet('<p class="muted">' + escT(t("mdLoading")) + "</p>");
+  const list = await fetchCrBattles(false);
+  const key = (x) => String(x && x.t || "").slice(0, 16);
+  const b = (list || []).find((x) => key(x) === key(b0) && String(x.opp || "") === String(b0.opp || "")) || null;
+  if (!b || !b.deck.length) { openMatchSheet('<p class="muted">' + escT(t("mdNoDetail")) + "</p>"); return; }
+  const avg = (arr, k) => arr.length ? Math.round((arr.reduce((a, c) => a + (Number(c[k]) || 0), 0) / arr.length) * 10) / 10 : null;
+  const myLvl = avg(b.deck, "lvl"), opLvl = avg(b.opp_deck, "lvl");
+  const myEl = avg(b.deck, "e"), opEl = avg(b.opp_deck, "e");
+  const weak = b.deck.filter((c) => c.lvl != null).sort((a, c) => a.lvl - c.lvl)[0] || null;
+  const gap = weak && opLvl != null ? Math.round((opLvl - weak.lvl) * 10) / 10 : null;
+  const shared = b.deck.filter((c) => b.opp_deck.some((o) => o.n === c.n));
+  const dt = b.t ? new Date(b.t) : null;
+  const tro = Number(b.trophy);
+  const head = '<div class="md-head ' + (b.res === "W" ? "win" : b.res === "L" ? "loss" : "") + '">' +
+    '<span class="md-res">' + (b.res === "W" ? "WIN" : b.res === "L" ? "LOSS" : "DRAW") + "</span>" +
+    '<div class="md-score"><b>' + escT(String(b.crowns)) + "</b><i>\u2013</i><b>" + escT(String(b.opp_crowns)) + "</b></div>" +
+    '<div class="md-meta"><b>' + escT(b.opp || "?") + (b.opp_tag ? ' <small>' + escT(b.opp_tag) + "</small>" : "") + "</b>" +
+    "<small>" + escT(b.mode || t("crLadder")) + (b.arena ? " \u00b7 " + escT(b.arena) : "") + (dt ? " \u00b7 " + escT(dt.toLocaleString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : "") + "</small></div>" +
+    (Number.isFinite(tro) && tro !== 0 ? '<span class="md-tro ' + (tro > 0 ? "up" : "down") + '">' + (tro > 0 ? "+" : "") + escT(String(tro)) + "</span>" : "") + "</div>";
+  const compare = '<div class="md-cmp">' +
+    '<div><b>' + (myLvl != null ? myLvl : "\u2013") + "</b><span>" + escT(t("mdYou") + " \u00b7 " + t("mdAvgLvl")) + "</span></div>" +
+    '<div><b>' + (opLvl != null ? opLvl : "\u2013") + "</b><span>" + escT(t("mdOpp") + " \u00b7 " + t("mdAvgLvl")) + "</span></div>" +
+    '<div><b>' + (myEl != null ? myEl : "\u2013") + "</b><span>" + escT(t("mdYou") + " \u00b7 " + t("mdElixir")) + "</span></div>" +
+    '<div><b>' + (opEl != null ? opEl : "\u2013") + "</b><span>" + escT(t("mdOpp") + " \u00b7 " + t("mdElixir")) + "</span></div>" +
+    (b.my_tr != null ? '<div><b>' + fmtNum(b.my_tr) + "</b><span>" + escT(t("mdStartTr")) + "</span></div>" : "") + "</div>";
+  const weakHtml = weak ? '<div class="md-weak"><div class="md-weak-t"><span class="eyebrow">' + escT(t("mdWeak")) + "</span><b>" + escT(t("mdWeakP")(weak.n, weak.lvl)) + "</b>" +
+    "<small>" + escT(gap != null && gap > 0 ? t("mdWeakVs")(gap) : t("mdEven")) + "</small></div>" + crCardHtml(weak, "big") + "</div>" : "";
+  const decks = '<div class="md-sec">' + escT(t("mdYou")) + (b.my_tower ? ' <small>' + escT(t("mdTower")) + ": " + escT(b.my_tower) + "</small>" : "") + "</div>" +
+    '<div class="md-deck">' + b.deck.map((c) => crCardHtml(c, weak && c.n === weak.n ? "weak" : "")).join("") + "</div>" +
+    '<div class="md-sec">' + escT(t("mdOpp")) + (b.opp_tower ? ' <small>' + escT(t("mdTower")) + ": " + escT(b.opp_tower) + "</small>" : "") + "</div>" +
+    '<div class="md-deck">' + b.opp_deck.map((c) => crCardHtml(c, shared.some((x) => x.n === c.n) ? "shared" : "")).join("") + "</div>" +
+    (shared.length ? '<div class="md-note">' + escT(t("mdShared")) + ": " + escT(shared.map((c) => c.n).join(", ")) + "</div>" : "");
+  openMatchSheet(head + compare + weakHtml + decks);
+}
+function openRlMatch(m, rs) {
+  const g = Number(m.goals) || 0, a = Number(m.assists) || 0, sv = Number(m.saves) || 0, sh = Number(m.shots) || 0;
+  const per = (tot) => rs && rs.n ? tot / rs.n : null;
+  const cmp = (val, avgv) => { if (avgv == null) return ""; const d = Math.round((val - avgv) * 10) / 10; const w = d > 0 ? t("mdAbove") : d < 0 ? t("mdBelow") : t("mdSame"); return '<small class="' + (d > 0 ? "up" : d < 0 ? "down" : "") + '">' + (d !== 0 ? (d > 0 ? "+" : "") + d + " " : "") + escT(w) + " " + escT(t("mdPerMatchAvg")) + "</small>"; };
+  const dt = m.played_at ? new Date(m.played_at) : null;
+  const res = m.result || "unknown";
+  const head = '<div class="md-head ' + (res === "win" ? "win" : res === "loss" ? "loss" : "") + '">' +
+    '<span class="md-res">' + escT(res.toUpperCase()) + "</span>" +
+    '<div class="md-score"><b>' + g + "</b><i>G</i></div>" +
+    '<div class="md-meta"><b>Rocket League' + (m.playlist ? " \u00b7 " + escT(m.playlist) : "") + "</b><small>" + (dt ? escT(dt.toLocaleString(lang === "nl" ? "nl-NL" : "en-US", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })) : "") + "</small></div>" +
+    (m.score != null ? '<span class="md-tro">' + fmtNum(m.score) + "</span>" : "") + "</div>";
+  const acc = sh > 0 ? Math.round((g / sh) * 100) : null;
+  const rows = [[g, t("rlGoals"), per(rs && rs.g)], [a, t("rlAssists"), per(rs && rs.a)], [sv, t("rlSaves"), per(rs && rs.s)], [sh, t("rlShots"), per(rs && rs.sh)]];
+  const grid = '<div class="md-sec">' + escT(t("mdVsAvg")) + "</div><div class=\"md-rows\">" +
+    rows.map(([v, lb, avgv]) => '<div class="md-row"><b>' + v + "</b><span>" + escT(lb) + "</span>" + cmp(v, avgv != null ? Math.round(avgv * 10) / 10 : null) + "</div>").join("") +
+    (acc != null ? '<div class="md-row"><b>' + acc + '%</b><span>' + escT(t("rlAcc")) + "</span></div>" : "") + "</div>";
+  const how = '<div class="md-sec">' + escT(t("mdHow")) + '</div><div class="md-note">' + escT(t("mdRlHow")) + "</div>";
+  openMatchSheet(head + grid + how);
 }
 function closeGameSheet() { $("game-sheet").hidden = true; $("gsheet-body").innerHTML = ""; }
 $("gsheet-close").addEventListener("click", closeGameSheet);
@@ -1781,6 +1860,7 @@ function matchRow(m, deletable) {
     '<span class="m-res ' + res + '">' + res.toUpperCase().slice(0, 4) + "</span>" +
     '<span class="m-stats"><b>' + g + "G</b> " + a + "A " + s + "S</span>" +
     '<span class="m-meta">' + (m.playlist ? String(m.playlist).replace(/[<>&]/g, "") + "<br>" : "") + fmtTime(m.played_at) + "</span>";
+  if (deletable) { div.classList.add("clickable"); div.addEventListener("click", () => openRlMatch(m, rlStats(rlMatches))); }
   /* potten zonder uitslag kun je zelf wissen (alleen hier in de Companion) */
   if (deletable && res === "unknown" && m.client_match_id) {
     div.classList.add("has-del");
