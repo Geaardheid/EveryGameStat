@@ -485,6 +485,7 @@ ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { g
 /* Ontdekken: populaire aankomende games op Steam (officiële store-zoekopdracht, filter popularcomingsoon), 1 uur cache.
    Alleen naam/appid/releasedatum; art is de standaard Steam-header. Geen sponsoring, geen schattingen. */
 let steamSoonCache = { at: 0, items: [] };
+const unent = (s) => String(s).replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
 ipcMain.handle("steam-discover", async () => {
   if (Date.now() - steamSoonCache.at < 3600000 && steamSoonCache.items.length) return { ok: true, items: steamSoonCache.items, cached: true };
   try {
@@ -497,7 +498,15 @@ ipcMain.handle("steam-discover", async () => {
       const block = mm[2];
       const name = (block.match(/class="title">([^<]+)</) || [])[1];
       const rel = (block.match(/search_released[^>]*>\s*([^<]*?)\s*</) || [])[1];
-      if (name) items.push({ appid: mm[1], name: name.trim(), release: (rel || "").trim() || null });
+      const cap = (block.match(/<img[^>]*src="([^"]+)"/) || [])[1] || null;
+      if (name) items.push({ appid: mm[1], name: unent(name.trim()), release: unent((rel || "").trim()) || null, capsule: cap });
+    }
+    /* de header-art van nieuwe apps staat in een eigen gehashte map, alleen bekend via appdetails: eerste 24 ophalen, in kleine groepjes */
+    const head = items.slice(0, 24);
+    for (let i = 0; i < head.length; i += 6) {
+      await Promise.all(head.slice(i, i + 6).map(async (it) => {
+        try { const r2 = await fetch("https://store.steampowered.com/api/appdetails?appids=" + it.appid + "&cc=nl&filters=basic", { signal: AbortSignal.timeout(6000) }); const j = await r2.json(); const dd = j && j[it.appid] && j[it.appid].data; if (dd && dd.header_image) it.image = dd.header_image; } catch (e) { /* capsule blijft */ }
+      }));
     }
     if (items.length) steamSoonCache = { at: Date.now(), items };
     return { ok: true, items };

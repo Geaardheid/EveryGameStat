@@ -970,3 +970,4 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .soon-b b { display: block; font-family: var(--font-display); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .soon-b span { display: block; font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); margin-top: 3px; min-height: 14px; }
 .soon-actions { margin-top: 9px; }
+.soon-ph { aspect-ratio: 460/215; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center; font-family: var(--font-display); font-size: 14px; color: var(--muted); background: linear-gradient(160deg, #2A2A30, #131316); }

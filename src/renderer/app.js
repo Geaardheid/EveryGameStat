@@ -854,9 +854,10 @@ async function renderSoon(browsing) {
   row.innerHTML = "";
   list.forEach((g, i) => {
     const el = document.createElement("div"); el.className = "soon-card"; el.style.setProperty("--i", i);
-    el.innerHTML = '<img src="' + STEAM_H(g.appid) + '" alt="" loading="lazy"><div class="soon-b"><b>' + escT(g.name) + "</b><span>" + (g.release ? escT(t("libRelease")(g.release)) : "") + "</span>" +
+    el.innerHTML = '<img src="' + encodeURI(g.image || g.capsule || STEAM_H(g.appid)) + '" alt="" loading="lazy"><div class="soon-b"><b>' + escT(g.name) + "</b><span>" + (g.release ? escT(t("libRelease")(g.release)) : "") + "</span>" +
       '<div class="soon-actions"><button class="btn small" data-steam="' + escT(g.appid) + '">' + escT(t("btnOpenSteam")) + "</button></div></div>";
     el.querySelector("[data-steam]").addEventListener("click", (e) => { e.stopPropagation(); window.egs.openExternal("steam://store/" + g.appid); });
+    el.querySelector("img").addEventListener("error", (e) => { const ph = document.createElement("div"); ph.className = "soon-ph"; ph.textContent = g.name; e.target.replaceWith(ph); });
     row.appendChild(el);
   });
 }
