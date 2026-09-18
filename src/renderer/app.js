@@ -107,7 +107,11 @@ const I18N = {
     profSince: (d) => "Member since " + d, profPrivate: "This player's card is private.", profNotFound: "No player with this name.", profAddFriend: "Add friend", profMessage: "Message", profOwn: "This is you.", profSearchPh: "Find a player\u2026",
     tabStats: "Stats", statsHead: "Your game stats", statsEmpty: "Link a game on the website (Deep stats) and it shows up here.", statsAll: "All stats", statsBack: "Back", statsUpdated: "updated",
     gsViewSteam: "View on Steam", gsBuySteam: "Buy on Steam", gsWishlist: "Wishlist on Steam", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Follow on",
-    boardHead: "Leaderboard",
+        fnTabPlayer: "Player", fnTabShop: "Item shop", fnTabNews: "News", fnTabMap: "Map", fnTabCos: "Cosmetics",
+    fnShopH: "Item shop today", fnItems: "items", fnNewsH: "News", fnMapH: "The map", fnPois: "named locations",
+    fnCosH: "Cosmetics", fnCosPh: "Search a skin, emote, pickaxe\u2026", fnCosNote: "Search the full cosmetics catalogue.", fnResults: "results", fnLastShop: "last in shop", fnSearch: "Search",
+    fnPerMode: "Per mode", fnShare: "of your matches", fnLevel: "Level", fnNote: "Data from fortnite-api.com. Not affiliated with or endorsed by Epic Games.", fnNoData: "Nothing to show right now.",
+boardHead: "Leaderboard",
     commHead: "Community",
     commSub: "Who is playing, the rankings and community matches. Public cards only.",
     commPlaying: "Playing now", commPlayingEmpty: "Nobody is live right now. Play with the Companion open and you show up here.",
@@ -252,7 +256,11 @@ const I18N = {
     profSince: (d) => "Lid sinds " + d, profPrivate: "De kaart van deze speler is priv\u00e9.", profNotFound: "Geen speler met deze naam.", profAddFriend: "Vriend toevoegen", profMessage: "Bericht", profOwn: "Dit ben jij.", profSearchPh: "Zoek een speler\u2026",
     tabStats: "Stats", statsHead: "Jouw game-stats", statsEmpty: "Koppel een game op de website (Deep stats) en hij verschijnt hier.", statsAll: "Alle stats", statsBack: "Terug", statsUpdated: "bijgewerkt",
     gsViewSteam: "Bekijk op Steam", gsBuySteam: "Koop op Steam", gsWishlist: "Op Steam-verlanglijst", gsTrailer: "Trailer", gsScreens: "Screenshots", gsFollow: "Volg op",
-    boardHead: "Klassement",
+        fnTabPlayer: "Speler", fnTabShop: "Itemshop", fnTabNews: "Nieuws", fnTabMap: "Map", fnTabCos: "Cosmetics",
+    fnShopH: "Itemshop van vandaag", fnItems: "items", fnNewsH: "Nieuws", fnMapH: "De map", fnPois: "benoemde locaties",
+    fnCosH: "Cosmetics", fnCosPh: "Zoek een skin, emote, pickaxe\u2026", fnCosNote: "Zoek in de volledige cosmetics-catalogus.", fnResults: "resultaten", fnLastShop: "laatst in de shop", fnSearch: "Zoeken",
+    fnPerMode: "Per mode", fnShare: "van je potten", fnLevel: "Level", fnNote: "Data van fortnite-api.com. Niet verbonden met of goedgekeurd door Epic Games.", fnNoData: "Nu niets te tonen.",
+boardHead: "Klassement",
     commHead: "Community",
     commSub: "Wie er speelt, het klassement en community-potten. Alleen publieke kaarten.",
     commPlaying: "Speelt nu", commPlayingEmpty: "Niemand is nu live. Speel met de Companion open en je staat hier.",
@@ -1441,6 +1449,7 @@ function openRoyaleHub(h) {
 }
 function openHub(key) {
   if (key === "royale") { const hh = hubOf(key); if (hh) return openRoyaleHub(hh); }
+  if (key === "fortnite") { const hh = hubOf(key); if (hh) return openFortniteHub(hh); }
   const h = hubOf(key); if (!h) return;
   const def = HUBS[key], d = h.data || {};
   hubAtmo("view-stats", def.c);
@@ -1486,6 +1495,117 @@ function openHub(key) {
   box.appendChild(wrap);
   $("hub-back").addEventListener("click", hubBack);
   box.scrollTop = 0; $("view-stats").scrollTop = 0;
+}
+
+
+/* ===== FORTNITE-HUB: eigen stats per mode + itemshop, nieuws, map en cosmetics via fn-hub (fortnite-api.com), zoals /fortnite op de site ===== */
+const fnS = { tab: "player", shop: null, news: null, map: null, cos: null, cosQ: "" };
+const fnRar = (k) => k ? " fn-r-" + String(k).toLowerCase().replace(/[^a-z]/g, "") : "";
+function openFortniteHub(h) {
+  const def = HUBS.fortnite, d = h.data || {};
+  hubAtmo("view-stats", def.c);
+  const box = $("stats-detail"); $("stats-home").hidden = true; box.hidden = false; box.innerHTML = "";
+  const wrap = document.createElement("div"); wrap.className = "sd fn"; wrap.style.setProperty("--hc", def.c);
+  const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
+  banner.innerHTML = '<button class="btn small sd-back" id="hub-back">\u2190 ' + t("statsBack") + "</button>" +
+    '<div class="sd-in"><div><h2>Fortnite</h2><div class="sd-who">' + escT(d.name || "") + (d.level != null ? " \u00b7 " + t("fnLevel") + " " + escT(fmtStat(d.level)) : "") + "</div></div>" +
+    '<div class="sd-upd">' + t("statsUpdated") + " " + escT(h.updated_at ? new Date(h.updated_at).toLocaleString(lang === "nl" ? "nl-NL" : "en-US") : "\u2013") + "</div></div>";
+  wrap.appendChild(banner);
+  const tabs = document.createElement("div"); tabs.className = "fn-tabs";
+  [["player", "fnTabPlayer"], ["shop", "fnTabShop"], ["news", "fnTabNews"], ["map", "fnTabMap"], ["cosmetics", "fnTabCos"]].forEach(([k, l]) => {
+    const b = document.createElement("button"); b.className = "fn-tab" + (fnS.tab === k ? " on" : ""); b.dataset.tab = k; b.textContent = t(l);
+    b.addEventListener("click", () => { fnS.tab = k; tabs.querySelectorAll(".fn-tab").forEach((x) => x.classList.toggle("on", x.dataset.tab === k)); fnPane(pane, k, d); });
+    tabs.appendChild(b);
+  });
+  wrap.appendChild(tabs);
+  const pane = document.createElement("div"); pane.className = "fn-pane"; wrap.appendChild(pane);
+  const note = document.createElement("p"); note.className = "gs-igdb fn-note"; note.textContent = t("fnNote"); wrap.appendChild(note);
+  box.appendChild(wrap);
+  $("hub-back").addEventListener("click", hubBack);
+  fnPane(pane, fnS.tab, d);
+  box.scrollTop = 0; $("view-stats").scrollTop = 0;
+}
+function fnPane(pane, tab, d) {
+  pane.innerHTML = ""; pane.dataset.tab = tab;
+  if (tab === "player") return fnPlayer(pane, d);
+  pane.innerHTML = skelRows(3, "skel-row");
+  const fail = () => { pane.innerHTML = emptyHtml(t("fnNoData"), "shrug"); };
+  if (tab === "shop") return fnShop(pane).catch(fail);
+  if (tab === "news") return fnNews(pane).catch(fail);
+  if (tab === "map") return fnMap(pane).catch(fail);
+  if (tab === "cosmetics") return fnCos(pane);
+}
+async function fnGet(key, body) {
+  if (fnS[key]) return fnS[key];
+  const r = await window.egs.fnHub(body);
+  if (!r || !r.ok) throw new Error((r && r.error) || "api");
+  fnS[key] = r; return r;
+}
+function fnPlayer(pane, d) {
+  const w = Number(d.wins) || 0, mt = Number(d.matches) || 0;
+  const wr = d.winrate != null ? d.winrate : (mt ? Math.round((w / mt) * 1000) / 10 : null);
+  const heroes = [[fmtStat(d.wins), STAT_LBL.wins], [wr != null ? fmtStat(wr) + "%" : "\u2013", STAT_LBL.winrate], [fmtStat(d.kd), STAT_LBL.kd], [fmtStat(d.kills), STAT_LBL.kills], [fmtStat(d.matches), STAT_LBL.matches]];
+  pane.innerHTML = '<div class="sd-heroes five">' + heroes.map(([v, l], i) => '<div class="sh" style="--i:' + i + '"><b>' + escT(v) + "</b><span>" + escT(l) + "</span></div>").join("") + "</div>";
+  const modes = d.modes && typeof d.modes === "object" ? Object.entries(d.modes) : [];
+  if (modes.length) {
+    const tot = modes.reduce((s, [, v]) => s + (Number(v.matches) || 0), 0);
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = t("fnPerMode"); pane.appendChild(sub);
+    const g = document.createElement("div"); g.className = "fn-modes";
+    modes.sort((x, y) => (Number(y[1].matches) || 0) - (Number(x[1].matches) || 0)).forEach(([name, v], i) => {
+      const share = tot ? Math.round(((Number(v.matches) || 0) / tot) * 100) : 0;
+      const el = document.createElement("div"); el.className = "fn-mode"; el.style.setProperty("--i", i);
+      el.innerHTML = '<div class="fn-mode-h"><b>' + escT(name) + "</b><em>" + (v.winrate != null ? escT(fmtStat(v.winrate)) + "%" : "\u2013") + "</em></div>" +
+        '<i class="fn-bar"><i style="width:' + share + '%"></i></i><small>' + share + "% " + escT(t("fnShare")) + " \u00b7 " + escT(fmtStat(v.matches)) + " " + escT(STAT_LBL.matches.toLowerCase()) + "</small>" +
+        '<div class="fn-mode-rows">' + [["wins", v.wins], ["kills", v.kills], ["kd", v.kd], ["top10", v.top10]].map(([k, x]) => "<span><b>" + escT(fmtStat(x)) + "</b>" + escT(STAT_LBL[k] || k) + "</span>").join("") + "</div>";
+      g.appendChild(el);
+    });
+    pane.appendChild(g);
+  }
+  const rest = ["deaths", "top10", "top25", "kpm", "score", "outlived", "minutes", "level"].filter((k) => d[k] != null);
+  if (rest.length) {
+    const sub = document.createElement("div"); sub.className = "hub-sub"; sub.textContent = t("statsAll"); pane.appendChild(sub);
+    const g = document.createElement("div"); g.className = "sd-grid";
+    rest.forEach((k, i) => { const v = k === "minutes" ? fmtNum(Math.round(Number(d[k]) / 60)) + " " + t("stHours") : fmtStat(d[k]); const el = document.createElement("div"); el.className = "hub-tile"; el.style.setProperty("--i", i); el.innerHTML = "<b>" + escT(v) + "</b><span>" + escT(k === "minutes" ? t("profHours") : STAT_LBL[k] || k) + "</span>"; g.appendChild(el); });
+    pane.appendChild(g);
+  }
+}
+const fnItem = (it, s) => '<div class="fn-item' + fnRar(it.rarity_key) + '" title="' + escT(it.name || "") + '">' + (it.image ? '<img src="' + encodeURI(it.image) + '" alt="" loading="lazy">' : '<div class="fn-noimg"></div>') +
+  '<div class="fn-item-b"><b>' + escT(it.name || "") + "</b><span>" + escT(it.type || "") + (it.series ? " \u00b7 " + escT(it.series) : (it.rarity ? " \u00b7 " + escT(it.rarity) : "")) + "</span>" +
+  (it.price != null ? "<em>" + (s && s.vbuck ? '<img src="' + encodeURI(s.vbuck) + '" alt="">' : "") + escT(fmtNum(it.price)) + (it.regular && it.regular !== it.price ? " <s>" + escT(fmtNum(it.regular)) + "</s>" : "") + (it.bundle ? " \u00b7 " + escT(String(it.items)) + " " + escT(t("fnItems")) : "") + "</em>" :
+   (it.intro || it.shop_last ? "<em>" + escT(it.intro ? String(it.intro).replace("Introduced in ", "") : "") + (it.shop_last ? (it.intro ? " \u00b7 " : "") + escT(t("fnLastShop")) + " " + escT(String(it.shop_last).slice(0, 10)) : "") + "</em>" : "")) + "</div></div>";
+async function fnShop(pane) {
+  const s = await fnGet("shop", { action: "shop" }); if (!pane.isConnected || pane.dataset.tab !== "shop") return;
+  pane.innerHTML = '<div class="hub-sub fn-sec"><span>' + escT(t("fnShopH")) + "</span><small>" + (s.date ? escT(String(s.date).slice(0, 10)) + " \u00b7 " : "") + escT(fmtNum(s.total || 0)) + " " + escT(t("fnItems")) + "</small></div>" +
+    (s.sections || []).map((sec) => '<div class="hub-sub fn-sec sm"><span>' + escT(sec.name) + "</span><small>" + sec.items.length + '</small></div><div class="fn-shop">' + sec.items.map((it) => fnItem(it, s)).join("") + "</div>").join("");
+  pane.querySelectorAll(".fn-item").forEach((el, i) => el.style.setProperty("--i", Math.min(i, 24)));
+}
+async function fnNews(pane) {
+  const n = await fnGet("news", { action: "news" }); if (!pane.isConnected || pane.dataset.tab !== "news") return;
+  pane.innerHTML = '<div class="hub-sub fn-sec"><span>' + escT(t("fnNewsH")) + "</span><small>" + (n.date ? escT(String(n.date).slice(0, 10)) : "") + "</small></div>" +
+    '<div class="fn-news">' + (n.items || []).map((x, i) => '<article class="fn-newsitem" style="--i:' + i + '">' + (x.image ? '<img src="' + encodeURI(x.image) + '" alt="" loading="lazy">' : "") + "<div><b>" + escT(x.title || "") + "</b><p>" + escT(x.body || "") + "</p></div></article>").join("") + "</div>";
+  if (!(n.items || []).length) pane.innerHTML = emptyHtml(t("fnNoData"), "shrug");
+}
+async function fnMap(pane) {
+  const m = await fnGet("map", { action: "map" }); if (!pane.isConnected || pane.dataset.tab !== "map") return;
+  const pois = (m.pois || []).slice().sort((x, y) => String(x.name).localeCompare(String(y.name)));
+  pane.innerHTML = '<div class="hub-sub fn-sec"><span>' + escT(t("fnMapH")) + "</span><small>" + pois.length + " " + escT(t("fnPois")) + "</small></div>" +
+    (m.image ? '<div class="fn-map"><img src="' + encodeURI(m.image) + '" alt="Fortnite map"></div>' : "") +
+    '<div class="fn-pois">' + pois.map((x, i) => '<span style="--i:' + Math.min(i, 30) + '">' + escT(x.name) + "</span>").join("") + "</div>";
+}
+function fnCos(pane) {
+  const c = fnS.cos;
+  pane.innerHTML = '<div class="hub-sub fn-sec"><span>' + escT(t("fnCosH")) + "</span><small>" + (c ? escT(fmtNum(c.total || 0)) + " " + escT(t("fnResults")) : escT(t("fnCosNote"))) + "</small></div>" +
+    '<div class="fn-cosbar"><input id="fn-cos-q" class="text-input" maxlength="40" placeholder="' + escT(t("fnCosPh")) + '" value="' + escT(fnS.cosQ) + '" spellcheck="false"><button class="btn gold sm" id="fn-cos-go">' + escT(t("fnSearch")) + "</button></div>" +
+    '<div id="fn-cos-list">' + (c ? (c.items && c.items.length ? '<div class="fn-shop">' + c.items.map((it) => fnItem(it, null)).join("") + "</div>" : emptyHtml(t("fnNoData"), "shrug")) : "") + "</div>";
+  const go = async () => {
+    const q = $("fn-cos-q").value.trim(); if (q.length < 2) { $("fn-cos-q").focus(); return; }
+    fnS.cosQ = q; $("fn-cos-list").innerHTML = skelRows(2, "skel-row");
+    try { const r = await window.egs.fnHub({ action: "cosmetics", query: q }); fnS.cos = r && r.ok ? r : { items: [], total: 0 }; } catch (e) { fnS.cos = { items: [], total: 0 }; }
+    if (pane.isConnected && pane.dataset.tab === "cosmetics") fnCos(pane);
+  };
+  $("fn-cos-go").addEventListener("click", go);
+  $("fn-cos-q").addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+  pane.querySelectorAll(".fn-item").forEach((el, i) => el.style.setProperty("--i", Math.min(i, 24)));
 }
 
 /* ===== Zoeken (titelbalk): spelers op EGS + games in je bibliotheek, alles in de app ===== */

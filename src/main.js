@@ -482,6 +482,10 @@ ipcMain.handle("win", (_e, cmd) => {
 
 ipcMain.handle("mc-status", () => mcStatus);
 ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
+/* Fortnite-hub: itemshop/nieuws/map/cosmetics via de site-functie fn-hub (fortnite-api.com) */
+ipcMain.handle("fn-hub", async (_e, body) => {
+  try { return await api.callFunction("fn-hub", body || {}); } catch (e) { return { ok: false, error: "offline" }; }
+});
 ipcMain.handle("cr-battles", async () => {
   try { return await api.callFunction("cr-battle", {}); } catch (e) { return { ok: false, error: "offline" }; }
 });

@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld("egs", {
   recent: (limit) => ipcRenderer.invoke("recent", limit),
   rlDelete: (payload) => ipcRenderer.invoke("rl-delete", payload),
   crBattles: () => ipcRenderer.invoke("cr-battles"),
+  fnHub: (body) => ipcRenderer.invoke("fn-hub", body),
   profile: () => ipcRenderer.invoke("profile"),
   restartUpdate: () => ipcRenderer.invoke("restart-update"),
   checkUpdates: () => ipcRenderer.invoke("check-updates"),
