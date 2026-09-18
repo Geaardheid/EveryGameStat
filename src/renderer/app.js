@@ -1041,6 +1041,7 @@ const RL_PLAYLISTS = [["Ranked Duel", "1v1"], ["Ranked Doubles", "2v2"], ["Ranke
 function openGameHub(key) {
   const def = HUBS[key]; if (!def) return;
   hubAtmo("view-hubs", def.c);
+  $("hubs-head").hidden = true;
   const box = $("hubs-detail"); $("hubs-grid").hidden = true; $("hubs-detail").hidden = false; box.innerHTML = "";
   const wrap = document.createElement("div"); wrap.className = "gh-detail"; wrap.style.setProperty("--hc", def.c);
   const banner = document.createElement("div"); banner.className = "sd-banner"; artStyle(banner, def);
@@ -1062,7 +1063,8 @@ function openGameHub(key) {
     const s2 = document.createElement("div"); s2.className = "hub-sub gh-sec"; s2.innerHTML = "<span>" + escT(t("ghPlaylists")) + '</span><small>' + escT(t("ghPlaylistsNote")) + "</small>"; wrap.appendChild(s2);
     const pl = document.createElement("div"); pl.className = "gh-pls";
     RL_PLAYLISTS.forEach(([n, m], i) => {
-      const played = rs ? rs.all.filter((x) => String(x.playlist || "") === m).length : 0;
+      /* de RL-log geeft alleen 1v1/2v2/3v3 door, niet welke playlist: het cijfer hoort alleen bij de ranked-playlist van die grootte, niet bij Hoops/Rumble/etc. */
+      const played = rs && i < 3 ? rs.all.filter((x) => String(x.playlist || "") === m).length : 0;
       const el = document.createElement("div"); el.className = "gh-pl" + (played ? " on" : ""); el.style.setProperty("--i", i);
       el.innerHTML = "<b>" + escT(m) + "</b><span>" + escT(n) + "</span>" + (played ? '<small>' + played + " " + escT(t("rlMatches")) + "</small>" : "");
       pl.appendChild(el);
@@ -1074,7 +1076,7 @@ function openGameHub(key) {
     const p4 = document.createElement("p"); p4.className = "gh-p"; p4.textContent = t("ghRlAbout"); wrap.appendChild(p4);
   }
   box.appendChild(wrap);
-  $("gh-back").addEventListener("click", () => { hubAtmoOff("view-hubs"); $("hubs-detail").hidden = true; $("hubs-grid").hidden = false; $("view-hubs").scrollTop = 0; });
+  $("gh-back").addEventListener("click", () => { hubAtmoOff("view-hubs"); $("hubs-head").hidden = false; $("hubs-detail").hidden = true; $("hubs-grid").hidden = false; $("view-hubs").scrollTop = 0; });
   $("gh-stats").addEventListener("click", () => { hubOrigin = "view-hubs"; show("view-stats"); if (key === "rocketleague") openRlHub(); else if (key === "minecraft") openMcHub(); else openHub(key); });
   $("view-hubs").scrollTop = 0;
 }
@@ -1095,7 +1097,7 @@ async function loadHubsPage() {
 }
 function renderHubsPage(quiet) {
   const grid = $("hubs-grid");
-  hubAtmoOff("view-hubs");
+  hubAtmoOff("view-hubs"); $("hubs-head").hidden = false;
   $("hubs-detail").hidden = true; grid.hidden = false;
   grid.innerHTML = ""; grid.classList.toggle("noanim", !!quiet);
   HUB_PAGE_ORDER.forEach((key, i) => {
