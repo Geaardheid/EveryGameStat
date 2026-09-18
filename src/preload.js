@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("egs", {
   rlDelete: (payload) => ipcRenderer.invoke("rl-delete", payload),
   crBattles: () => ipcRenderer.invoke("cr-battles"),
   fnHub: (body) => ipcRenderer.invoke("fn-hub", body),
+  steamDiscover: () => ipcRenderer.invoke("steam-discover"),
   profile: () => ipcRenderer.invoke("profile"),
   restartUpdate: () => ipcRenderer.invoke("restart-update"),
   checkUpdates: () => ipcRenderer.invoke("check-updates"),

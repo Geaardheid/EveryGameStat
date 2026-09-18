@@ -482,6 +482,27 @@ ipcMain.handle("win", (_e, cmd) => {
 
 ipcMain.handle("mc-status", () => mcStatus);
 ipcMain.handle("presence-now", () => { const cur = presenceCurrent(); return { game: cur, state: cur === "Rocket League" ? rlState : null, detail: cur === "Rocket League" ? rlScoreLine : null, art: (cur && presenceArt[cur]) || null }; });
+/* Ontdekken: populaire aankomende games op Steam (officiële store-zoekopdracht, filter popularcomingsoon), 1 uur cache.
+   Alleen naam/appid/releasedatum; art is de standaard Steam-header. Geen sponsoring, geen schattingen. */
+let steamSoonCache = { at: 0, items: [] };
+ipcMain.handle("steam-discover", async () => {
+  if (Date.now() - steamSoonCache.at < 3600000 && steamSoonCache.items.length) return { ok: true, items: steamSoonCache.items, cached: true };
+  try {
+    const r = await fetch("https://store.steampowered.com/search/results/?filter=popularcomingsoon&start=0&count=50&infinite=1&cc=nl&l=english", { headers: { "User-Agent": "Mozilla/5.0 EGS-Companion" }, signal: AbortSignal.timeout(10000) });
+    const d = await r.json();
+    const html = String(d.results_html || "");
+    const items = [];
+    const re = /<a[^>]*data-ds-appid="(\d+)"[^>]*>([\s\S]*?)<\/a>/g; let mm;
+    while ((mm = re.exec(html)) && items.length < 60) {
+      const block = mm[2];
+      const name = (block.match(/class="title">([^<]+)</) || [])[1];
+      const rel = (block.match(/search_released[^>]*>\s*([^<]*?)\s*</) || [])[1];
+      if (name) items.push({ appid: mm[1], name: name.trim(), release: (rel || "").trim() || null });
+    }
+    if (items.length) steamSoonCache = { at: Date.now(), items };
+    return { ok: true, items };
+  } catch (e) { return { ok: false, error: "offline", items: steamSoonCache.items }; }
+});
 /* Fortnite-hub: itemshop/nieuws/map/cosmetics via de site-functie fn-hub (fortnite-api.com) */
 ipcMain.handle("fn-hub", async (_e, body) => {
   try { return await api.callFunction("fn-hub", body || {}); } catch (e) { return { ok: false, error: "offline" }; }
@@ -564,6 +585,8 @@ ipcMain.handle("game-info", async (_e, steamAppid, name) => {
 ipcMain.handle("open-external", (_e, url) => {
   /* alleen https; game-links (Steam, YouTube, socials, officiële site) komen uit IGDB */
   if (/^https:\/\/[^\s"'<>]+$/.test(String(url || ""))) shell.openExternal(url);
+  /* steam://store/<appid> opent de pagina in de Steam-client zelf (zoals "Open Steam" bij Steam) */
+  else if (/^steam:\/\/store\/\d{1,10}$/.test(String(url || ""))) shell.openExternal(url);
 });
 
 /* ---------- Rocket League autosetup: TAStatsAPI.ini schrijven ---------- */

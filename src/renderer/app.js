@@ -111,6 +111,7 @@ const I18N = {
     fnShopH: "Item shop today", fnItems: "items", fnNewsH: "News", fnMapH: "The map", fnPois: "named locations",
     fnCosH: "Cosmetics", fnCosPh: "Search a skin, emote, pickaxe\u2026", fnCosNote: "Search the full cosmetics catalogue.", fnResults: "results", fnLastShop: "last in shop", fnSearch: "Search",
     fnPerMode: "Per mode", fnShare: "of your matches", fnLevel: "Level", fnNote: "Data from fortnite-api.com. Not affiliated with or endorsed by Epic Games.", fnNoData: "Nothing to show right now.",
+    libSoon: "Coming soon on Steam", libSoonSub: "Popular upcoming games you don\u2019t own yet", btnOpenSteam: "Open in Steam", libRelease: (d) => "Releases " + d, gsOpenClient: "Open in Steam app",
 boardHead: "Leaderboard",
     commHead: "Community",
     commSub: "Who is playing, the rankings and community matches. Public cards only.",
@@ -260,6 +261,7 @@ boardHead: "Leaderboard",
     fnShopH: "Itemshop van vandaag", fnItems: "items", fnNewsH: "Nieuws", fnMapH: "De map", fnPois: "benoemde locaties",
     fnCosH: "Cosmetics", fnCosPh: "Zoek een skin, emote, pickaxe\u2026", fnCosNote: "Zoek in de volledige cosmetics-catalogus.", fnResults: "resultaten", fnLastShop: "laatst in de shop", fnSearch: "Zoeken",
     fnPerMode: "Per mode", fnShare: "van je potten", fnLevel: "Level", fnNote: "Data van fortnite-api.com. Niet verbonden met of goedgekeurd door Epic Games.", fnNoData: "Nu niets te tonen.",
+    libSoon: "Binnenkort op Steam", libSoonSub: "Populaire aankomende games die je nog niet hebt", btnOpenSteam: "Open in Steam", libRelease: (d) => "Komt " + d, gsOpenClient: "Open in Steam-app",
 boardHead: "Klassement",
     commHead: "Community",
     commSub: "Wie er speelt, het klassement en community-potten. Alleen publieke kaarten.",
@@ -839,6 +841,25 @@ $("chat-input").addEventListener("keydown", (e) => { if (e.key === "Enter") send
 /* ===== SITE-TAB ===== */
 /* ===== BIBLIOTHEEK ===== */
 let libData = null;
+/* Binnenkort op Steam: populaire aankomende games, minus wat je al in je bibliotheek hebt. Bron: Steam store. */
+let soonData = null, soonBusy = false;
+async function renderSoon(browsing) {
+  const hd = $("lib-soon-h"), row = $("lib-soon"); if (!hd || !row) return;
+  if (!browsing) { hd.hidden = true; row.hidden = true; return; }
+  if (!soonData && !soonBusy) { soonBusy = true; try { const r = await window.egs.steamDiscover(); soonData = (r && r.items) || []; } catch (e) { soonData = []; } soonBusy = false; }
+  const owned = new Set((libData || []).filter((g) => g.platform === "Steam").map((g) => String(g.external_id)));
+  const list = (soonData || []).filter((g) => !owned.has(String(g.appid))).slice(0, 12);
+  hd.hidden = !list.length; row.hidden = !list.length; if (!list.length) return;
+  hd.innerHTML = escT(t("libSoon")) + '<small class="lib-sec-sub">' + escT(t("libSoonSub")) + "</small>";
+  row.innerHTML = "";
+  list.forEach((g, i) => {
+    const el = document.createElement("div"); el.className = "soon-card"; el.style.setProperty("--i", i);
+    el.innerHTML = '<img src="' + STEAM_H(g.appid) + '" alt="" loading="lazy"><div class="soon-b"><b>' + escT(g.name) + "</b><span>" + (g.release ? escT(t("libRelease")(g.release)) : "") + "</span>" +
+      '<div class="soon-actions"><button class="btn small" data-steam="' + escT(g.appid) + '">' + escT(t("btnOpenSteam")) + "</button></div></div>";
+    el.querySelector("[data-steam]").addEventListener("click", (e) => { e.stopPropagation(); window.egs.openExternal("steam://store/" + g.appid); });
+    row.appendChild(el);
+  });
+}
 async function loadLibrary() {
   if (loadLibrary.busy) return; loadLibrary.busy = true; setTimeout(() => { loadLibrary.busy = false; }, 5000);
   if (!libData) {
@@ -930,6 +951,7 @@ function renderLibrary() {
   const browsing = !q;
   const top = browsing ? rows.slice().sort((a, b) => b.minutes - a.minutes)[0] : null;
   renderLibHero(top || null);
+  renderSoon(browsing);
   const recent = browsing ? rows.filter((g) => g.last).sort((a, b) => String(b.last).localeCompare(String(a.last))).slice(0, 12) : [];
   $("lib-recent-h").hidden = !recent.length; $("lib-recent").hidden = !recent.length;
   const rBox = $("lib-recent"); rBox.innerHTML = ""; recent.forEach((g, i) => rBox.appendChild(gameCard(g, i)));
@@ -1777,6 +1799,7 @@ async function openGameSheet(g) {
       '<div class="gs-modes">' + (m.modes || []).map((x) => "<span>\u25cf " + escT(x) + "</span>").join("") + "</div>" +
       '<div class="gs-actions">' +
         (steamUrl ? '<button class="btn primary" data-url="' + steamUrl + '">' + (owned ? t("gsViewSteam") : t("gsBuySteam")) + "</button>" : "") +
+        (appid || m.steam_appid ? '<button class="btn" data-url="steam://store/' + (appid || m.steam_appid) + '">' + t("gsOpenClient") + "</button>" : "") +
         (!owned && m.steam_appid ? '<button class="btn" data-url="https://store.steampowered.com/app/' + m.steam_appid + '">' + t("gsWishlist") + "</button>" : "") +
       "</div></div></div>" +
     (m.summary ? '<p class="gs-summary">' + escT(m.summary) + "</p>" : "") +
