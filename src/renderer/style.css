@@ -828,12 +828,14 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .view.hubmode { overflow-x: hidden; background: radial-gradient(1100px 750px at 85% -10%, color-mix(in srgb, var(--hc) 15%, transparent), transparent 60%), linear-gradient(180deg, color-mix(in srgb, var(--hc) 16%, #2E2E34) 0%, var(--bg) 46%, color-mix(in srgb, var(--hc) 8%, #1B1B20) 100%); }
 .view.hubmode > * { position: relative; z-index: 1; }
 .view.hubmode .hub-atmo { z-index: 0; }
-/* held randloos over de volle breedte, hoger, art nadrukkelijker */
-.view.hubmode .sd-banner { width: calc(100vw - var(--rail)); margin-left: calc(50% - (100vw - var(--rail)) / 2); margin-top: -26px; border-radius: var(--sheet-r) 0 0 0; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--hc) 35%, rgba(255,255,255,.08)); height: 320px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
-.view.hubmode .sd-banner .sd-in { padding: 26px 34px; }
+/* held randloos: de detail-container wordt de volle breedte van het blad, de banner schuift
+   met negatieve marges over de view-padding heen, de inhoud eronder blijft gecentreerd op 1200px */
+.view.hubmode .stats-detail, .view.hubmode .hubs-detail, .view.hubmode .sd, .view.hubmode .gh-detail { max-width: none; margin: 0; }
+.view.hubmode .sd-banner { width: auto; margin: -26px -30px 0; border-radius: var(--sheet-r) 0 0 0; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--hc) 35%, rgba(255,255,255,.08)); height: 320px; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+.view.hubmode .sd > :not(.sd-banner), .view.hubmode .gh-detail > :not(.sd-banner) { max-width: 1200px; margin-left: auto; margin-right: auto; }
+.view.hubmode .sd-banner .sd-in { padding: 26px 40px; }
 .view.hubmode .sd-banner h2 { font-size: 40px; letter-spacing: -.01em; }
-.view.hubmode .sd-banner .sd-back { top: 18px; left: 22px; }
-.view.hubmode .stats-detail, .view.hubmode .hubs-detail { max-width: 1160px; }
+.view.hubmode .sd-banner .sd-back { top: 18px; left: 26px; }
 /* accenten in de kleur van de game */
 .view.hubmode .sh, .view.hubmode .hub-tile { border-color: color-mix(in srgb, var(--hc) 24%, rgba(255,255,255,.07)); background: color-mix(in srgb, var(--hc) 7%, rgba(255,255,255,.03)); }
 .view.hubmode .hub-sub > span:first-child, .view.hubmode .hub-sub { color: color-mix(in srgb, var(--hc) 55%, #cfcfd6); }
@@ -863,7 +865,7 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .crl-row em { font-style: normal; font-family: var(--font-num); color: var(--gold); font-size: 13px; }
 .crl-row.go { cursor: pointer; } .crl-row.go:hover { border-color: rgba(242,176,61,.4); }
 /* ---- profiel: banner met game-art, hoogtepunten, achievement-balkjes, activiteit ---- */
-.prof-banner.art { background-size: cover; background-position: center 25%; position: relative; overflow: hidden; }
+.prof-banner.art { background-size: cover; background-position: center 30%; position: relative; overflow: hidden; z-index: 0; }
 .prof-banner.art::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(180deg, rgba(14,13,16,.2), rgba(14,13,16,.88)), linear-gradient(90deg, rgba(14,13,16,.5), transparent 55%); }
 .prof-tile small { display: block; font-family: var(--font-mono); font-size: 10px; color: #8b8b96; margin-top: 2px; }
 .pf-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin: 6px 0 18px; }
@@ -887,3 +889,13 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .ag b { flex: 1; font-size: 12.5px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ag span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
 .ag em { font-style: normal; font-family: var(--font-num); font-size: 12.5px; color: var(--gold); }
+/* ---- profiel v0.9.1: banner randloos over de volle breedte, kop erbovenop, hoogtepunten met hiërarchie ---- */
+.prof-wrap { max-width: none; margin: 0; }
+.prof-wrap > :not(.prof-banner) { max-width: 1160px; margin-left: auto; margin-right: auto; }
+.prof-banner { margin: -26px -30px 0; height: 260px; border-radius: var(--sheet-r) 0 0 0; }
+.prof-head { position: relative; z-index: 1; margin-top: -56px; padding: 0 8px; }
+.prof-av { width: 124px; height: 124px; }
+.prof-id h1 { font-size: 34px; letter-spacing: -.01em; }
+.prof-stats { margin-top: 18px; }
+.pf.zero { opacity: .55; }
+.pf.zero b { color: var(--muted); }

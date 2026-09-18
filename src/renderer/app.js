@@ -1576,9 +1576,10 @@ async function openProfile(slug, isMe) {
   $("prof-stats").innerHTML = tile(fmtNum(d.games || 0), t("profGames")) + tile(fmtNum(d.hours || 0), t("profHours")) + tile(achV, t("profAch"), achSub) + tile((d.platforms_detail || d.platforms || []).length, t("profPlats"));
   $("prof-stats").querySelectorAll(".prof-tile").forEach((el, i) => el.style.setProperty("--i", i));
   /* game-hoogtepunten: de cijfers van de publieke kaart, rechtstreeks uit de API's */
-  const flex = d.flex && typeof d.flex === "object" ? Object.values(d.flex).filter((f) => f && f.value != null && f.label) : [];
+  const flex = (d.flex && typeof d.flex === "object" ? Object.values(d.flex).filter((f) => f && f.value != null && f.label) : [])
+    .sort((x, y) => (Number(y.value) > 0 ? 1 : 0) - (Number(x.value) > 0 ? 1 : 0)); /* nullen achteraan, gedimd */
   $("prof-flex").innerHTML = flex.length ? '<div class="lib-sec">' + escT(t("profFlex")) + '</div><div class="pf-grid">' +
-    flex.map((f, i) => '<div class="pf" style="--i:' + i + '"><b>' + escT(fmtStat(f.value)) + escT(f.unit || "") + "</b><span>" + escT(f.label) + "</span>" + (f.sub ? "<small>" + escT(f.sub) + "</small>" : "") + "</div>").join("") + "</div>" : "";
+    flex.map((f, i) => '<div class="pf' + (Number(f.value) > 0 ? "" : " zero") + '" style="--i:' + i + '"><b>' + escT(fmtStat(f.value)) + escT(f.unit || "") + "</b><span>" + escT(f.label) + "</span>" + (f.sub ? "<small>" + escT(f.sub) + "</small>" : "") + "</div>").join("") + "</div>" : "";
   $("prof-top").innerHTML = (d.top_games || []).map((g, i) => {
     const aE = g.achievements_earned, aT = g.achievements_total;
     return '<div class="tg"><span class="tg-n">' + (i + 1) + "</span>" +
