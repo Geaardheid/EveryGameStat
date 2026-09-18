@@ -1,0 +1,140 @@
+/* Generieke game-detectie — zoals Medal/Discord, zonder game-geheugen.
+   1) Steam zet bij een draaiende Steam-game HKCU\Software\Valve\Steam\RunningAppID;
+      appid → naam/cover uit je eigen bibliotheek (werkt voor élke Steam-game).
+   2) Anders: exe-lijst voor bekende niet-Steam-games (Battle.net, Xbox-app, Epic, Riot).
+   3) Call of Duty: de venstertitel zegt welke titel (BO7, MW4, Warzone …). */
+const { execFile } = require("child_process");
+
+const EXES = [
+  { exes: ["cod26-cod.exe", "cod25-cod.exe", "cod24-cod.exe", "cod23-cod.exe", "cod22-cod.exe", "cod.exe"], label: "Call of Duty", family: "cod" } /* titel-exe vóór de HQ-exe: de eerste treffer bepaalt de titel */,
+  { exes: ["fortniteclient-win64-shipping.exe"], label: "Fortnite", appid: null, art: "icon-fortnite.png" },
+  { exes: ["rocketleague.exe"], label: "Rocket League", appid: 252950 },
+  { exes: ["deadbydaylight-win64-shipping.exe", "dbd-win64-shipping.exe"], label: "Dead by Daylight", appid: 381210 },
+  { exes: ["rustclient.exe"], label: "Rust", appid: 252490 },
+  { exes: ["tslgame.exe"], label: "PUBG", appid: 578080 },
+  { exes: ["fivem.exe", "fivem_gtaprocess.exe"], label: "FiveM" , art: "game-fivem.png" },
+  { exes: ["gta5.exe", "gta5_enhanced.exe", "playgtav.exe"], label: "Grand Theft Auto V", appid: 271590 },
+  { exes: ["valorant-win64-shipping.exe"], label: "VALORANT", art: "icon-valorant.png" },
+  { exes: ["league of legends.exe"], label: "League of Legends", art: "icon-lol.png" },
+  { exes: ["cs2.exe"], label: "Counter-Strike 2", appid: 730 },
+  { exes: ["r5apex.exe", "r5apex_dx12.exe"], label: "Apex Legends", appid: 1172470 },
+  { exes: ["minecraft.windows.exe", "minecraftlauncher.exe"], label: "Minecraft", art: "icon-minecraft.png" },
+  { exes: ["overwatch.exe"], label: "Overwatch 2", appid: 2357570 },
+  { exes: ["thefinals.exe", "discovery.exe"], label: "THE FINALS", appid: 2073850 },
+  { exes: ["forzahorizon5.exe"], label: "Forza Horizon 5", appid: 1551360 },
+  { exes: ["eafc24.exe", "fc24.exe"], label: "EA SPORTS FC 24", appid: 2195250 },
+  { exes: ["eafc25.exe", "fc25.exe"], label: "EA SPORTS FC 25", appid: 2669320 },
+  { exes: ["eafc26.exe", "fc26.exe"], label: "EA SPORTS FC 26" },
+  { exes: ["marvel-win64-shipping.exe"], label: "Marvel Rivals", appid: 2767030 },
+  { exes: ["helldivers2.exe"], label: "HELLDIVERS 2", appid: 553850 },
+  { exes: ["eldenring.exe"], label: "Elden Ring", appid: 1245620 },
+  { exes: ["dota2.exe"], label: "Dota 2", appid: 570 },
+  { exes: ["escapefromtarkov.exe"], label: "Escape from Tarkov" },
+  { exes: ["robloxplayerbeta.exe"], label: "Roblox" },
+  { exes: ["seaofthieves.exe"], label: "Sea of Thieves", appid: 1172620 },
+  { exes: ["ufc5.exe"], label: "UFC 5" }
+];
+/* Java-Minecraft draait als javaw.exe; alleen tellen als de venstertitel 'Minecraft' zegt */
+const TITLE_ONLY = [{ exe: "javaw.exe", contains: "minecraft", label: "Minecraft", art: "icon-minecraft.png" }];
+
+const COD_TITLES = [
+  ["black ops 7", "Call of Duty: Black Ops 7"], ["black ops 6", "Call of Duty: Black Ops 6"], ["modern warfare iv", "Call of Duty: Modern Warfare IV"],
+  ["modern warfare 4", "Call of Duty: Modern Warfare IV"], ["mw4", "Call of Duty: Modern Warfare IV"], ["modern warfare iii", "Call of Duty: Modern Warfare III"],
+  ["modern warfare ii", "Call of Duty: Modern Warfare II"], ["warzone", "Call of Duty: Warzone"]
+];
+
+function reg(key, value) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32") return resolve(null);
+    execFile("reg", ["query", key, "/v", value], { windowsHide: true }, (err, out) => {
+      if (err || !out) return resolve(null);
+      const m = out.match(/REG_DWORD\s+0x([0-9a-f]+)/i);
+      resolve(m ? parseInt(m[1], 16) : null);
+    });
+  });
+}
+/** Steam-appid van de game die nu draait (0/null = geen). */
+async function steamRunningAppId() { const v = await reg("HKCU\\Software\\Valve\\Steam", "RunningAppID"); return v && v > 0 ? v : null; }
+
+/** Venstertitels van processen (alleen de gevraagde exe's), via PowerShell. */
+function windowTitles(exeNames) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32" || !exeNames.length) return resolve({});
+    const names = exeNames.map((e) => e.replace(/\.exe$/i, "")).join(",");
+    const ps = `Get-Process -Name ${names} -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle } | ForEach-Object { $_.ProcessName + '|' + $_.MainWindowTitle }`;
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 8000 }, (err, out) => {
+      const map = {};
+      if (!err && out) for (const line of out.split(/\r?\n/)) { const i = line.indexOf("|"); if (i > 0) map[line.slice(0, i).toLowerCase() + ".exe"] = line.slice(i + 1); }
+      resolve(map);
+    });
+  });
+}
+/* Commandoregel + pad van processen (WMI, geen admin nodig). Via de Xbox-app draait CoD als één
+   cod.exe; de titel zit dan hopelijk in de argumenten of het installatiepad. */
+function processCommandLines(exeNames) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32" || !exeNames.length) return resolve({});
+    const filter = exeNames.map((e) => "name='" + e.replace(/'/g, "") + "'").join(" or ");
+    const ps = `Get-CimInstance Win32_Process -Filter "${filter}" | ForEach-Object { $_.Name + '|' + $_.ExecutablePath + '|' + $_.CommandLine }`;
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 8000 }, (err, out) => {
+      const map = {};
+      if (!err && out) for (const line of out.split(/\r?\n/)) { const i = line.indexOf("|"); if (i > 0) map[line.slice(0, i).toLowerCase()] = line.slice(i + 1); }
+      resolve(map);
+    });
+  });
+}
+/* Geladen modules van een proces (paden buiten \Windows\). Via de Xbox-app start altijd het
+   COREBase-pakket (HQ); welke titel draait blijkt uit de DLL's uit het titel-pakket (op de gamedrive). */
+function processModules(exeName) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32" || !exeName) return resolve([]);
+    const name = exeName.replace(/\.exe$/i, "").replace(/'/g, "");
+    const ps = `$p = Get-Process -Name '${name}' -ErrorAction SilentlyContinue | Select-Object -First 1; if ($p) { try { $p.Modules | ForEach-Object { $_.FileName } | Where-Object { $_ -notmatch '\\\\Windows\\\\' } | Select-Object -First 400 } catch { 'ERR:' + $_.Exception.Message } }`;
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 10000 }, (err, out) => {
+      resolve(!err && out ? out.split(/\r?\n/).map((l) => l.trim()).filter(Boolean) : []);
+    });
+  });
+}
+/* CoD schrijft per titel eigen instellingen-/profielbestanden in Documents\Call of Duty\players
+   (titelcode cod2x in de bestandsnaam). Het bestand dat het laatst is geschreven hoort bij de titel
+   die nu draait. Alleen lezen van bestandsnamen en tijden — nooit inhoud, nooit geheugen. */
+function codRecentFiles() {
+  const fs = require("fs"); const os = require("os"); const path = require("path");
+  const home = os.homedir();
+  const roots = [path.join(home, "Documents", "Call of Duty"), path.join(home, "OneDrive", "Documents", "Call of Duty"), path.join(home, "OneDrive", "Documenten", "Call of Duty"),
+    path.join(process.env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "Call of Duty"), path.join(process.env.LOCALAPPDATA || path.join(home, "AppData", "Local"), "Activision")];
+  const out = [];
+  const walk = (dir, depth) => {
+    let ents = []; try { ents = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of ents) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) { if (depth < 3) walk(full, depth + 1); continue; }
+      try { const st = fs.statSync(full); out.push({ file: full, mtime: st.mtimeMs }); } catch (e2) {}
+    }
+  };
+  for (const r of roots) walk(r, 0);
+  return out.sort((a, b) => b.mtime - a.mtime);
+}
+/* Per seizoen een eigen exe in de unified client; de venstertitel zegt alleen "Call of Duty". */
+const COD_EXE_TITLES = { "cod26-cod.exe": "Call of Duty: Modern Warfare IV", "cod25-cod.exe": "Call of Duty: Black Ops 7", "cod24-cod.exe": "Call of Duty: Black Ops 6", "cod23-cod.exe": "Call of Duty: Modern Warfare III", "cod22-cod.exe": "Call of Duty: Modern Warfare II" };
+const COD_CODES = { cod26: "Call of Duty: Modern Warfare IV", cod25: "Call of Duty: Black Ops 7", cod24: "Call of Duty: Black Ops 6", cod23: "Call of Duty: Modern Warfare III", cod22: "Call of Duty: Modern Warfare II" };
+function codTitleFrom(windowTitle, appid, exe, cmdline) {
+  const via = String(exe || "").toLowerCase();
+  for (const [k, label] of Object.entries(COD_EXE_TITLES)) if (via.includes(k)) return label;
+  const m = /cod(\d\d)-cod\.exe/.exec(via); /* onbekend seizoen: jaartal tonen i.p.v. alleen "Call of Duty" */
+  if (m) return "Call of Duty (20" + m[1] + ")";
+  /* Xbox-app/Steam: titelcode (cod25) of naam in argumenten of pad */
+  const c = String(cmdline || "").toLowerCase();
+  if (c) {
+    const cm = /\bcod(2\d)\b/.exec(c); if (cm && COD_CODES["cod" + cm[1]]) return COD_CODES["cod" + cm[1]];
+    if (/bo7|blackops7|black_ops_7/.test(c)) return "Call of Duty: Black Ops 7";
+    if (/bo6|blackops6/.test(c)) return "Call of Duty: Black Ops 6";
+    if (/mw4|mwiv|modernwarfare4/.test(c)) return "Call of Duty: Modern Warfare IV";
+    if (/mw3|mwiii/.test(c)) return "Call of Duty: Modern Warfare III";
+    for (const [k, label] of COD_TITLES) if (c.includes(k)) return label;
+  }
+  const t = String(windowTitle || "").toLowerCase();
+  for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
+  return null;
+}
+module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codRecentFiles, codTitleFrom };

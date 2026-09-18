@@ -1,0 +1,79 @@
+/* Praat uitsluitend met de EGS companion-ingest edge function.
+   Auth: device-token (via koppelcode verkregen) — nooit wachtwoorden. */
+const SB_URL = "https://wcsgosrevyyafnerrhge.supabase.co";
+const SB_KEY = "sb_publishable_mric3P9h3YsHU_t5Jc5wWw_qulO3z8I";
+const ENDPOINT = SB_URL + "/functions/v1/companion-ingest";
+
+let config = null;
+function init(cfg) { config = cfg; }
+
+async function call(body) {
+  const r = await fetch(ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SB_KEY },
+    body: JSON.stringify(body)
+  });
+  const d = await r.json().catch(() => ({ ok: false, error: "bad_response" }));
+  return d;
+}
+
+function token() { return config ? config.get().token : null; }
+
+/* andere edge functions van EGS (bijv. cr-battle), zelfde device-token */
+async function callFunction(name, body) {
+  const r = await fetch(SB_URL + "/functions/v1/" + String(name).replace(/[^a-z0-9-]/gi, ""), {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "apikey": SB_KEY },
+    body: JSON.stringify(Object.assign({ token: token() }, body || {}))
+  });
+  return await r.json().catch(() => ({ ok: false, error: "bad_response" }));
+}
+
+async function claim(code, appVersion) {
+  return call({ action: "claim", code, device_name: require("os").hostname(), app_version: appVersion });
+}
+async function ingest(game, matches) {
+  return call({ action: "ingest", token: token(), game, matches });
+}
+async function recent(limit) {
+  return call({ action: "recent", token: token(), limit });
+}
+async function unlink() {
+  return call({ action: "unlink", token: token() });
+}
+async function ingestSessions(sessions) {
+  return call({ action: "ingest_sessions", token: token(), sessions });
+}
+async function sessionsSummary() {
+  return call({ action: "sessions_summary", token: token() });
+}
+async function ingestGmatch(match) {
+  return call({ action: "ingest_gmatch", token: token(), match });
+}
+async function social(action, extra) {
+  return call(Object.assign({ action, token: token() }, extra || {}));
+}
+async function profile() {
+  return call({ action: "profile", token: token() });
+}
+/* IGDB-metadata via de EGS game-info function (gecachet server-side). */
+async function gameInfo(steam_appid, name) {
+  const r = await fetch(SB_URL + "/functions/v1/game-info", {
+    method: "POST", headers: { "Content-Type": "application/json", "apikey": SB_KEY },
+    body: JSON.stringify({ steam_appid, name })
+  });
+  return r.json().catch(() => ({ ok: false }));
+}
+/* Publieke kaart van een andere speler (of jezelf) — zelfde bron als everygamestat.com/p/<slug>. */
+async function publicProfile(slug) {
+  const r = await fetch(SB_URL + "/rest/v1/rpc/get_public_profile", { method: "POST", headers: { "Content-Type": "application/json", "apikey": SB_KEY }, body: JSON.stringify({ p_slug: String(slug || "").toLowerCase() }) });
+  return r.json().catch(() => null);
+}
+async function hubs() {
+  return call({ action: "hubs", token: token() });
+}
+async function ping() {
+  return call({ action: "ping", token: token() });
+}
+
+module.exports = { init, claim, ingest, recent, unlink, ping, profile, ingestSessions, sessionsSummary, ingestGmatch, social, gameInfo, hubs, publicProfile, callFunction };
