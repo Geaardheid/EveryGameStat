@@ -684,7 +684,7 @@ body.tabbed .view, .view {
 .qp-arrow { color: var(--muted); font-size: 15px; }
 .qp-btn.busy .qp-arrow { display: inline-block; animation: spin 1s linear infinite; }
 /* schakelaar */
-.sw { position: relative; width: 40px; height: 22px; display: inline-block; cursor: pointer; }
+.sw { position: relative; width: 40px; height: 22px; display: inline-block; cursor: pointer; flex: none; } /* flex:none: een lange tekst ernaast drukte de schakelaar anders plat */
 .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
 .sw i { position: absolute; inset: 0; border-radius: 11px; background: rgba(255,255,255,.12); transition: background .18s; }
 .sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .18s; }
@@ -976,3 +976,4 @@ body.tabbed #tabbar .tab:nth-child(2) { animation-delay: .04s; } body.tabbed #ta
 .set-txt small.dc-status { margin-top: 6px; line-height: 1.45; }
 .set-txt small.dc-status.ok { color: var(--teal, #6ED4BC); }
 .set-txt small.dc-status.bad { color: #F0A35E; }
+.set-row .set-txt { flex: 1; min-width: 0; }

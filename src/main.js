@@ -226,6 +226,9 @@ function startSteamWatch() {
         if (steamSession) endSteamSession(now);
         steamSession = { appid, name, startedAt: now };
       } else steamSession.name = name;
+      /* Dezelfde game wordt ook door de proceswatcher gemeten (bekende exe)? Dan telt alleen die
+         sessie. Eerder gingen beide naar je kaart en stonden de uren er dubbel op. */
+      if (sameGameRunning(name)) steamSession.covered = true;
       presenceUpdate("steam", name);
     } else if (steamSession) { endSteamSession(now); presenceUpdate("steam", null); }
     await xboxTick(appid, now);
@@ -265,8 +268,15 @@ async function xboxTick(steamAppid, now) {
     presenceUpdate("xbox", title);
   } else if (xboxSession || presenceSrc.xbox) { if (xboxSession) endXboxSession(now); presenceUpdate("xbox", null); }
 }
+const normGame = (v) => String(v || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+function sameGameRunning(name) {
+  const a = normGame(name); if (a.length < 4) return false;
+  for (const l of runningLabels) { const b = normGame(l); if (b.length >= 4 && (a.includes(b) || b.includes(a))) return true; }
+  return false;
+}
 function endSteamSession(endMs) {
   const s = steamSession; steamSession = null; if (!s || endMs - s.startedAt < 60000) return;
+  if (s.covered) return; /* al gemeten door de proceswatcher */
   const session = { game: s.name, client_session_id: require("crypto").randomUUID(), started_at: new Date(s.startedAt).toISOString(), ended_at: new Date(endMs).toISOString() };
   sendToUI("proc-session", session);
   api.ingestSessions([session]).then((r) => { if (!r || !r.ok) config.queueSession(session); }).catch(() => config.queueSession(session));
