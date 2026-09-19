@@ -14,6 +14,8 @@ const ProcessWatchAdapter = require("./adapters/processwatch");
 const MinecraftAdapter = require("./adapters/minecraft");
 const gamedb = require("./gamedb");
 const discord = require("./discord");
+/* status van de Discord-koppeling naar Instellingen: zichtbaar waarom presence wel of niet werkt */
+discord.onStatus((st) => { try { sendToUI("discord-status", { ...st, ...discord.getStatus() }); } catch (e) {} });
 
 /* standaard gevolgde games (exes aanpasbaar in instellingen) */
 const DEFAULT_TRACKED = [
@@ -526,6 +528,12 @@ ipcMain.handle("recent", async (_e, limit) => {
   try { return await api.recent(Math.min(Math.max(Number(limit) || 15, 1), 50)); } catch (e) { return { ok: false, error: "offline" }; }
 });
 
+ipcMain.handle("discord-status", () => {
+  const enabled = config.get().discord_rpc !== false, signedIn = !!config.get().token;
+  /* nog nooit geprobeerd (geen game gezien sinds de start): nu verbinden, zodat de statusregel iets echts zegt */
+  if (enabled && signedIn && discord.getStatus().phase === "idle") { try { presencePush(true); } catch (e) {} }
+  return { ...discord.getStatus(), enabled, signedIn };
+});
 ipcMain.handle("set-setting", (_e, kv) => {
   if (kv.autostart !== undefined) {
     app.setLoginItemSettings({ openAtLogin: !!kv.autostart, args: ["--hidden"] });

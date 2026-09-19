@@ -125,6 +125,7 @@ boardHead: "Leaderboard",
 
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Playing now \u00b7 " + g,
+    dcOff: "Off. Nothing is sent to Discord.", dcSignedOut: "Sign in to EveryGameStat first. Presence only runs when you are signed in.", dcConnecting: "Connecting to Discord\u2026", dcIdle: "Connected to Discord as {name}. Waiting for a game.", dcShowing: "Connected to Discord as {name}. Showing: {game}.", dcHidden: "Friends can't see it? In Discord, check Settings, Activity Privacy, and the Privacy Settings of the server itself. If sharing your activity is off there, Discord hides this too.", dcNoDiscord: "Can't reach Discord on this PC. Start the Discord desktop app (the browser version doesn't work). If Discord runs as administrator, the Companion can't reach it. It retries every 20 seconds.", dcError: "Discord didn't answer: {err}. Retrying every 20 seconds.", dcSetError: "Connected as {name}, but Discord rejected the activity: {err}",
     setDiscord: "Discord Rich Presence (show what you're playing, with live RL score)",
     chatPick: "Pick a friend to start chatting",
     updCheck: "Check for updates",
@@ -275,6 +276,7 @@ boardHead: "Klassement",
 
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Speelt nu \u00b7 " + g,
+    dcOff: "Uit. Er gaat niets naar Discord.", dcSignedOut: "Log eerst in bij EveryGameStat. Presence draait alleen als je bent ingelogd.", dcConnecting: "Verbinden met Discord\u2026", dcIdle: "Verbonden met Discord als {name}. Wacht op een game.", dcShowing: "Verbonden met Discord als {name}. Toont nu: {game}.", dcHidden: "Zien vrienden het niet? Kijk in Discord bij Instellingen, Activiteitsprivacy, en bij de Privacy-instellingen van de server zelf. Staat je activiteit delen daar uit, dan verbergt Discord dit ook.", dcNoDiscord: "Discord is op deze pc niet bereikbaar. Start de Discord-desktopapp (de browserversie werkt niet). Draait Discord als administrator, dan kan de Companion er niet bij. Elke 20 seconden volgt een nieuwe poging.", dcError: "Discord gaf geen antwoord: {err}. Elke 20 seconden volgt een nieuwe poging.", dcSetError: "Verbonden als {name}, maar Discord weigerde de activiteit: {err}",
     setDiscord: "Discord Rich Presence (laat zien wat je speelt, met live RL-stand)",
     chatPick: "Kies een vriend om te chatten",
     updCheck: "Check op updates",
@@ -2189,6 +2191,7 @@ $("btn-settings").addEventListener("click", () => {
   $("set-rlname").value = state.rl_name || "";
   $("set-autostart").checked = !!state.autostart;
   $("set-discord").checked = state.discord_rpc !== false;
+  dcRefresh();
   $("set-track").checked = state.tracking_paused !== true;
   $("set-lang").value = lang;
   show("view-settings");
@@ -2200,7 +2203,25 @@ $("btn-back").addEventListener("click", async () => {
   show("view-main");
 });
 $("set-autostart").addEventListener("change", (e) => window.egs.setSetting({ autostart: e.target.checked }));
-$("set-discord").addEventListener("change", (e) => { window.egs.setSetting({ discord_rpc: e.target.checked }); state.discord_rpc = e.target.checked; });
+$("set-discord").addEventListener("change", async (e) => { await window.egs.setSetting({ discord_rpc: e.target.checked }); state.discord_rpc = e.target.checked; setTimeout(dcRefresh, 600); });
+/* Statusregel onder de Discord-schakelaar: zegt eerlijk of de koppeling staat en wat Discord nu toont. */
+function dcRender(st) {
+  const el = $("set-discord-status"); if (!el || !st) return;
+  const f = (k, o) => Object.keys(o || {}).reduce((s, p) => s.split("{" + p + "}").join(o[p]), t(k));
+  const name = st.user || "?";
+  let txt = "", cls = "";
+  if (st.enabled === false) txt = t("dcOff");
+  else if (st.signedIn === false) { txt = t("dcSignedOut"); cls = "bad"; }
+  else if (st.phase === "connected" && st.setError) { txt = f("dcSetError", { name, err: st.setError }); cls = "bad"; }
+  else if (st.phase === "connected") { txt = (st.game && st.game !== "EveryGameStat" ? f("dcShowing", { name, game: st.game }) : f("dcIdle", { name })) + " " + t("dcHidden"); cls = "ok"; }
+  else if (st.phase === "no_discord") { txt = t("dcNoDiscord"); cls = "bad"; }
+  else if (st.phase === "error") { txt = f("dcError", { err: st.error || "?" }); cls = "bad"; }
+  else txt = t("dcConnecting");
+  el.textContent = txt; el.className = "dc-status" + (cls ? " " + cls : "");
+}
+let dcLast = null;
+async function dcRefresh() { try { dcLast = await window.egs.discordStatus(); dcRender(dcLast); } catch (e) {} }
+if (window.egs.onDiscordStatus) window.egs.onDiscordStatus((st) => { dcLast = { ...(dcLast || {}), ...st, enabled: state.discord_rpc !== false, signedIn: dcLast ? dcLast.signedIn : true }; dcRender(dcLast); });
 $("set-track").addEventListener("change", async (e) => { const paused = !e.target.checked; await window.egs.setSetting({ tracking_paused: paused }); state.tracking_paused = paused; if (paused) applyPresence({ game: null, art: null }); });
 $("set-lang").addEventListener("change", (e) => {
   lang = e.target.value;

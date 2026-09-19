@@ -13,19 +13,57 @@ let connecting = false;
 let lastActivity = null;
 let startTs = null;
 
+/* Zichtbare status. Eerder slikte dit bestand elke fout in: werkte de presence niet, dan
+   was nergens te zien waarom. Nu staat in Instellingen wat er aan de hand is.
+   phase: idle | connecting | connected | no_discord | error */
+const status = { phase: "idle", user: null, error: null, setOk: null, setError: null, at: 0 };
+let onStatus = null;
+function setStatus(patch) {
+  Object.assign(status, patch, { at: Date.now() });
+  try { onStatus && onStatus({ ...status }); } catch (e) {}
+}
+const errText = (e) => String((e && (e.message || e.code)) || e || "").slice(0, 160);
+
+function dropClient() {
+  ready = false;
+  const c = client; client = null;
+  try { c && c.removeAllListeners && c.removeAllListeners(); } catch (_) {}
+  try { c && c.destroy && c.destroy(); } catch (_) {}
+}
+
+const LOGIN_TIMEOUT_MS = 12000;
 async function ensureClient() {
   if (ready || connecting) return;
   connecting = true;
+  setStatus({ phase: "connecting", error: null });
   try {
     const { Client } = require("@xhayper/discord-rpc");
-    client = new Client({ clientId: DISCORD_APP_ID });
-    client.on("ready", () => { ready = true; if (lastActivity) push(lastActivity); });
-    client.on("disconnected", () => { ready = false; });
-    await client.login();
+    const c = new Client({ clientId: DISCORD_APP_ID });
+    client = c;
+    c.on("ready", () => {
+      if (client !== c) return;
+      ready = true;
+      setStatus({ phase: "connected", user: (c.user && (c.user.globalName || c.user.username)) || null, error: null });
+      if (lastActivity) push(lastActivity);
+    });
+    c.on("disconnected", () => {
+      if (client !== c) return;
+      /* Discord afgesloten of herstart: client weggooien, anders blijft een dode verbinding hangen
+         en lukt opnieuw verbinden nooit meer tot de Companion herstart. */
+      dropClient();
+      setStatus({ phase: "no_discord", user: null, error: "disconnected" });
+    });
+    /* login() kan blijven hangen als de pipe wel bestaat maar Discord niet antwoordt. Zonder
+       deze grens bleef 'connecting' voor altijd true en probeerde de app het nooit opnieuw. */
+    await Promise.race([
+      c.login(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error("login_timeout")), LOGIN_TIMEOUT_MS))
+    ]);
   } catch (e) {
-    ready = false;
-    try { client && client.destroy && client.destroy(); } catch (_) {}
-    client = null;
+    const msg = errText(e);
+    dropClient();
+    const noDiscord = /ENOENT|could not connect|connection (closed|refused)|ECONNREFUSED|EPIPE/i.test(msg);
+    setStatus({ phase: noDiscord ? "no_discord" : "error", user: null, error: msg });
   }
   connecting = false;
 }
@@ -35,8 +73,21 @@ async function push(act) {
   try {
     if (act) await client.user.setActivity(act);
     else await client.user.clearActivity();
-  } catch (e) {}
+    setStatus({ setOk: Date.now(), setError: null });
+  } catch (e) {
+    setStatus({ setError: errText(e) });
+  }
 }
+
+/* Discord weigert een hele activity als één veld niet voldoet: tekstvelden 2 t/m 128 tekens,
+   afbeeldings-URL's hooguit 256. Een servernaam van één letter of een lange cover-URL zette
+   de presence dan stilzwijgend niet. */
+const txt = (v, fallback) => {
+  let t = String(v == null ? "" : v).trim();
+  if (t.length < 2) t = fallback;
+  return t.length > 128 ? t.slice(0, 127) + "\u2026" : t;
+};
+const img = (url, fallback) => (url && String(url).length <= 256) ? String(url) : fallback;
 
 /* Per-game art op je Discord-profiel. Discord proxyt externe https-afbeeldingen,
    dus we kunnen rechtstreeks Steam-covers en eigen bucket-art gebruiken.
@@ -85,12 +136,12 @@ function setActivity(game, state, art) {
      "Tracking stats in Rocket League with EveryGameStat", de game-cover groot,
      het EGS-logo klein in de hoek, en de regel eronder is de live-stand/server. */
   lastActivity = {
-    name: game + " with EveryGameStat", type: 0, statusDisplayType: 0,
-    details: "Tracking stats in " + game + " with EveryGameStat",
-    state: state || "Playing",
+    name: txt(game + " with EveryGameStat", "EveryGameStat"), type: 0, statusDisplayType: 0,
+    details: txt("Tracking stats in " + game + " with EveryGameStat", "EveryGameStat"),
+    state: txt(state, "Playing"),
     startTimestamp: startTs,
-    largeImageKey: art || gameIcon(game),
-    largeImageText: game,
+    largeImageKey: img(art, gameIcon(game)),
+    largeImageText: txt(game, "EveryGameStat"),
     smallImageKey: APP_ICON,
     smallImageText: "EveryGameStat Companion",
     buttons: [{ label: "View stats on EveryGameStat", url: "https://everygamestat.com" }]
@@ -98,15 +149,19 @@ function setActivity(game, state, art) {
   ensureClient().then(() => push(lastActivity));
 }
 
-/* periodiek opnieuw verbinden (Discord kan later gestart worden) */
-setInterval(() => { if (lastActivity && !ready) ensureClient(); }, 60 * 1000);
+/* periodiek opnieuw verbinden (Discord kan later gestart worden of herstarten) */
+setInterval(() => { if (lastActivity && !ready) ensureClient(); }, 20 * 1000);
 
 function stop() {
   lastActivity = null;
   push(null);
-  try { client && client.destroy && client.destroy(); } catch (e) {}
-  client = null; ready = false;
+  dropClient();
+  setStatus({ phase: "idle", user: null, error: null });
 }
 
-module.exports = { setActivity, stop };
+module.exports = {
+  setActivity, stop,
+  getStatus: () => ({ ...status, hasActivity: !!lastActivity, game: lastActivity && lastActivity.largeImageText || null }),
+  onStatus: (fn) => { onStatus = fn; }
+};
 /* art: optionele afbeeldings-URL van de detector (Steam-cover per appid) */
