@@ -154,7 +154,7 @@ let presenceSent = null;
 let presenceBeat = null;
 /* voorrang: Rocket League (live), dan Steam (exacte naam), dan proces-lijst */
 function presenceCurrent() {
-  return presenceSrc.rl ? "Rocket League" : (presenceSrc.steam || presenceSrc.proc || null);
+  return presenceSrc.rl ? "Rocket League" : (presenceSrc.steam || presenceSrc.proc || presenceSrc.xbox || null);
 }
 let rlScoreLine = null, rlState = null; /* "menu" | "in_match" — gaat mee naar de site-kaart ("pot bezig") */
 let mcStatus = { running: false, server: null, world: null }; /* Minecraft: server/wereld uit latest.log */
@@ -217,16 +217,53 @@ function startSteamWatch() {
     const appid = await gamedb.steamRunningAppId();
     const now = Date.now();
     if (appid) {
-      const lib = libByAppid[String(appid)];
-      const name = (lib && lib.name) || ("Steam app " + appid);
+      /* lege bibliotheek-index (ophalen mislukt bij de start)? Niet een half uur wachten. */
+      if (!Object.keys(libByAppid).length && now - libRetryAt > 60000) { libRetryAt = now; refreshLibIndex(); }
+      const name = await steamGameName(appid);
+      if (!name) return; /* naam nog niet bekend: liever één tik niets dan "Steam app 381210" op je profiel */
       presenceArt[name] = steamCover(appid);
       if (!steamSession || steamSession.appid !== appid) {
         if (steamSession) endSteamSession(now);
         steamSession = { appid, name, startedAt: now };
-      }
+      } else steamSession.name = name;
       presenceUpdate("steam", name);
     } else if (steamSession) { endSteamSession(now); presenceUpdate("steam", null); }
+    await xboxTick(appid, now);
   }, 15000);
+}
+/* Naam bij een Steam-appid: EGS-bibliotheek, bekende games, Steams eigen manifest op schijf, Steam-winkel.
+   Pas als dat allemaal niets geeft (en we het een paar keer geprobeerd hebben) de kale appid. */
+let libRetryAt = 0;
+const steamNameCache = new Map(), steamNameTries = new Map();
+async function steamGameName(appid) {
+  const key = String(appid);
+  const lib = libByAppid[key];
+  if (lib && lib.name) return lib.name;
+  if (steamNameCache.has(key)) return steamNameCache.get(key);
+  let name = gamedb.labelByAppid(appid);
+  if (!name) { try { name = await gamedb.steamNameLocal(appid); } catch (e) {} }
+  if (!name) { try { name = await gamedb.steamNameStore(appid); } catch (e) {} }
+  if (name) { steamNameCache.set(key, name); return name; }
+  const n = (steamNameTries.get(key) || 0) + 1; steamNameTries.set(key, n);
+  return n >= 4 ? ("Steam app " + appid) : null;
+}
+/* Xbox-app op pc: alleen kijken als Steam en de bekende-exe-lijst niets zien. Sessies gaan
+   dezelfde weg als Steam-sessies. */
+let xboxSession = null;
+function endXboxSession(endMs) {
+  const s = xboxSession; xboxSession = null; if (!s || endMs - s.startedAt < 60000) return;
+  const session = { game: s.name, client_session_id: require("crypto").randomUUID(), started_at: new Date(s.startedAt).toISOString(), ended_at: new Date(endMs).toISOString() };
+  sendToUI("proc-session", session);
+  api.ingestSessions([session]).then((r) => { if (!r || !r.ok) config.queueSession(session); }).catch(() => config.queueSession(session));
+}
+async function xboxTick(steamAppid, now) {
+  let title = null;
+  if (!steamAppid && !presenceSrc.proc && !presenceSrc.rl) { try { title = await gamedb.xboxRunningTitle(); } catch (e) {} }
+  if (title) {
+    if (!xboxSession || xboxSession.name !== title) { if (xboxSession) endXboxSession(now); xboxSession = { name: title, startedAt: now }; }
+    if (!presenceArt[title]) { try { const c = await coverByName(title); if (c) presenceArt[title] = c; } catch (e) {} }
+    presenceUpdate("xbox", title);
+  } else if (xboxSession || presenceSrc.xbox) { if (xboxSession) endXboxSession(now); presenceUpdate("xbox", null); }
 }
 function endSteamSession(endMs) {
   const s = steamSession; steamSession = null; if (!s || endMs - s.startedAt < 60000) return;
@@ -543,7 +580,7 @@ ipcMain.handle("set-setting", (_e, kv) => {
   config.set(kv);
   /* tracking pauzeren/hervatten: adapters stoppen (geen sessies, geen presence) of weer starten */
   if (kv.tracking_paused !== undefined && !!kv.tracking_paused !== wasPaused) {
-    if (kv.tracking_paused) { stopAdapters(); if (steamTimer) { clearInterval(steamTimer); steamTimer = null; } steamSession = null; presenceSrc.steam = null; presenceSrc.proc = null; presenceSrc.rl = false; runningLabels.clear(); mcStatus = { running: false, server: null, world: null }; presencePush(true); sendToUI("presence-local", { game: null, art: null }); sendToUI("mc-status", mcStatus); }
+    if (kv.tracking_paused) { stopAdapters(); if (steamTimer) { clearInterval(steamTimer); steamTimer = null; } steamSession = null; presenceSrc.steam = null; presenceSrc.proc = null; presenceSrc.xbox = null; presenceSrc.rl = false; runningLabels.clear(); mcStatus = { running: false, server: null, world: null }; presencePush(true); sendToUI("presence-local", { game: null, art: null }); sendToUI("mc-status", mcStatus); }
     else startAdapters();
   }
   if (kv.discord_rpc !== undefined) presencePush(true);

@@ -9,7 +9,7 @@ const EXES = [
   { exes: ["cod26-cod.exe", "cod25-cod.exe", "cod24-cod.exe", "cod23-cod.exe", "cod22-cod.exe", "cod.exe"], label: "Call of Duty", family: "cod" } /* titel-exe vóór de HQ-exe: de eerste treffer bepaalt de titel */,
   { exes: ["fortniteclient-win64-shipping.exe"], label: "Fortnite", appid: null, art: "icon-fortnite.png" },
   { exes: ["rocketleague.exe"], label: "Rocket League", appid: 252950 },
-  { exes: ["deadbydaylight-win64-shipping.exe", "dbd-win64-shipping.exe"], label: "Dead by Daylight", appid: 381210 },
+  { exes: ["deadbydaylight-win64-shipping.exe", "dbd-win64-shipping.exe", "deadbydaylight-wingdk-shipping.exe", "deadbydaylight-egs-shipping.exe"], label: "Dead by Daylight", appid: 381210 }, /* wingdk = Xbox-app op pc, egs = Epic */
   { exes: ["rustclient.exe"], label: "Rust", appid: 252490 },
   { exes: ["tslgame.exe"], label: "PUBG", appid: 578080 },
   { exes: ["fivem.exe", "fivem_gtaprocess.exe"], label: "FiveM" , art: "game-fivem.png" },
@@ -53,6 +53,80 @@ function reg(key, value) {
     });
   });
 }
+/* Tekstwaarde uit het register (REG_SZ), bijv. het Steam-pad */
+function regStr(key, value) {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32") return resolve(null);
+    execFile("reg", ["query", key, "/v", value], { windowsHide: true }, (err, out) => {
+      if (err || !out) return resolve(null);
+      const m = out.match(/REG_(?:EXPAND_)?SZ\s+(.+)/i);
+      resolve(m ? m[1].trim() : null);
+    });
+  });
+}
+
+/* ── Naam van een Steam-game op appid, zonder dat hij in je EGS-bibliotheek hoeft te staan ──
+   Steam zet bij elke geïnstalleerde game een appmanifest_<appid>.acf met de officiële naam.
+   Dat is lokaal, exact en werkt offline; ook voor gratis games, family sharing en games die
+   je nog niet gesynct hebt. Eerder viel de naam dan terug op "Steam app 381210". */
+const fs = require("fs"), path = require("path");
+let steamLibsCache = null, steamLibsAt = 0;
+async function steamLibraryDirs() {
+  if (steamLibsCache && Date.now() - steamLibsAt < 10 * 60 * 1000) return steamLibsCache;
+  const dirs = new Set();
+  const root = (await regStr("HKCU\\Software\\Valve\\Steam", "SteamPath")) || (await regStr("HKLM\\SOFTWARE\\WOW6432Node\\Valve\\Steam", "InstallPath"));
+  for (const r of [root, "C:\\Program Files (x86)\\Steam"]) if (r) dirs.add(path.normalize(r));
+  for (const r of [...dirs]) {
+    try {
+      const vdf = fs.readFileSync(path.join(r, "steamapps", "libraryfolders.vdf"), "utf8");
+      for (const m of vdf.matchAll(/"path"\s+"([^"]+)"/g)) dirs.add(path.normalize(m[1].replace(/\\\\/g, "\\")));
+    } catch (e) {}
+  }
+  steamLibsCache = [...dirs]; steamLibsAt = Date.now();
+  return steamLibsCache;
+}
+function parseAcfName(text) { const m = String(text || "").match(/"name"\s+"((?:[^"\\]|\\.)*)"/); return m ? m[1].replace(/\\(.)/g, "$1").trim() : null; }
+async function steamNameLocal(appid) {
+  for (const d of await steamLibraryDirs()) {
+    try { const n = parseAcfName(fs.readFileSync(path.join(d, "steamapps", "appmanifest_" + appid + ".acf"), "utf8")); if (n) return n; } catch (e) {}
+  }
+  return null;
+}
+/* laatste redmiddel: de officiële Steam-winkel (alleen de naam) */
+async function steamNameStore(appid) {
+  try {
+    const r = await fetch("https://store.steampowered.com/api/appdetails?appids=" + appid + "&filters=basic", { signal: AbortSignal.timeout(8000) });
+    const j = await r.json(); const d = j && j[String(appid)];
+    return d && d.success && d.data && d.data.name ? String(d.data.name) : null;
+  } catch (e) { return null; }
+}
+const labelByAppid = (appid) => { const g = EXES.find((x) => Number(x.appid) === Number(appid)); return g ? g.label : null; };
+
+/* ── Games uit de Xbox-app op pc ──
+   De Xbox-app installeert games in <schijf>:\XboxGames\<Titel>\Content\. Draait daar een proces,
+   dan is de mapnaam de titel zoals de Xbox-app hem zelf schrijft. Zo werkt elke Xbox-pc-game,
+   niet alleen de paar exe-namen die we kennen. Launchers en hulpprogramma's tellen niet. */
+function xboxTitleFromPath(p) {
+  const m = String(p || "").match(/[\\/]XboxGames[\\/]([^\\/]+)[\\/]/i);
+  if (!m) return null;
+  const t = m[1].replace(/[\u2122\u00ae]/g, "").replace(/\s{2,}/g, " ").trim();
+  if (!t || /launcher|gamingservices|^content$/i.test(t)) return null;
+  return t;
+}
+function xboxRunningTitle() {
+  return new Promise((resolve) => {
+    if (process.platform !== "win32") return resolve(null);
+    const ps = "Get-CimInstance Win32_Process | Where-Object { $_.ExecutablePath -like '*\\XboxGames\\*' } | ForEach-Object { $_.ExecutablePath }";
+    execFile("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], { windowsHide: true, timeout: 9000 }, (err, out) => {
+      if (err || !out) return resolve(null);
+      const count = {};
+      for (const line of String(out).split(/\r?\n/)) { const t = xboxTitleFromPath(line); if (t) count[t] = (count[t] || 0) + 1; }
+      const best = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+      resolve(best || null);
+    });
+  });
+}
+
 /** Steam-appid van de game die nu draait (0/null = geen). */
 async function steamRunningAppId() { const v = await reg("HKCU\\Software\\Valve\\Steam", "RunningAppID"); return v && v > 0 ? v : null; }
 
@@ -137,4 +211,4 @@ function codTitleFrom(windowTitle, appid, exe, cmdline) {
   for (const [k, label] of COD_TITLES) if (t.includes(k)) return label;
   return null;
 }
-module.exports = { EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codRecentFiles, codTitleFrom };
+module.exports = { steamNameLocal, steamNameStore, labelByAppid, parseAcfName, xboxTitleFromPath, xboxRunningTitle, EXES, TITLE_ONLY, steamRunningAppId, windowTitles, processCommandLines, processModules, codRecentFiles, codTitleFrom };
