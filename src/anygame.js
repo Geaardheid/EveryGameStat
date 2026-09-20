@@ -32,6 +32,27 @@ function titleFromPath(p) {
   return !t || /launcher|redistributable|^content$|^common$/i.test(t) ? null : t;
 }
 
+/* ── Pakketten uit de Xbox-app / Microsoft Store: ...\WindowsApps\<Pakket>\ ──
+   Niet elke game staat in XboxGames; een deel staat als pakket in WindowsApps, waar ook gewone
+   apps staan (Rekenmachine, WhatsApp). Het verschil: elke Xbox-pc-game heeft in de pakketmap een
+   MicrosoftGame.config. Staat dat bestand er, dan is het een game, ook als hij zo nieuw is dat
+   geen enkele lijst zijn exe kent. */
+function packageRoot(p) { const m = String(p || "").match(/^(.*[\\/]WindowsApps[\\/][^\\/]+)[\\/]/i); return m ? m[1] : null; }
+const cfgCache = new Map();
+function readGameConfig(root) {
+  if (cfgCache.has(root)) return cfgCache.get(root);
+  let r;
+  try {
+    const buf = fs.readFileSync(path.join(root, "MicrosoftGame.config"));
+    const xml = (buf.length > 1 && buf[1] === 0) ? buf.toString("utf16le") : buf.toString("utf8");
+    const m = xml.match(/DefaultDisplayName\s*=\s*"([^"]+)"/i);
+    const nm = m && !/^ms-resource:/i.test(m[1]) ? m[1].replace(/&amp;/g, "&").replace(/&apos;/g, "'").replace(/&quot;/g, '"').trim() : null;
+    r = { isGame: true, name: nm || null };
+  } catch (e) { r = { isGame: e && e.code === "ENOENT" ? false : null }; } /* null = mogen we niet lezen: onbekend */
+  cfgCache.set(root, r);
+  return r;
+}
+
 /* ── Discord-lijst ── */
 const LIST_URL = "https://discord.com/api/v10/applications/detectable";
 const LIST_MAX_AGE = 7 * 86400000;
@@ -102,8 +123,8 @@ async function gameConfigStore() {
 }
 
 /* ── De beslissing (zuiver, testbaar) ── */
-function pickGame(procs, gcsMap, lst) {
-  const L = lst || list, seen = [];
+function pickGame(procs, gcsMap, lst, cfgReader) {
+  const L = lst || list, seen = [], readCfg = cfgReader || readGameConfig;
   for (const pr of procs || []) {
     const pn = String(pr.n || "").toLowerCase(); if (!pn || DENY.has(pn)) continue;
     const exe = pn.endsWith(".exe") ? pn : pn + ".exe";
@@ -120,6 +141,17 @@ function pickGame(procs, gcsMap, lst) {
       else if (uniq.length === 1) { name = uniq[0]; source = "discord-list"; }
     }
     if (!name) { const t = titleFromPath(full); if (t) { name = canonical(t, L); source = pr.p ? "folder" : "folder-via-windows"; } }
+    /* Pakket uit de Xbox-app of Store: MicrosoftGame.config beslist of het een game is. De naam komt uit
+       de venstertitel als dat een bekende game is (officiële schrijfwijze), anders uit het config-bestand,
+       anders de venstertitel zoals hij is. Geen config-bestand: alleen als de titel exact een bekende game is. */
+    if (!name) {
+      const root = packageRoot(full);
+      if (root) {
+        const gc = readCfg(root), viaTitle = pr.t ? nameFromTitle(pr.t, L) : null;
+        if (gc && gc.isGame) { name = viaTitle || (gc.name && canonical(gc.name, L)) || String(pr.t || "").trim() || String(pr.n || "").trim(); source = "xbox-package"; }
+        else if (viaTitle && (!gc || gc.isGame === null || L.names[norm(pr.t)])) { name = viaTitle; source = "store+title"; }
+      }
+    }
     /* Windows kent hem als game (GameConfigStore) maar de map zegt niets (WindowsApps): venstertitel of productnaam,
        alleen als die exact een bekende gametitel is */
     if (!name && gcsMap && gcsMap[exe]) {
@@ -131,7 +163,7 @@ function pickGame(procs, gcsMap, lst) {
     if (name) seen.push({ name, exe, source, path: full || null, title: pr.t || null });
   }
   /* meerdere kandidaten: lijst-match wint van map, map van titel */
-  const rank = { "discord-list": 0, "folder": 1, "folder-via-windows": 1, "windows+title": 2, "title": 3 };
+  const rank = { "discord-list": 0, "folder": 1, "folder-via-windows": 1, "xbox-package": 1, "store+title": 2, "windows+title": 2, "title": 3 };
   seen.sort((a, b) => rank[a.source] - rank[b.source]);
   return seen[0] || null;
 }
@@ -144,7 +176,7 @@ async function detect() {
 async function report() {
   const [procs, map] = await Promise.all([windowedProcs(), gameConfigStore()]);
   return { at: new Date().toISOString(), listAgeHours: list.at ? Math.round((Date.now() - list.at) / 3600000) : null, listGames: Object.keys(list.names).length,
-    picked: pickGame(procs, map, list), windows: procs.map((p) => ({ n: p.n, p: p.p || null, t: p.t || null, d: p.d || null, knownToWindows: !!map[String(p.n || "").toLowerCase() + ".exe"] })),
+    picked: pickGame(procs, map, list), windows: procs.map((p) => ({ n: p.n, p: p.p || null, t: p.t || null, d: p.d || null, knownToWindows: !!map[String(p.n || "").toLowerCase() + ".exe"], xboxPackage: packageRoot(p.p) ? readGameConfig(packageRoot(p.p)) : undefined })),
     windowsGamePaths: Object.values(map).slice(0, 80) };
 }
-module.exports = { init, detect, report, refreshList, pickGame, reduceList, parseGcs, titleFromPath };
+module.exports = { init, detect, report, refreshList, pickGame, reduceList, parseGcs, titleFromPath, packageRoot, readGameConfig };
