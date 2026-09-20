@@ -126,6 +126,7 @@ boardHead: "Leaderboard",
     boardHours: "Hours", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Playing now \u00b7 " + g,
     dcOff: "Off. Nothing is sent to Discord.", dcSignedOut: "Sign in to EveryGameStat first. Presence only runs when you are signed in.", dcConnecting: "Connecting to Discord\u2026", dcIdle: "Connected to Discord as {name}. Waiting for a game.", dcShowing: "Connected to Discord as {name}. Showing: {game}.", dcHidden: "Not showing in a server? In Discord: Settings, Activity Privacy, and switch that server on in the list.", dcNoDiscord: "Can't reach Discord on this PC. Start the Discord desktop app (the browser version doesn't work). If Discord runs as administrator, the Companion can't reach it. It retries every 20 seconds.", dcError: "Discord didn't answer: {err}. Retrying every 20 seconds.", dcSetError: "Connected as {name}, but Discord rejected the activity: {err}",
+    setReport: "Game not recognised?", setReportHint: "Start the game, then copy this report. It lists the windows that are open and what the Companion makes of them. Nothing is sent anywhere.", setReportBtn: "Copy report", setReportDone: "Copied",
     setDiscord: "Discord Rich Presence (show what you're playing, with live RL score)",
     chatPick: "Pick a friend to start chatting",
     updCheck: "Check for updates",
@@ -277,6 +278,7 @@ boardHead: "Klassement",
     boardHours: "Uren", boardGames: "Games", boardAch: "Achievements",
     nowPlaying: (g) => "Speelt nu \u00b7 " + g,
     dcOff: "Uit. Er gaat niets naar Discord.", dcSignedOut: "Log eerst in bij EveryGameStat. Presence draait alleen als je bent ingelogd.", dcConnecting: "Verbinden met Discord\u2026", dcIdle: "Verbonden met Discord als {name}. Wacht op een game.", dcShowing: "Verbonden met Discord als {name}. Toont nu: {game}.", dcHidden: "Niet zichtbaar in een server? In Discord: Instellingen, Activiteitsprivacy, en zet die server aan in de lijst.", dcNoDiscord: "Discord is op deze pc niet bereikbaar. Start de Discord-desktopapp (de browserversie werkt niet). Draait Discord als administrator, dan kan de Companion er niet bij. Elke 20 seconden volgt een nieuwe poging.", dcError: "Discord gaf geen antwoord: {err}. Elke 20 seconden volgt een nieuwe poging.", dcSetError: "Verbonden als {name}, maar Discord weigerde de activiteit: {err}",
+    setReport: "Game niet herkend?", setReportHint: "Start de game en kopieer dan dit rapport. Er staat in welke vensters open zijn en wat de Companion ervan maakt. Er wordt niets verstuurd.", setReportBtn: "Kopieer rapport", setReportDone: "Gekopieerd",
     setDiscord: "Discord Rich Presence (laat zien wat je speelt, met live RL-stand)",
     chatPick: "Kies een vriend om te chatten",
     updCheck: "Check op updates",
@@ -2204,6 +2206,12 @@ $("btn-back").addEventListener("click", async () => {
 });
 $("set-autostart").addEventListener("change", (e) => window.egs.setSetting({ autostart: e.target.checked }));
 $("set-discord").addEventListener("change", async (e) => { await window.egs.setSetting({ discord_rpc: e.target.checked }); state.discord_rpc = e.target.checked; setTimeout(dcRefresh, 600); });
+$("set-report").addEventListener("click", async (e) => {
+  const b = e.currentTarget; b.disabled = true;
+  try { const txt = await window.egs.detectReport(); await navigator.clipboard.writeText(txt); b.textContent = t("setReportDone"); }
+  catch (err) { b.textContent = "!"; }
+  setTimeout(() => { b.disabled = false; b.textContent = t("setReportBtn"); }, 2500);
+});
 /* Statusregel onder de Discord-schakelaar: zegt eerlijk of de koppeling staat en wat Discord nu toont. */
 function dcRender(st) {
   const el = $("set-discord-status"); if (!el || !st) return;

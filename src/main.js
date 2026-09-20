@@ -14,6 +14,7 @@ const ProcessWatchAdapter = require("./adapters/processwatch");
 const MinecraftAdapter = require("./adapters/minecraft");
 const gamedb = require("./gamedb");
 const discord = require("./discord");
+const anygame = require("./anygame");
 /* status van de Discord-koppeling naar Instellingen: zichtbaar waarom presence wel of niet werkt */
 discord.onStatus((st) => { try { sendToUI("discord-status", { ...st, ...discord.getStatus() }); } catch (e) {} });
 
@@ -261,7 +262,8 @@ function endXboxSession(endMs) {
 }
 async function xboxTick(steamAppid, now) {
   let title = null;
-  if (!steamAppid && !presenceSrc.proc && !presenceSrc.rl) { try { title = await gamedb.xboxRunningTitle(); } catch (e) {} }
+  /* elke game, los van de launcher (Xbox-app, Epic, GOG, EA, ...): zie anygame.js */
+  if (!steamAppid && !presenceSrc.proc && !presenceSrc.rl) { try { const g = await anygame.detect(); title = g && g.name; } catch (e) {} }
   if (title) {
     if (!xboxSession || xboxSession.name !== title) { if (xboxSession) endXboxSession(now); xboxSession = { name: title, startedAt: now }; }
     if (!presenceArt[title]) { try { const c = await coverByName(title); if (c) presenceArt[title] = c; } catch (e) {} }
@@ -284,6 +286,7 @@ function endSteamSession(endMs) {
 function startAdapters() {
   const cfg = config.get();
   if (!cfg.token) return; /* niet gekoppeld: nog niets starten */
+  try { anygame.init(app.getPath("userData")); } catch (e) {}
   startSteamWatch();
   if (!adapters.procwatch) {
     const pw = new ProcessWatchAdapter({
@@ -575,6 +578,10 @@ ipcMain.handle("recent", async (_e, limit) => {
   try { return await api.recent(Math.min(Math.max(Number(limit) || 15, 1), 50)); } catch (e) { return { ok: false, error: "offline" }; }
 });
 
+ipcMain.handle("detect-report", async () => {
+  try { return JSON.stringify({ version: app.getVersion(), steamAppid: await gamedb.steamRunningAppId(), presence: { ...presenceSrc }, ...(await anygame.report()) }, null, 1); }
+  catch (e) { return JSON.stringify({ error: String(e).slice(0, 300) }); }
+});
 ipcMain.handle("discord-status", () => {
   const enabled = config.get().discord_rpc !== false, signedIn = !!config.get().token;
   /* nog nooit geprobeerd (geen game gezien sinds de start): nu verbinden, zodat de statusregel iets echts zegt */

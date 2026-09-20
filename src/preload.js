@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld("egs", {
   onOpenSocial: (cb) => ipcRenderer.on("open-social", (_e, d) => cb(d)),
   onPresence: (cb) => ipcRenderer.on("presence", (_e, d) => cb(d)),
   setSetting: (kv) => ipcRenderer.invoke("set-setting", kv),
+  detectReport: () => ipcRenderer.invoke("detect-report"),
   discordStatus: () => ipcRenderer.invoke("discord-status"),
   onDiscordStatus: (cb) => ipcRenderer.on("discord-status", (_e, d) => cb(d)),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
