@@ -117,13 +117,19 @@ function gameIcon(game) {
 /* Geen game bezig: tóch een nette EGS-presence i.p.v. Discords eigen "?"-detectie
    van EGS Companion.exe (die grijze vraagteken-kaart). App-icoon via externe URL. */
 const APP_ICON = EGS_LOGO;
+/* Timers. Zonder startTimestamp neemt Discord het moment van elke update als begin: de teller
+   sprong dan bij elke hartslag (elke 2 minuten) terug naar 0:00. Nu loopt hij door zolang de
+   toestand gelijk blijft, en begint hij alleen opnieuw als je een game start, wisselt of stopt. */
+let idleTs = null, lastGame = null;
 function setActivity(game, state, art) {
   if (!game) {
-    startTs = null;
+    startTs = null; lastGame = null;
+    if (!idleTs) idleTs = Date.now();
     lastActivity = {
       name: "EveryGameStat", type: 0,
       details: "Tracking stats with EveryGameStat",
       state: "everygamestat.com",
+      startTimestamp: idleTs,
       largeImageKey: APP_ICON,
       largeImageText: "EveryGameStat",
       buttons: [{ label: "EveryGameStat", url: "https://everygamestat.com" }]
@@ -131,7 +137,9 @@ function setActivity(game, state, art) {
     ensureClient().then(() => push(lastActivity));
     return;
   }
-  if (!startTs) startTs = Date.now();
+  idleTs = null;
+  if (!startTs || lastGame !== game) startTs = Date.now();
+  lastGame = game;
   /* Medal-stijl: de gamenaam is de titel ("Playing Rocket League"), de kaart zegt
      "Tracking stats in Rocket League with EveryGameStat", de game-cover groot,
      het EGS-logo klein in de hoek, en de regel eronder is de live-stand/server. */
@@ -153,7 +161,7 @@ function setActivity(game, state, art) {
 setInterval(() => { if (lastActivity && !ready) ensureClient(); }, 20 * 1000);
 
 function stop() {
-  lastActivity = null;
+  lastActivity = null; idleTs = null; startTs = null; lastGame = null;
   push(null);
   dropClient();
   setStatus({ phase: "idle", user: null, error: null });
